@@ -46,6 +46,43 @@
     });
   }
 
+  /* ── Stage ──────────────────────────────────────────────────────────────
+   * One flag drives every status surface, so the page cannot claim the agent
+   * is doing something it is not. */
+  var STAGES = {
+    prelaunch: {
+      pill: 'Autonomous agent · in development',
+      ticker: 'PRE-LAUNCH',
+      banner: 'Pre-launch. The agent is not running yet and no funds are deployed. ' +
+              'Everything below describes what is being built.'
+    },
+    paper: {
+      pill: 'Autonomous agent · paper mode',
+      ticker: 'PAPER MODE',
+      banner: 'Paper mode. The agent is running and publishing signal, but every ' +
+              'trade is simulated — no funds are deployed and no result here is a ' +
+              'realised return.'
+    },
+    live: {
+      pill: 'Autonomous agent · live on pump.fun',
+      ticker: 'ONLINE',
+      banner: null
+    }
+  };
+  var STAGE = STAGES[C.stage] || STAGES.prelaunch;
+
+  (function renderStage() {
+    var pill = $('#heroPill');
+    if (pill) pill.textContent = STAGE.pill;
+
+    var bar = $('#stagebar');
+    if (bar && STAGE.banner) {
+      $('#stagebarText').textContent = STAGE.banner;
+      bar.classList.toggle('is-prelaunch', C.stage === 'prelaunch');
+      bar.hidden = false;
+    }
+  })();
+
   /* ── Links ──────────────────────────────────────────────────────────────── */
   ['buyTop', 'buyHero', 'buyFoot'].forEach(function (id) {
     var el = document.getElementById(id);
@@ -217,7 +254,7 @@
       ['VOL 24H', m ? usd(m.vol) : DASH, ''],
       ['TREASURY', usd(T.valueUsd), ''],
       ['BURNED', count(T.burnedTokens), ''],
-      ['AGENT', 'ONLINE', 'up']
+      ['AGENT', STAGE.ticker, C.stage === 'live' ? 'up' : '']
     ];
     var html = items.map(function (i) {
       return '<span>' + i[0] + ' <b class="' + i[2] + '">' + i[1] + '</b></span>';
@@ -278,6 +315,73 @@
 
   loadMarket();
   if (C.liveData && addr) setInterval(loadMarket, 60000);
+
+  /* ── Ledger feed ────────────────────────────────────────────────────────
+   * Pulls real numbers from the bot's read-only API when one is configured.
+   * Anything the API does not supply keeps its em dash — a missing feed must
+   * never look like a zero, and a paper run must never look like a live one. */
+  function loadLedger() {
+    var base = (C.ledgerApi || '').replace(/\/$/, '');
+    if (!base) return;
+
+    fetch(base + '/api/state')
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
+      .then(function (s) {
+        var p = s.portfolio || {};
+        var totals = s.totals || {};
+
+        var live = {
+          valueUsd: s.treasury && Number.isFinite(s.treasury.sol)
+            ? null                       // SOL needs a price to value; left to config
+            : null,
+          realisedPnlUsd: p.realisedUsd,
+          boughtBackUsd: totals.buyback ? Math.abs(totals.buyback) : null,
+          burnedTokens: totals.burn ? Math.abs(totals.burn) : null
+        };
+
+        $$('[data-treasury]').forEach(function (el) {
+          var k = el.getAttribute('data-treasury');
+          var v = live[k];
+          if (v === null || v === undefined || !isFinite(v)) return;
+          el.textContent = (TREASURY_FMT[k] || String)(v);
+        });
+
+        /* Real callouts replace the sample rows. */
+        var ours = (s.callouts && s.callouts.ours) || [];
+        if (ours.length) {
+          listEl.innerHTML = '';
+          ours.slice(0, 12).forEach(function (c) {
+            var row = document.createElement('div');
+            row.className = 'callout';
+            var when = new Date(c.created_at);
+            row.innerHTML =
+              '<span class="co-tick">' + esc(shortMint(c.mint)) + '</span>' +
+              '<span class="co-note">' + esc(c.text) + '</span>' +
+              '<span class="co-at">' + esc(when.toLocaleDateString()) + '</span>' +
+              '<span class="co-status ' + (c.status === 'posted' ? 'win' : 'open') + '">' +
+                esc(c.status) + '</span>';
+            listEl.appendChild(row);
+          });
+        }
+
+        /* The API is the authority on whether this is simulated. */
+        if (s.paper) {
+          termState.textContent = 'paper mode';
+          termState.classList.add('sample');
+        } else {
+          termState.textContent = 'live';
+          termState.classList.remove('sample');
+        }
+      })
+      .catch(function () { /* keep configured values; the feed is optional */ });
+  }
+
+  function shortMint(m) {
+    return m && m.length > 10 ? m.slice(0, 4) + '…' + m.slice(-4) : (m || '—');
+  }
+
+  loadLedger();
+  if (C.ledgerApi) setInterval(loadLedger, 60000);
 
   /* ── Hero sparkline ─────────────────────────────────────────────────────
    * Decorative only — a deterministic drifting curve, never presented as

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "npm run paper",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "_notes": [
+    "Mount a volume at ./data — that SQLite file is the caller reputation history",
+    "and is the one thing here you cannot rebuild.",
+    "For the ledger API, add a SECOND Railway service from this same repo with",
+    "startCommand 'npm run api', sharing the same volume.",
+    "Set variables from .env.example. Keys never go in the repo."
+  ]
+}

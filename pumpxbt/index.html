@@ -23,6 +23,14 @@
 </head>
 <body>
 
+<!-- Stage banner. Rendered from PXBT.stage; hidden entirely once stage is live. -->
+<div class="stagebar" id="stagebar" hidden>
+  <div class="wrap stagebar-inner">
+    <span class="stagebar-dot" aria-hidden="true"></span>
+    <p id="stagebarText"></p>
+  </div>
+</div>
+
 <div class="grid-bg" aria-hidden="true"></div>
 <div class="glow glow-a" aria-hidden="true"></div>
 <div class="glow glow-b" aria-hidden="true"></div>
@@ -71,7 +79,7 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <div class="pill reveal"><span class="live-dot"></span> Autonomous agent · live on pump.fun</div>
+      <div class="pill reveal"><span class="live-dot"></span> <span id="heroPill">Autonomous agent</span></div>
 
       <h1 class="reveal">Pump<span class="accent">XBT</span></h1>
 

@@ -73,6 +73,28 @@ p { margin: 0; }
 
 main, .foot, .nav, .ticker { position: relative; z-index: 1; }
 
+/* stage banner — states the truth about what is actually running */
+.stagebar {
+  position: relative; z-index: 70;
+  background: linear-gradient(90deg, rgba(251, 191, 36, .16), rgba(251, 191, 36, .07));
+  border-bottom: 1px solid rgba(251, 191, 36, .32);
+  color: #fde68a;
+}
+.stagebar-inner {
+  display: flex; align-items: center; gap: 10px;
+  padding-top: 10px; padding-bottom: 10px;
+}
+.stagebar p { font-size: 13px; font-weight: 600; letter-spacing: .01em; }
+.stagebar-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; flex: none;
+}
+.stagebar.is-prelaunch {
+  background: linear-gradient(90deg, rgba(148, 163, 184, .16), rgba(148, 163, 184, .06));
+  border-bottom-color: rgba(148, 163, 184, .3); color: #cbd5e1;
+}
+.stagebar.is-prelaunch .stagebar-dot { background: #94a3b8; }
+@media (max-width: 560px) { .stagebar p { font-size: 12px; } }
+
 /* ticker */
 .ticker {
   border-bottom: 1px solid var(--line);
@@ -421,6 +443,7 @@ main, .foot, .nav, .ticker { position: relative; z-index: 1; }
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--line);
 }
 .rd.live::before { background: var(--green); box-shadow: 0 0 18px var(--green-glow); }
+.rd.progress::before { background: #fbbf24; box-shadow: 0 0 18px rgba(251, 191, 36, .35); }
 .rd.next::before { background: var(--green-deep); }
 .rd-phase {
   font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;

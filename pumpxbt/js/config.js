@@ -4,6 +4,24 @@
    ========================================================================== */
 window.PXBT = {
 
+  /* ── Stage ────────────────────────────────────────────────────────────────
+   * Drives every status badge on the page. Change this ONE value as the project
+   * progresses — the hero pill, the ticker, the roadmap and the banner all read
+   * from it, so they can never drift out of sync with reality.
+   *
+   *   'prelaunch' — nothing is running yet
+   *   'paper'     — the agent runs, but every fill is simulated (current)
+   *   'live'      — the agent trades real funds
+   *
+   * Do not set 'live' until it actually is. Claiming a running agent while none
+   * exists is the kind of thing that turns a launch into a legal problem. */
+  stage: 'paper',
+
+  /* Ledger API base URL, e.g. https://pumpxbt-api.up.railway.app
+   * When set, the treasury figures and callouts below are replaced with live
+   * data from the bot. Leave empty to show configured values only. */
+  ledgerApi: '',
+
   /* ── Token ────────────────────────────────────────────────────────────────
    * Paste the mint address once the token is live. While this is empty every
    * market figure on the page renders as "—" and is labelled "awaiting
@@ -84,7 +102,7 @@ window.PXBT = {
 
   /* ── Roadmap ──────────────────────────────────────────────────────────── */
   roadmap: [
-    { phase: 'Live now',    title: 'Agent + callouts',   body: 'Autonomous trading against the treasury with public callouts published in the pump.fun app.', state: 'live' },
+    { phase: 'In progress', title: 'Agent + callouts',   body: 'The agent runs in paper mode: it scores callers, detects signal and logs every trade it would take. Execution goes live once the hit rate is proven on paper.', state: 'progress' },
     { phase: 'Next',        title: 'Buyback & burn feed', body: 'A public, verifiable ledger of every buyback and burn transaction with on-chain links.', state: 'next' },
     { phase: 'Coming soon', title: 'The Terminal',        body: 'The full intelligence layer, exposed. Live signal scoring, wallet graphs and narrative heatmaps in one screen.', state: 'soon' },
     { phase: 'Coming soon', title: 'Alerts & API',        body: 'Push callouts and raw signal to your own stack, bot or group the moment they fire.', state: 'soon' }
