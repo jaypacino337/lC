@@ -15,7 +15,28 @@ python3 -m http.server 8000
 
 Any static host works (Vercel, Netlify, Cloudflare Pages, GitHub Pages).
 
-## Before launch — do these three things
+## Deploying
+
+The site is static, so any host works with **no build command and no output
+directory** — point it at this folder and it serves.
+
+**Vercel / Netlify / Cloudflare Pages:** import the repo, set **Root Directory**
+to `pumpxbt`, framework preset **Other**, leave build settings empty. That makes
+PumpXBT the site at `/` without moving any files. The repo's other site
+(LONGDOG, at the repo root) can be a second project pointed at `/`.
+
+**GitHub Pages:** Settings → Pages → deploy from branch. The site appears at
+`<user>.github.io/<repo>/pumpxbt/`. All paths are relative, so a subdirectory
+works fine.
+
+## Before launch — do these four things
+
+**0. Fix the social card URLs.** In `index.html`, `og:url`, `og:image` and
+`twitter:image` are absolute URLs pointing at `pumpxbt.fun`. Change them to your
+real domain. Social crawlers do not run JavaScript and cannot resolve relative
+paths — if these are wrong, link previews on X, Telegram and Discord render
+blank. Test with the X Card Validator after deploying.
+
 
 **1. Add your brand files.** Drop `logo.png` and `banner.png` into `assets/`.
 See `assets/README.md` for sizes. Until they exist the site falls back to a
