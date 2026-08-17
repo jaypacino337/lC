@@ -1,0 +1,90 @@
+{
+  "_comment": "Synthetic fixture. Field names mirror the GUESSES in src/sources/pumpfun.js — replace with a real captured response once you have one, then run `npm test` to see what broke. Timestamps are seconds and are shifted at load time by (realNow - _anchor), so relative ages are preserved: history stays hours old and scoreable, live tokens stay minutes old and tradeable.",
+  "_anchor": 1750020000,
+
+  "_scenario": [
+    "WALLET_SHARP_A: 12 resolved wins, 1 loss -> clears the elite bar.",
+    "WALLET_LUCKY_B: 1 win only -> shrinkage keeps the score low.",
+    "WALLET_BAD_C:   5 losses -> scores zero, filtered out.",
+    "MINT_SILENT_ELITE: SHARP_A bought it and has NOT called it -> earlyBuy edge.",
+    "MINT_HOT_NEW: called by SHARP_A just now -> copyCaller.",
+    "MINT_DEAD: thin liquidity and net outflow -> must be rejected by the gates."
+  ],
+
+  "callouts": [
+    { "id": "co_w01", "caller": "WALLET_SHARP_A", "mint": "MINT_W01", "created_at": 1750000000, "price_usd": 0.0000100, "usd_market_cap": 22000 },
+    { "id": "co_w02", "caller": "WALLET_SHARP_A", "mint": "MINT_W02", "created_at": 1750000100, "price_usd": 0.0000200, "usd_market_cap": 41000 },
+    { "id": "co_w03", "caller": "WALLET_SHARP_A", "mint": "MINT_W03", "created_at": 1750000200, "price_usd": 0.0000150, "usd_market_cap": 30000 },
+    { "id": "co_w04", "caller": "WALLET_SHARP_A", "mint": "MINT_W04", "created_at": 1750000300, "price_usd": 0.0000120, "usd_market_cap": 25000 },
+    { "id": "co_w05", "caller": "WALLET_SHARP_A", "mint": "MINT_W05", "created_at": 1750000400, "price_usd": 0.0000180, "usd_market_cap": 35000 },
+    { "id": "co_w06", "caller": "WALLET_SHARP_A", "mint": "MINT_W06", "created_at": 1750000500, "price_usd": 0.0000090, "usd_market_cap": 19000 },
+    { "id": "co_w07", "caller": "WALLET_SHARP_A", "mint": "MINT_W07", "created_at": 1750000600, "price_usd": 0.0000210, "usd_market_cap": 44000 },
+    { "id": "co_w08", "caller": "WALLET_SHARP_A", "mint": "MINT_W08", "created_at": 1750000700, "price_usd": 0.0000160, "usd_market_cap": 33000 },
+    { "id": "co_w09", "caller": "WALLET_SHARP_A", "mint": "MINT_W09", "created_at": 1750000800, "price_usd": 0.0000130, "usd_market_cap": 27000 },
+    { "id": "co_w10", "caller": "WALLET_SHARP_A", "mint": "MINT_W10", "created_at": 1750000900, "price_usd": 0.0000110, "usd_market_cap": 23000 },
+    { "id": "co_w11", "caller": "WALLET_SHARP_A", "mint": "MINT_W11", "created_at": 1750001000, "price_usd": 0.0000170, "usd_market_cap": 36000 },
+    { "id": "co_w12", "caller": "WALLET_SHARP_A", "mint": "MINT_W12", "created_at": 1750001100, "price_usd": 0.0000140, "usd_market_cap": 29000 },
+    { "id": "co_l01", "caller": "WALLET_SHARP_A", "mint": "MINT_L01", "created_at": 1750001200, "price_usd": 0.0000500, "usd_market_cap": 88000 },
+
+    { "id": "co_b01", "caller": "WALLET_LUCKY_B", "mint": "MINT_W01", "created_at": 1750001300, "price_usd": 0.0000110, "usd_market_cap": 23000 },
+
+    { "id": "co_c01", "caller": "WALLET_BAD_C", "mint": "MINT_L02", "created_at": 1750001400, "price_usd": 0.0000600, "usd_market_cap": 95000 },
+    { "id": "co_c02", "caller": "WALLET_BAD_C", "mint": "MINT_L03", "created_at": 1750001500, "price_usd": 0.0000700, "usd_market_cap": 99000 },
+    { "id": "co_c03", "caller": "WALLET_BAD_C", "mint": "MINT_L04", "created_at": 1750001600, "price_usd": 0.0000800, "usd_market_cap": 91000 },
+    { "id": "co_c04", "caller": "WALLET_BAD_C", "mint": "MINT_L05", "created_at": 1750001700, "price_usd": 0.0000900, "usd_market_cap": 93000 },
+    { "id": "co_c05", "caller": "WALLET_BAD_C", "mint": "MINT_L06", "created_at": 1750001800, "price_usd": 0.0001000, "usd_market_cap": 96000 },
+
+    { "id": "co_new", "caller": "WALLET_SHARP_A", "mint": "MINT_HOT_NEW", "created_at": 1750019700, "price_usd": 0.0000090, "usd_market_cap": 19000 }
+  ],
+
+  "trades": [
+    { "signature": "rw01", "user": "R1", "mint": "MINT_W01", "timestamp": 1750000600, "usd": 300, "price_usd": 0.0000320, "is_buy": true },
+    { "signature": "rw02", "user": "R2", "mint": "MINT_W02", "timestamp": 1750000700, "usd": 300, "price_usd": 0.0000640, "is_buy": true },
+    { "signature": "rw03", "user": "R3", "mint": "MINT_W03", "timestamp": 1750000800, "usd": 300, "price_usd": 0.0000480, "is_buy": true },
+    { "signature": "rw04", "user": "R4", "mint": "MINT_W04", "timestamp": 1750000900, "usd": 300, "price_usd": 0.0000384, "is_buy": true },
+    { "signature": "rw05", "user": "R5", "mint": "MINT_W05", "timestamp": 1750001000, "usd": 300, "price_usd": 0.0000576, "is_buy": true },
+    { "signature": "rw06", "user": "R6", "mint": "MINT_W06", "timestamp": 1750001100, "usd": 300, "price_usd": 0.0000288, "is_buy": true },
+    { "signature": "rw07", "user": "R7", "mint": "MINT_W07", "timestamp": 1750001200, "usd": 300, "price_usd": 0.0000672, "is_buy": true },
+    { "signature": "rw08", "user": "R8", "mint": "MINT_W08", "timestamp": 1750001300, "usd": 300, "price_usd": 0.0000512, "is_buy": true },
+    { "signature": "rw09", "user": "R9", "mint": "MINT_W09", "timestamp": 1750001400, "usd": 300, "price_usd": 0.0000416, "is_buy": true },
+    { "signature": "rw10", "user": "R10", "mint": "MINT_W10", "timestamp": 1750001500, "usd": 300, "price_usd": 0.0000352, "is_buy": true },
+    { "signature": "rw11", "user": "R11", "mint": "MINT_W11", "timestamp": 1750001600, "usd": 300, "price_usd": 0.0000544, "is_buy": true },
+    { "signature": "rw12", "user": "R12", "mint": "MINT_W12", "timestamp": 1750001700, "usd": 300, "price_usd": 0.0000448, "is_buy": true },
+
+    { "signature": "rl01", "user": "R13", "mint": "MINT_L01", "timestamp": 1750001800, "usd": 200, "price_usd": 0.0000300, "is_buy": false },
+    { "signature": "rl02", "user": "R14", "mint": "MINT_L02", "timestamp": 1750001900, "usd": 200, "price_usd": 0.0000300, "is_buy": false },
+    { "signature": "rl03", "user": "R15", "mint": "MINT_L03", "timestamp": 1750002000, "usd": 200, "price_usd": 0.0000350, "is_buy": false },
+    { "signature": "rl04", "user": "R16", "mint": "MINT_L04", "timestamp": 1750002100, "usd": 200, "price_usd": 0.0000400, "is_buy": false },
+    { "signature": "rl05", "user": "R17", "mint": "MINT_L05", "timestamp": 1750002200, "usd": 200, "price_usd": 0.0000450, "is_buy": false },
+    { "signature": "rl06", "user": "R18", "mint": "MINT_L06", "timestamp": 1750002300, "usd": 200, "price_usd": 0.0000500, "is_buy": false },
+
+    { "signature": "se01", "user": "WALLET_SHARP_A", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019780, "usd": 900, "price_usd": 0.0000080, "is_buy": true },
+    { "signature": "se02", "user": "BUYER_1", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019800, "usd": 140, "price_usd": 0.0000082, "is_buy": true },
+    { "signature": "se03", "user": "BUYER_2", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019810, "usd": 220, "price_usd": 0.0000085, "is_buy": true },
+    { "signature": "se04", "user": "BUYER_3", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019820, "usd": 310, "price_usd": 0.0000088, "is_buy": true },
+    { "signature": "se05", "user": "BUYER_4", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019830, "usd": 180, "price_usd": 0.0000090, "is_buy": true },
+    { "signature": "se06", "user": "BUYER_5", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019840, "usd": 260, "price_usd": 0.0000093, "is_buy": true },
+    { "signature": "se07", "user": "BUYER_6", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019850, "usd": 150, "price_usd": 0.0000095, "is_buy": true },
+    { "signature": "se08", "user": "BUYER_7", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019860, "usd": 400, "price_usd": 0.0000098, "is_buy": true },
+    { "signature": "se09", "user": "SELLER_1", "mint": "MINT_SILENT_ELITE", "timestamp": 1750019870, "usd": 90, "price_usd": 0.0000097, "is_buy": false },
+
+    { "signature": "hn01", "user": "BUYER_8",  "mint": "MINT_HOT_NEW", "timestamp": 1750019800, "usd": 200, "price_usd": 0.0000091, "is_buy": true },
+    { "signature": "hn02", "user": "BUYER_9",  "mint": "MINT_HOT_NEW", "timestamp": 1750019820, "usd": 240, "price_usd": 0.0000093, "is_buy": true },
+    { "signature": "hn03", "user": "BUYER_10", "mint": "MINT_HOT_NEW", "timestamp": 1750019840, "usd": 180, "price_usd": 0.0000095, "is_buy": true },
+    { "signature": "hn04", "user": "BUYER_11", "mint": "MINT_HOT_NEW", "timestamp": 1750019850, "usd": 300, "price_usd": 0.0000097, "is_buy": true },
+    { "signature": "hn05", "user": "BUYER_12", "mint": "MINT_HOT_NEW", "timestamp": 1750019860, "usd": 260, "price_usd": 0.0000099, "is_buy": true },
+    { "signature": "hn06", "user": "BUYER_13", "mint": "MINT_HOT_NEW", "timestamp": 1750019870, "usd": 210, "price_usd": 0.0000101, "is_buy": true },
+
+    { "signature": "dd01", "user": "BUYER_14", "mint": "MINT_DEAD", "timestamp": 1750019860, "usd": 12, "price_usd": 0.0000030, "is_buy": true },
+    { "signature": "dd02", "user": "SELLER_2", "mint": "MINT_DEAD", "timestamp": 1750019870, "usd": 400, "price_usd": 0.0000028, "is_buy": false }
+  ],
+
+  "tokens": [
+    { "mint": "MINT_SILENT_ELITE", "symbol": "SILENT", "name": "Silent Elite", "price_usd": 0.0000098, "usd_market_cap": 21000, "liquidity": 26000, "created_timestamp": 1750019700, "complete": false },
+    { "mint": "MINT_HOT_NEW", "symbol": "HOTNEW", "name": "Hot New", "price_usd": 0.0000101, "usd_market_cap": 20000, "liquidity": 18000, "created_timestamp": 1750019650, "complete": false },
+    { "mint": "MINT_DEAD", "symbol": "DEAD", "name": "Dead", "price_usd": 0.0000028, "usd_market_cap": 4000, "liquidity": 400, "created_timestamp": 1749990000, "complete": false },
+
+    { "mint": "MINT_W01", "symbol": "W01", "name": "Winner 01", "price_usd": 0.0000320, "usd_market_cap": 64000, "liquidity": 40000, "created_timestamp": 1749999000, "complete": false },
+    { "mint": "MINT_L01", "symbol": "L01", "name": "Loser 01", "price_usd": 0.0000300, "usd_market_cap": 60000, "liquidity": 22000, "created_timestamp": 1750001100, "complete": false }
+  ]
+}

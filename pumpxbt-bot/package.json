@@ -1,0 +1,20 @@
+{
+  "name": "pumpxbt-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PumpXBT — callout-reward farming agent. Paper mode.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "paper": "PXBT_MODE=paper node src/main.js",
+    "replay": "PXBT_SOURCE=fixture node src/main.js --once",
+    "api": "node src/api/server.js",
+    "test": "node --test test/*.test.js",
+    "schema": "node -e \"import('./src/store/db.js').then(m=>{m.open().close();console.log('schema ok')})\""
+  },
+  "dependencies": {},
+  "comment": "Zero runtime dependencies on purpose: node:sqlite, fetch, node:http and node:test are all built in. Nothing to install, nothing to audit."
+}
