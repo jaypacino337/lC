@@ -2,29 +2,29 @@
 
 Three things live in this repo:
 
-| Path           | What                                  | State                        |
-| -------------- | ------------------------------------- | ---------------------------- |
-| `/`            | LONGDOG — scrolling toy               | Done, deployable now         |
-| `/pumpxbt`     | PumpXBT marketing site                | Works, needs your assets     |
-| `/pumpxbt-bot` | Paper-mode agent + ledger API         | Runs, endpoints unverified   |
+| Path           | What                                   | State                        |
+| -------------- | -------------------------------------- | ---------------------------- |
+| `/`            | PumpXBT site + Terminal (repo root)    | Works, needs your assets     |
+| `/longdog`     | LONGDOG — scrolling toy                | Done                         |
+| `/pumpxbt-bot` | Paper-mode agent + ledger API + X agent | Runs, endpoints unverified  |
 
 ---
 
 ## Blocked on you — nobody else can do these
 
 ### 1. Brand assets
-Drop `logo.png` and `banner.png` into `pumpxbt/assets/`.
+Drop `logo.png` and `banner.png` into `assets/` (repo root).
 Transparent PNG for the logo — the site is dark, so a white background reads as
 a white square. Banner at least 1200×630 or social platforms will refuse it.
 
 ### 2. Social card URLs
-`pumpxbt/index.html` has `og:url`, `og:image` and `twitter:image` pointing at the
+`index.html` has `og:url`, `og:image` and `twitter:image` pointing at the
 placeholder domain `pumpxbt.fun`. Change to your real domain, then check with the
 X Card Validator. Crawlers do not run JavaScript — get this wrong and every
 shared link previews blank.
 
 ### 3. Contract address
-`pumpxbt/js/config.js` → `token.address`, and `token.pumpUrl` to the coin's URL.
+`js/config.js` → `token.address`, and `token.pumpUrl` to the coin's URL.
 Price, 24h, market cap and liquidity then go live automatically via Dexscreener,
 refreshing every 60s. Until then they show `—`.
 
@@ -46,12 +46,9 @@ it is a scruffy default for a public repo. Creating `main` needs your say-so.
 ## Deploying
 
 ### Site → Vercel
-Import the repo, **Root Directory `pumpxbt`**, framework preset Other, leave
-build settings empty. `vercel.json` handles the rest.
-
-If you skip the Root Directory setting you will get LONGDOG at your domain.
-
-LONGDOG can be a second Vercel project from the same repo with Root Directory `/`.
+Import the repo at vercel.com/new and click Deploy. **Change nothing** — the
+site is at the repo root, so there is no root directory to set, no build
+command, no output directory. LONGDOG ships with it at `/longdog/`.
 
 ### Bot → Railway
 Point a service at `pumpxbt-bot`, set variables from `.env.example`, and
@@ -59,7 +56,7 @@ Point a service at `pumpxbt-bot`, set variables from `.env.example`, and
 history and is the only thing here you cannot rebuild.
 
 Add a second service running `npm run api` for the ledger, sharing the volume.
-Then set `ledgerApi` in `pumpxbt/js/config.js` to its URL and the site's treasury
+Then set `ledgerApi` in `js/config.js` to its URL and the site's treasury
 and callout panels populate from real data.
 
 **Keys go in Railway variables. Never in the repo.**
@@ -68,7 +65,7 @@ and callout panels populate from real data.
 
 ## The stage flag
 
-`pumpxbt/js/config.js` → `stage`, one of `prelaunch` | `paper` | `live`.
+`js/config.js` → `stage`, one of `prelaunch` | `paper` | `live`.
 
 It drives the banner, the hero pill, the ticker and the roadmap together, so
 those four can never contradict each other. It is currently `paper`, which is

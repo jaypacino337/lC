@@ -1,622 +1,451 @@
-/* LONGDOG — engine.
- *
- * The page never actually gets taller. `.runway` is a fixed 2-span strip and
- * the scroll position is recycled inside it: whenever you pass 1.5 spans the
- * position drops back a span and the same distance is added to `loop`. Every
- * visible layer is positioned from `v = loop + scrollY`, so the recycle is
- * invisible and the dog has no maximum length.
- */
+/* ============================================================================
+   PumpXBT — behaviour.
+   Renders everything driven by config.js, pulls live market data when a
+   contract address is configured, and wires the scroll interactions.
+   ========================================================================== */
 (function () {
   'use strict';
 
-  var D = window.LD, Dog = window.LDDog;
-
-  var SPAN = 6000;                 // px per recycle step
-  var CHUNK = 420;                 // decor chunk size, in layer space
-  var LAYERS = [0.50, 0.72, 1.00]; // parallax factors
-  var STORE = 'longdog:v1';
-
-  var el = {
-    sky: document.getElementById('sky'),
-    decor: document.getElementById('decor'),
-    dog: document.getElementById('dog'),
-    body: document.getElementById('dogBody'),
-    front: document.getElementById('dogFront'),
-    hero: document.getElementById('hero'),
-    len: document.getElementById('len'),
-    cmp: document.getElementById('cmp'),
-    zone: document.getElementById('zone').querySelector('span'),
-    ruler: document.getElementById('ruler'),
-    runway: document.getElementById('runway'),
-    toasts: document.getElementById('toasts'),
-    panel: document.getElementById('panel'),
-    scrim: document.getElementById('scrim'),
-    badges: document.getElementById('badges'),
-    best: document.getElementById('best'),
-    tally: document.getElementById('tally')
-  };
-
-  var vw = 0, vh = 0;
-  var loop = 0, v = 0;
-  var HERO = 0;      // where the head sits on the opening screen
-  var ORIGIN = 0;    // virtual y where the tube starts — depth is measured from here
-  var baseFit = 1;   // keeps head + chest inside short viewports
-  var queued = false;
+  var C = window.PXBT;
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  /* ── Saved state ────────────────────────────────────────────────────────── */
-  var save = { earned: [], best: 0 };
-  try {
-    var raw = localStorage.getItem(STORE);
-    if (raw) {
-      var p = JSON.parse(raw);
-      if (p && Array.isArray(p.earned)) save = { earned: p.earned, best: +p.best || 0 };
-    }
-  } catch (e) { /* private mode: run without persistence */ }
+  /* ── Formatting ─────────────────────────────────────────────────────────
+   * Every formatter returns an em dash for null/undefined, so an unconfigured
+   * field is visibly blank rather than silently rendering as zero. */
+  var DASH = '—';
 
-  function persist() {
-    try { localStorage.setItem(STORE, JSON.stringify(save)); } catch (e) {}
+  function usd(n) {
+    if (n === null || n === undefined || !isFinite(n)) return DASH;
+    if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+    if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+    return '$' + n.toFixed(2);
   }
-  function has(id) { return save.earned.indexOf(id) !== -1; }
-
-  /* ── Build the dog ──────────────────────────────────────────────────────── */
-  el.front.innerHTML = Dog.front();
-  el.body.style.backgroundImage = Dog.bodyTile();
-
-  /* ── Colour helpers ─────────────────────────────────────────────────────── */
-  function hex(c) {
-    return [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  function price(n) {
+    if (n === null || n === undefined || !isFinite(n)) return DASH;
+    if (n >= 1) return '$' + n.toFixed(3);
+    if (n >= 0.001) return '$' + n.toFixed(5);
+    return '$' + n.toPrecision(3);
   }
-  function mix(a, b, t) {
-    var x = hex(a), y = hex(b);
-    return 'rgb(' + Math.round(x[0] + (y[0] - x[0]) * t) + ',' +
-                    Math.round(x[1] + (y[1] - x[1]) * t) + ',' +
-                    Math.round(x[2] + (y[2] - x[2]) * t) + ')';
+  function pct(n) {
+    if (n === null || n === undefined || !isFinite(n)) return DASH;
+    return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
   }
-  function lum(c) { var x = hex(c); return (0.2126 * x[0] + 0.7152 * x[1] + 0.0722 * x[2]) / 255; }
-
-  /* ── Sizing ─────────────────────────────────────────────────────────────── */
-  function measure() {
-    vw = window.innerWidth;
-    vh = window.innerHeight;
-    el.runway.style.height = (SPAN * 2 + vh) + 'px';
-
-    HERO = Math.round(vh * 0.28);
-    baseFit = Math.max(0.5, Math.min(1,
-      (vh * 0.90 - HERO) / Dog.FRONT_H,          // head + chest fit above the fold
-      (vw * 0.52) / Dog.BODY_W                   // …and the tube never eats the phone
-    ));
-    ORIGIN = HERO + Dog.FRONT_H * baseFit;
-    render(true);
+  function count(n) {
+    if (n === null || n === undefined || !isFinite(n)) return DASH;
+    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return String(Math.round(n));
   }
-
-  /* How far the camera has pulled back. Full size at the top, easing outward. */
-  function zoomAt(vv) { return baseFit * (0.42 + 0.58 * Math.exp(-vv / 45000)); }
-
-  /* Depth, in metres, of the point sitting `y` pixels down the screen. */
-  function depthOf(y) { return D.depthAt(Math.max(0, v + y - ORIGIN)); }
-
-  /* ── Scroll recycling ───────────────────────────────────────────────────── */
-  function readScroll() {
-    var y = window.pageYOffset;
-    if (y > SPAN * 1.5) {
-      window.scrollTo(0, y - SPAN);
-      loop += SPAN;
-      y -= SPAN;
-    } else if (y < SPAN * 0.5 && loop >= SPAN) {
-      window.scrollTo(0, y + SPAN);
-      loop -= SPAN;
-      y += SPAN;
-    }
-    v = loop + y;
-  }
-
-  function goTo(target) {          // absolute virtual position
-    target = Math.max(0, target);
-    var y = target % SPAN + SPAN;  // land mid-runway so both directions have room
-    loop = target - y;
-    if (loop < 0) { y += loop; loop = 0; }
-    window.scrollTo(0, y);
-    v = target;
-    render(true);
-  }
-
-  /* ── Decor pool ─────────────────────────────────────────────────────────── */
-  var live = {};              // key "layer:chunk" -> [element]
-  var shownZone = D.ZONES[0]; // the zone currently on screen, set in render()
-
-  var SIZES = {
-    cloud:   [120, 260, 34, 60], bird:    [22, 40, 12, 20],   moth:   [5, 10, 5, 10],
-    grass:   [16, 34, 26, 60],   root:    [50, 130, 8, 16],   worm:   [26, 60, 7, 12],
-    pebble:  [14, 44, 12, 34],   pipe:    [22, 40, 90, 210],  brick:  [34, 60, 16, 26],
-    wire:    [70, 190, 4, 7],    bone:    [30, 70, 10, 18],   fossil: [26, 60, 26, 60],
-    crystal: [22, 54, 44, 110],  glow:    [40, 110, 40, 110], ember:  [8, 22, 8, 22],
-    bubble:  [12, 34, 12, 34],   star:    [2, 4.5, 2, 4.5],   planet: [40, 120, 40, 120]
-  };
-
-  /* shapes that must stay circular rather than take an independent height */
-  var ROUND = {
-    planet: 1, star: 1, moth: 1, glow: 1, ember: 1, bubble: 1, fossil: 1, pebble: 1
-  };
-
-  function rand(seed) {
-    return function () {
-      seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  function spawnChunk(li, c) {
-    var p = LAYERS[li];
-    var r = rand(c * 7919 + li * 104729 + 11);
-    var n = 1 + Math.floor(r() * (li === 2 ? 2 : 3));
-    var items = [];
-
-    for (var i = 0; i < n; i++) {
-      var layerY = (c + r()) * CHUNK;
-      /* Decor follows whatever the sky is currently showing. Keying it to the
-       * layer's own parallax depth spawns pipes into the fossil beds, and
-       * keying it to the raw threshold lags the cross-fade. */
-      var type = shownZone.decor[Math.floor(r() * shownZone.decor.length)];
-      var s = SIZES[type] || [20, 40, 20, 40];
-
-      var w = s[0] + r() * (s[1] - s[0]);
-      var h = ROUND[type] ? w : s[2] + r() * (s[3] - s[2]);
-
-      /* keep clear of the dog: pick a side, then a spot in the margin */
-      var half = (Dog.BODY_W * zoomAt(v)) / 2 + 46;
-      var room = Math.max(30, vw / 2 - half - w);
-      var x = vw / 2 + (r() < 0.5 ? -1 : 1) * (half + r() * room) - w / 2;
-
-      var d = document.createElement('div');
-      d.className = 'd d-' + type;
-      d.style.width = w.toFixed(1) + 'px';
-      d.style.height = h.toFixed(1) + 'px';
-      d.style.opacity = (type === 'star' ? 1 : 0.55 + r() * 0.45) * (li === 0 ? 0.68 : 1);
-      d.style.animationDelay = (-r() * 4).toFixed(2) + 's';
-      d._x = x;
-      d._y = layerY;
-      d._p = p;
-      d._rot = type === 'fossil' || type === 'pebble' || type === 'brick' || type === 'crystal'
-        ? (r() * 60 - 30).toFixed(1) : 0;
-      el.decor.appendChild(d);
-      items.push(d);
-    }
-    live[li + ':' + c] = items;
-  }
-
-  function updateDecor() {
-    var keep = {};
-
-    for (var li = 0; li < LAYERS.length; li++) {
-      var p = LAYERS[li];
-      var top = v * p - 260;
-      var bot = v * p + vh + 260;
-      var c0 = Math.floor(top / CHUNK), c1 = Math.floor(bot / CHUNK);
-
-      for (var c = c0; c <= c1; c++) {
-        if (c < 0) continue;
-        var key = li + ':' + c;
-        keep[key] = true;
-        if (!live[key]) spawnChunk(li, c);
-      }
-    }
-
-    for (var k in live) {
-      if (!keep[k]) {
-        var arr = live[k];
-        for (var i = 0; i < arr.length; i++) el.decor.removeChild(arr[i]);
-        delete live[k];
-      } else {
-        var items = live[k];
-        for (var j = 0; j < items.length; j++) {
-          var d = items[j];
-          d.style.transform = 'translate3d(' + d._x.toFixed(1) + 'px,' +
-            (d._y - v * d._p).toFixed(1) + 'px,0)' + (d._rot ? ' rotate(' + d._rot + 'deg)' : '');
-        }
-      }
-    }
-  }
-
-  /* ── Ruler ──────────────────────────────────────────────────────────────── */
-  var lastRuler = '';
-
-  function niceStep(x) {
-    var pow = Math.pow(10, Math.floor(Math.log10(x)));
-    var f = x / pow;
-    return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * pow;
-  }
-
-  function updateRuler() {
-    var dTop = depthOf(0), dBot = depthOf(vh);
-    var step = niceStep((dBot - dTop) / 5);
-    if (!isFinite(step) || step <= 0) return;
-
-    var out = '', count = 0;
-    var minor = step / 5;
-    var start = Math.ceil(dTop / minor) * minor;
-
-    for (var d = start; d <= dBot && count < 60; d += minor, count++) {
-      var y = D.scrollAt(d) + ORIGIN - v;
-      if (y < 4 || y > vh - 4) continue;
-      var major = Math.abs(d / step - Math.round(d / step)) < 1e-6;
-      out += '<div class="tick' + (major ? '' : ' minor') + '" style="top:' + y.toFixed(1) + 'px">' +
-        (major ? '<span>' + D.fmt(d) + '</span>' : '') + '</div>';
-    }
-    if (out !== lastRuler) { el.ruler.innerHTML = out; lastRuler = out; }
-  }
-
-  /* ── Milestones ─────────────────────────────────────────────────────────── */
-  var toastQueue = [], toasting = false;
-
-  function award(id, name, note) {
-    if (has(id)) return;
-    save.earned.push(id);
-    persist();
-    renderBadges();
-    el.tally.classList.remove('pop');
-    void el.tally.offsetWidth;
-    el.tally.classList.add('pop');
-    toastQueue.push({ name: name, note: note });
-    drainToasts();
-  }
-
-  function drainToasts() {
-    if (toasting || !toastQueue.length) return;
-    toasting = true;
-    var t = toastQueue.shift();
-
-    var node = document.createElement('div');
-    node.className = 'toast';
-    node.innerHTML = '<div class="medal" aria-hidden="true">★</div><div>' +
-      '<b></b><small></small></div>';
-    node.querySelector('b').textContent = t.name;
-    node.querySelector('small').textContent = t.note;
-    el.toasts.appendChild(node);
-    ding();
-
-    var hold = toastQueue.length > 1 ? 1100 : (reduce ? 1800 : 2600);
-    setTimeout(function () {
-      node.classList.add('out');
-      setTimeout(function () {
-        if (node.parentNode) node.parentNode.removeChild(node);
-        toasting = false;
-        drainToasts();
-      }, 450);
-    }, hold);
-  }
-
-  function checkMilestones(d) {
-    /* Nothing fires on the opening frame — the first screen is just the dog. */
-    if (v <= 0) return;
-    for (var i = 0; i < D.MILESTONES.length; i++) {
-      var m = D.MILESTONES[i];
-      if (d >= m.at && !has(m.id)) award(m.id, m.name, m.note);
-    }
-    if (d > save.best) { save.best = d; el.best.textContent = D.fmt(d); persist(); }
-  }
-
-  function renderBadges() {
-    var out = '';
-    var all = D.MILESTONES.map(function (m) {
-      return { id: m.id, name: m.name, note: m.note, at: D.fmt(m.at) };
-    }).concat(D.DEEDS.map(function (x) {
-      return { id: x.id, name: x.name, note: x.note, at: '' };
-    }));
-
-    for (var i = 0; i < all.length; i++) {
-      var a = all[i], on = has(a.id);
-      out += '<li class="badge' + (on ? ' on' : '') + '">' +
-        '<div class="medal" aria-hidden="true">' + (on ? '★' : '·') + '</div>' +
-        '<div><b>' + esc(a.name) + '</b>' +
-        '<small>' + esc(on ? a.note : (a.at ? 'Not there yet.' : 'Not done yet.')) + '</small></div>' +
-        (a.at ? '<div class="at">' + a.at + '</div>' : '') + '</li>';
-    }
-    el.badges.innerHTML = out;
-    el.tally.textContent = save.earned.length;
-    el.tally.hidden = save.earned.length === 0;
-    el.best.textContent = D.fmt(save.best);
-  }
-
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
 
-  /* ── Render ─────────────────────────────────────────────────────────────── */
-  var lastZone = null;
-
-  function render(force) {
-    var z = zoomAt(v);
-    var frontTop = HERO - v;
-    var frontBottom = frontTop + Dog.FRONT_H * z;
-
-    el.front.style.transform = 'translate3d(0,' + frontTop.toFixed(1) + 'px,0) scale(' + z.toFixed(4) + ')';
-
-    /* Whole-pixel tile height: a fractional repeat leaves a visible seam line
-     * every tile once the tube is wide and flat. */
-    var bodyTop = Math.max(0, frontBottom);
-    var tileH = Math.max(1, Math.round(Dog.TILE_H * z));
-    var bodyW = Math.round(Dog.BODY_W * z);
-    var off = (frontBottom - bodyTop) % tileH;
-    el.body.style.top = bodyTop.toFixed(1) + 'px';
-    el.body.style.height = Math.max(0, vh - bodyTop).toFixed(1) + 'px';
-    el.body.style.width = bodyW + 'px';
-    el.body.style.backgroundSize = bodyW + 'px ' + tileH + 'px';
-    el.body.style.backgroundPosition = 'center ' + off.toFixed(1) + 'px';
-
-    /* sky + palette, cross-faded across the zone boundary */
-    var d = depthOf(vh * 0.5);
-    var i = D.zoneAt(d);
-    var a = D.ZONES[i], b = D.ZONES[i + 1] || a, t = 0;
-    if (b !== a) {
-      /* A screen spans only a few percent of its own depth once zoomed out, so
-       * the fade band has to hug the boundary or the sky changes zones long
-       * before the label does. */
-      var lo = b.from * 0.85;
-      t = Math.max(0, Math.min(1, (d - lo) / (b.from - lo)));
-      t = t * t * (3 - 2 * t);
+  /* ── Stage ──────────────────────────────────────────────────────────────
+   * One flag drives every status surface, so the page cannot claim the agent
+   * is doing something it is not. */
+  var STAGES = {
+    prelaunch: {
+      pill: 'Autonomous agent · in development',
+      ticker: 'PRE-LAUNCH',
+      banner: 'Pre-launch. The agent is not running yet and no funds are deployed. ' +
+              'Everything below describes what is being built.'
+    },
+    paper: {
+      pill: 'Autonomous agent · paper mode',
+      ticker: 'PAPER MODE',
+      banner: 'Paper mode. The agent is running and publishing signal, but every ' +
+              'trade is simulated — no funds are deployed and no result here is a ' +
+              'realised return.'
+    },
+    live: {
+      pill: 'Autonomous agent · live on pump.fun',
+      ticker: 'ONLINE',
+      banner: null
     }
-    var top = mix(a.top, b.top, t), bot = mix(a.bot, b.bot, t), ink = mix(a.ink, b.ink, t);
-    el.sky.style.setProperty('--sky-top', top);
-    el.sky.style.setProperty('--sky-bot', bot);
-    document.documentElement.style.setProperty('--ink', ink);
-    document.documentElement.style.setProperty('--sky-top', top);
-    document.documentElement.style.setProperty('--sky-bot', bot);
+  };
+  var STAGE = STAGES[C.stage] || STAGES.prelaunch;
 
-    /* the dog picks up the light of wherever he currently is */
-    var light = 0.62 + 0.38 * lum(bot);
-    el.dog.style.filter = 'brightness(' + light.toFixed(3) + ')';
+  (function renderStage() {
+    var pill = $('#heroPill');
+    if (pill) pill.textContent = STAGE.pill;
 
-    /* the chip and the decor both follow the sky, not the raw threshold */
-    shownZone = t > 0.5 ? b : a;
-    if (shownZone !== lastZone || force) {
-      lastZone = shownZone;
-      el.zone.textContent = shownZone.name;
-      document.querySelector('meta[name=theme-color]').setAttribute('content', top);
+    var bar = $('#stagebar');
+    if (bar && STAGE.banner) {
+      $('#stagebarText').textContent = STAGE.banner;
+      bar.classList.toggle('is-prelaunch', C.stage === 'prelaunch');
+      bar.hidden = false;
     }
+  })();
 
-    /* HUD — the dog is as long as the depth at the bottom edge of the view */
-    var len = depthOf(vh);
-    el.len.textContent = D.fmt(len);
-    el.cmp.textContent = D.comparison(len);
-
-    var heroFade = Math.max(0, 1 - v / (vh * 0.5));
-    el.hero.style.opacity = heroFade;
-    el.hero.style.visibility = heroFade <= 0.01 ? 'hidden' : 'visible';
-
-    updateDecor();
-    updateRuler();
-    checkMilestones(len);
-  }
-
-  function requestRender() {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(function () { queued = false; readScroll(); render(false); });
-  }
-
-  /* ── Sound (synthesised, off until asked for) ───────────────────────────── */
-  var ctx = null, soundOn = false;
-
-  function audio() {
-    if (!ctx) {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      ctx = new AC();
-    }
-    if (ctx.state === 'suspended') ctx.resume();
-    return ctx;
-  }
-
-  function bark() {
-    var c = soundOn && audio(); if (!c) return;
-    var t = c.currentTime;
-    var o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(440, t);
-    o.frequency.exponentialRampToValueAtTime(150, t + 0.16);
-    f.type = 'bandpass'; f.frequency.setValueAtTime(900, t); f.Q.value = 1.4;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.22, t + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-    o.connect(f); f.connect(g); g.connect(c.destination);
-    o.start(t); o.stop(t + 0.22);
-  }
-
-  function ding() {
-    var c = soundOn && audio(); if (!c) return;
-    [784, 1175].forEach(function (hz, k) {
-      var t = c.currentTime + k * 0.09;
-      var o = c.createOscillator(), g = c.createGain();
-      o.type = 'sine'; o.frequency.setValueAtTime(hz, t);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.14, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
-      o.connect(g); g.connect(c.destination);
-      o.start(t); o.stop(t + 0.34);
-    });
-  }
-
-  /* ── Auto-stretch ───────────────────────────────────────────────────────── */
-  var stretching = false, stretchV = 0, stretchRAF = 0, stretchUntil = 0;
-
-  function stretchTick() {
-    if (!stretching && performance.now() > stretchUntil) {
-      stretchV *= 0.9;
-      if (stretchV < 1) { stretchRAF = 0; return; }
-    } else {
-      stretchV = Math.min(stretchV * 1.055 + 6, 220);
-    }
-    window.scrollBy(0, stretchV);
-    requestRender();
-    stretchRAF = requestAnimationFrame(stretchTick);
-  }
-
-  function startStretch(ms) {
-    stretchUntil = ms ? performance.now() + ms : 0;
-    stretching = !ms;
-    if (stretchV < 8) stretchV = 8;
-    if (!stretchRAF) stretchRAF = requestAnimationFrame(stretchTick);
-    award('turbo', deed('turbo').name, deed('turbo').note);
-  }
-  function stopStretch() { stretching = false; }
-  function deed(id) {
-    for (var i = 0; i < D.DEEDS.length; i++) if (D.DEEDS[i].id === id) return D.DEEDS[i];
-    return { name: '', note: '' };
-  }
-
-  /* ── Wiring ─────────────────────────────────────────────────────────────── */
-  window.addEventListener('scroll', requestRender, { passive: true });
-  window.addEventListener('resize', measure);
-  window.addEventListener('orientationchange', measure);
-
-  var stretchBtn = document.getElementById('turbo');
-  ['pointerdown'].forEach(function (ev) {
-    stretchBtn.addEventListener(ev, function (e) {
-      e.preventDefault();
-      stretchBtn.classList.add('pressing');
-      startStretch(0);
-    });
+  /* ── Links ──────────────────────────────────────────────────────────────── */
+  ['buyTop', 'buyHero', 'buyFoot'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.href = C.token.pumpUrl;
   });
-  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
-    stretchBtn.addEventListener(ev, function () {
-      stretchBtn.classList.remove('pressing');
-      stopStretch();
+  var xl = $('#xLink'); if (xl) xl.href = C.token.twitterUrl;
+  $('#year').textContent = new Date().getFullYear();
+
+  /* contract address + copy */
+  var caBtn = $('#caBtn'), caText = $('#caText');
+  var addr = (C.token.address || '').trim();
+  if (addr) {
+    caText.textContent = addr.slice(0, 4) + '…' + addr.slice(-4);
+    caBtn.addEventListener('click', function () {
+      navigator.clipboard && navigator.clipboard.writeText(addr).then(
+        function () { toast('Contract address copied'); },
+        function () { toast('Copy failed'); }
+      );
     });
+  } else {
+    caText.textContent = 'CA soon';
+    caBtn.addEventListener('click', function () { toast('Contract address not set yet'); });
+  }
+
+  var toastEl = $('#toast'), toastT;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2200);
+  }
+
+  /* ── Treasury figures ───────────────────────────────────────────────────── */
+  var T = C.treasury;
+  var TREASURY_FMT = {
+    valueUsd: usd, realisedPnlUsd: usd, feesRoutedUsd: usd, boughtBackUsd: usd,
+    burnedTokens: count, burnedPctSupply: function (n) {
+      return (n === null || n === undefined) ? DASH : n.toFixed(1) + '%';
+    }
+  };
+  $$('[data-treasury]').forEach(function (el) {
+    var k = el.getAttribute('data-treasury');
+    el.textContent = (TREASURY_FMT[k] || String)(T[k]);
   });
 
-  document.getElementById('tailBtn').addEventListener('click', function () {
-    startStretch(2600);
+  var burnBar = $('#burnBar');
+  if (T.burnedPctSupply) {
     setTimeout(function () {
-      var d = deed('tail');
-      if (!has('tail')) award('tail', d.name, d.note);
-      else {
-        toastQueue.push({ name: 'Still no tail', note: 'He continues. That is the whole thing.' });
-        drainToasts();
-      }
-    }, 3200);
-  });
-
-  document.getElementById('topBtn').addEventListener('click', backToHead);
-  document.getElementById('brandLink').addEventListener('click', function (e) {
-    e.preventDefault(); backToHead();
-  });
-
-  function backToHead() {
-    stopStretch();
-    stretchV = 0;
-    goTo(0);
-    var d = deed('home');
-    award('home', d.name, d.note);
-    bark();
+      burnBar.style.width = Math.max(0, Math.min(100, T.burnedPctSupply)) + '%';
+    }, 400);
+  }
+  if (T.lastBurnTx) {
+    var bt = $('#burnTx');
+    bt.href = 'https://solscan.io/tx/' + T.lastBurnTx;
+    bt.hidden = false;
   }
 
-  var soundBtn = document.getElementById('soundBtn');
-  soundBtn.addEventListener('click', function () {
-    soundOn = !soundOn;
-    soundBtn.setAttribute('aria-pressed', String(soundOn));
-    if (soundOn) {
-      audio();
-      bark();
-      var d = deed('sound');
-      award('sound', d.name, d.note);
+  /* ── Flywheel ───────────────────────────────────────────────────────────── */
+  var stepsEl = $('#steps'), nodesEl = $('#wheelNodes');
+  C.flywheel.forEach(function (s, i) {
+    var li = document.createElement('li');
+    li.className = 'step';
+    li.innerHTML = '<div class="step-k">' + esc(s.k) + '</div>' +
+      '<div><h3>' + esc(s.title) + '</h3><p>' + esc(s.body) + '</p></div>';
+    stepsEl.appendChild(li);
+
+    /* place the node on the circle, starting at 12 o'clock */
+    var a = (i / C.flywheel.length) * Math.PI * 2 - Math.PI / 2;
+    var n = document.createElement('div');
+    n.className = 'wnode';
+    n.style.left = (50 + Math.cos(a) * 40) + '%';
+    n.style.top = (50 + Math.sin(a) * 40) + '%';
+    n.textContent = s.k;
+    nodesEl.appendChild(n);
+  });
+
+  var stepEls = $$('.step', stepsEl), nodeEls = $$('.wnode', nodesEl);
+
+  /* highlight whichever step is nearest the middle of the viewport */
+  function syncWheel() {
+    var mid = window.innerHeight * 0.45, best = -1, bestD = Infinity;
+    stepEls.forEach(function (el, i) {
+      var r = el.getBoundingClientRect();
+      var d = Math.abs(r.top + r.height / 2 - mid);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    stepEls.forEach(function (el, i) { el.classList.toggle('on', i === best); });
+    nodeEls.forEach(function (el, i) { el.classList.toggle('on', i === best); });
+  }
+
+  /* ── Capability cards ───────────────────────────────────────────────────── */
+  var ICONS = {
+    signal:  '<path d="M3 17l5-6 4 4 4-7 5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+    cluster: '<circle cx="6" cy="7" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="18" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8.5l7.5 .5M7.5 9.5l3.5 6M16.5 10.5l-3 5" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+    wave:    '<path d="M2 12c3-6 5 6 8 0s5 6 8 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+    shield:  '<path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2.2 2.2L15.5 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+    chart:   '<path d="M4 20V9M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+    bolt:    '<path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
+  };
+  var capsEl = $('#caps');
+  C.capabilities.forEach(function (c) {
+    var d = document.createElement('article');
+    d.className = 'card reveal';
+    d.innerHTML = '<div class="card-ico"><svg viewBox="0 0 24 24" aria-hidden="true">' +
+      (ICONS[c.icon] || ICONS.signal) + '</svg></div>' +
+      '<h3>' + esc(c.title) + '</h3><p>' + esc(c.body) + '</p>';
+    capsEl.appendChild(d);
+  });
+
+  /* ── Callouts ───────────────────────────────────────────────────────────── */
+  var listEl = $('#calloutList'), termState = $('#termState');
+  if (C.callouts.sample) {
+    termState.textContent = 'sample data';
+    termState.classList.add('sample');
+  }
+  C.callouts.items.forEach(function (c) {
+    var row = document.createElement('div');
+    row.className = 'callout';
+    row.innerHTML =
+      '<span class="co-tick">$' + esc(c.ticker) + '</span>' +
+      '<span class="co-note">' + esc(c.note) + '</span>' +
+      '<span class="co-at">' + esc(c.at) + '</span>' +
+      '<span class="co-status ' + esc(c.status) + '">' + esc(c.status) + '</span>';
+    listEl.appendChild(row);
+  });
+
+  /* typed prompt line */
+  var typeTarget = $('#termType');
+  var TYPED = C.callouts.sample
+    ? 'pumpxbt callouts --tail   # awaiting live feed'
+    : 'pumpxbt callouts --tail';
+  if (reduce) {
+    typeTarget.textContent = TYPED;
+  } else {
+    var ti = 0;
+    (function type() {
+      typeTarget.textContent = TYPED.slice(0, ti++);
+      if (ti <= TYPED.length) setTimeout(type, 34);
+    })();
+  }
+
+  /* ── Roadmap ────────────────────────────────────────────────────────────── */
+  var roadEl = $('#road');
+  C.roadmap.forEach(function (r) {
+    var d = document.createElement('article');
+    d.className = 'rd reveal ' + r.state;
+    d.innerHTML = '<div class="rd-phase">' +
+      (r.state === 'live' ? '<span class="live-dot"></span>' : '') + esc(r.phase) + '</div>' +
+      '<h3>' + esc(r.title) + '</h3><p>' + esc(r.body) + '</p>';
+    roadEl.appendChild(d);
+  });
+
+  /* ── FAQ ────────────────────────────────────────────────────────────────── */
+  var faqEl = $('#faqList');
+  C.faq.forEach(function (f) {
+    var d = document.createElement('details');
+    d.className = 'qa';
+    d.innerHTML = '<summary>' + esc(f.q) + '</summary><p>' + esc(f.a) + '</p>';
+    faqEl.appendChild(d);
+  });
+
+  /* ── Ticker ─────────────────────────────────────────────────────────────── */
+  function renderTicker(m) {
+    var items = [
+      ['PUMPXBT', m ? price(m.price) : DASH, ''],
+      ['24H', m ? pct(m.change) : DASH, m && m.change >= 0 ? 'up' : (m ? 'down' : '')],
+      ['MCAP', m ? usd(m.mcap) : DASH, ''],
+      ['LIQ', m ? usd(m.liq) : DASH, ''],
+      ['VOL 24H', m ? usd(m.vol) : DASH, ''],
+      ['TREASURY', usd(T.valueUsd), ''],
+      ['BURNED', count(T.burnedTokens), ''],
+      ['TERMINAL', 'FREE', 'up'],
+      ['AGENT', STAGE.ticker, C.stage === 'live' ? 'up' : '']
+    ];
+    var html = items.map(function (i) {
+      return '<span>' + i[0] + ' <b class="' + i[2] + '">' + i[1] + '</b></span>';
+    }).join('');
+    /* duplicated so the -50% marquee loops seamlessly */
+    $('#tickerTrack').innerHTML = html + html;
+  }
+  renderTicker(null);
+
+  /* ── Live market data ───────────────────────────────────────────────────
+   * Dexscreener's public token endpoint, client-side. If there is no address
+   * configured, or the request fails, every field stays as an em dash and the
+   * note under the hero stats says why. */
+  function setField(name, text, dir) {
+    $$('[data-field="' + name + '"]').forEach(function (el) {
+      el.textContent = text;
+      el.classList.remove('up', 'down');
+      if (dir) el.classList.add(dir);
+    });
+  }
+
+  function loadMarket() {
+    if (!C.liveData || !addr) return;
+    $('#feedNote').textContent = 'Loading live market data…';
+
+    fetch('https://api.dexscreener.com/latest/dex/tokens/' + encodeURIComponent(addr))
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
+      .then(function (j) {
+        var pairs = (j && j.pairs) || [];
+        if (!pairs.length) throw new Error('no pairs');
+        /* deepest liquidity pool is the reference market */
+        pairs.sort(function (a, b) {
+          return ((b.liquidity && b.liquidity.usd) || 0) - ((a.liquidity && a.liquidity.usd) || 0);
+        });
+        var p = pairs[0];
+        var m = {
+          price: parseFloat(p.priceUsd),
+          change: p.priceChange ? parseFloat(p.priceChange.h24) : null,
+          mcap: p.marketCap || p.fdv || null,
+          liq: p.liquidity ? p.liquidity.usd : null,
+          vol: p.volume ? p.volume.h24 : null
+        };
+        var dir = m.change >= 0 ? 'up' : 'down';
+        setField('price', price(m.price));
+        setField('change', pct(m.change), dir);
+        setField('changeChip', pct(m.change), dir);
+        setField('mcap', usd(m.mcap));
+        setField('liq', usd(m.liq));
+        renderTicker(m);
+
+        $('#feedNote').textContent = 'Live via Dexscreener · updated ' +
+          new Date().toLocaleTimeString();
+      })
+      .catch(function () {
+        $('#feedNote').textContent = 'Live market data unavailable right now.';
+      });
+  }
+
+  loadMarket();
+  if (C.liveData && addr) setInterval(loadMarket, 60000);
+
+  /* ── Ledger feed ────────────────────────────────────────────────────────
+   * Pulls real numbers from the bot's read-only API when one is configured.
+   * Anything the API does not supply keeps its em dash — a missing feed must
+   * never look like a zero, and a paper run must never look like a live one. */
+  function loadLedger() {
+    var base = (C.ledgerApi || '').replace(/\/$/, '');
+    if (!base) return;
+
+    fetch(base + '/api/state')
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
+      .then(function (s) {
+        var p = s.portfolio || {};
+        var totals = s.totals || {};
+
+        var live = {
+          valueUsd: s.treasury && Number.isFinite(s.treasury.sol)
+            ? null                       // SOL needs a price to value; left to config
+            : null,
+          realisedPnlUsd: p.realisedUsd,
+          boughtBackUsd: totals.buyback ? Math.abs(totals.buyback) : null,
+          burnedTokens: totals.burn ? Math.abs(totals.burn) : null
+        };
+
+        $$('[data-treasury]').forEach(function (el) {
+          var k = el.getAttribute('data-treasury');
+          var v = live[k];
+          if (v === null || v === undefined || !isFinite(v)) return;
+          el.textContent = (TREASURY_FMT[k] || String)(v);
+        });
+
+        /* Real callouts replace the sample rows. */
+        var ours = (s.callouts && s.callouts.ours) || [];
+        if (ours.length) {
+          listEl.innerHTML = '';
+          ours.slice(0, 12).forEach(function (c) {
+            var row = document.createElement('div');
+            row.className = 'callout';
+            var when = new Date(c.created_at);
+            row.innerHTML =
+              '<span class="co-tick">' + esc(shortMint(c.mint)) + '</span>' +
+              '<span class="co-note">' + esc(c.text) + '</span>' +
+              '<span class="co-at">' + esc(when.toLocaleDateString()) + '</span>' +
+              '<span class="co-status ' + (c.status === 'posted' ? 'win' : 'open') + '">' +
+                esc(c.status) + '</span>';
+            listEl.appendChild(row);
+          });
+        }
+
+        /* The API is the authority on whether this is simulated. */
+        if (s.paper) {
+          termState.textContent = 'paper mode';
+          termState.classList.add('sample');
+        } else {
+          termState.textContent = 'live';
+          termState.classList.remove('sample');
+        }
+      })
+      .catch(function () { /* keep configured values; the feed is optional */ });
+  }
+
+  function shortMint(m) {
+    return m && m.length > 10 ? m.slice(0, 4) + '…' + m.slice(-4) : (m || '—');
+  }
+
+  loadLedger();
+  if (C.ledgerApi) setInterval(loadLedger, 60000);
+
+  /* ── Hero sparkline ─────────────────────────────────────────────────────
+   * Decorative only — a deterministic drifting curve, never presented as
+   * price history. Redrawn once; no data is implied. */
+  (function spark() {
+    var W = 600, H = 140, N = 60, seed = 7;
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    var pts = [], y = H * 0.72;
+    for (var i = 0; i <= N; i++) {
+      y += (rnd() - 0.42) * 11;
+      y = Math.max(16, Math.min(H - 10, y - i * 0.28));
+      pts.push([(i / N) * W, y]);
     }
-  });
+    var d = pts.map(function (p, i) {
+      return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+    }).join(' ');
+    var line = $('#sparkLine'), area = $('#sparkArea');
+    if (line) line.setAttribute('d', d);
+    if (area) area.setAttribute('d', d + ' L' + W + ' ' + H + ' L0 ' + H + ' Z');
+  })();
 
-  document.getElementById('shareBtn').addEventListener('click', function () {
-    var text = 'My LONGDOG reached ' + D.fmt(save.best) + '. He is still going.';
-    var url = location.href.split('#')[0] + '#' + Math.round(save.best);
-    var d = deed('share');
-    var done = function (msg) {
-      toastQueue.push({ name: msg, note: text });
-      drainToasts();
-      award('share', d.name, d.note);
-    };
-    if (navigator.share) {
-      navigator.share({ title: 'LONGDOG', text: text, url: url }).then(function () {
-        award('share', d.name, d.note);
-      }, function () {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text + ' ' + url).then(function () {
-        done('Copied to clipboard');
-      }, function () { done('Could not copy'); });
-    } else {
-      done('Tell them yourself');
-    }
-  });
-
-  /* panel */
-  var panelOpen = false;
-  function togglePanel(open) {
-    panelOpen = open;
-    el.panel.hidden = !open;
-    el.scrim.hidden = !open;
-    if (open) { renderBadges(); el.panel.querySelector('.panel-close').focus(); }
+  /* ── Scroll behaviour ───────────────────────────────────────────────────── */
+  var nav = $('#nav');
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      nav.classList.toggle('stuck', window.pageYOffset > 8);
+      syncWheel();
+      ticking = false;
+    });
   }
-  document.getElementById('badgesBtn').addEventListener('click', function () { togglePanel(!panelOpen); });
-  document.getElementById('panelClose').addEventListener('click', function () { togglePanel(false); });
-  el.scrim.addEventListener('click', function () { togglePanel(false); });
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', syncWheel);
 
-  /* nose boop */
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'ldNose') {
-      el.front.classList.remove('booped');
-      void el.front.offsetWidth;
-      el.front.classList.add('booped');
-      bark();
-      var d = deed('boop');
-      award('boop', d.name, d.note);
-    }
-  });
-
-  /* eyes follow the pointer */
-  if (!reduce && matchMedia('(pointer: fine)').matches) {
-    var pl = document.getElementById('ldPupilL'), pr = document.getElementById('ldPupilR');
-    window.addEventListener('pointermove', function (e) {
-      if (!pl || !pr) return;
-      var dx = Math.max(-1, Math.min(1, (e.clientX - vw / 2) / (vw / 2))) * 6;
-      var dy = Math.max(-1, Math.min(1, (e.clientY - vh * 0.25) / (vh / 2))) * 4;
-      var t = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
-      pl.style.transform = t; pr.style.transform = t;
-    }, { passive: true });
+  /* reveal on enter */
+  if ('IntersectionObserver' in window && !reduce) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    $$('.reveal').forEach(function (el, i) {
+      el.style.transitionDelay = Math.min(i % 4, 3) * 60 + 'ms';
+      io.observe(el);
+    });
+  } else {
+    $$('.reveal').forEach(function (el) { el.classList.add('in'); });
   }
 
-  /* keyboard */
-  window.addEventListener('keydown', function (e) {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var k = e.key.toLowerCase();
-    if (k === 'escape' && panelOpen) { togglePanel(false); return; }
-    if (k === 'm') { e.preventDefault(); togglePanel(!panelOpen); }
-    else if (k === 's') { e.preventDefault(); soundBtn.click(); }
-    else if (k === 't' && !e.repeat) { e.preventDefault(); startStretch(0); }
-    else if (k === 'home') { e.preventDefault(); backToHead(); }
+  /* mobile menu */
+  var burger = $('#burger'), links = $('.nav-links');
+  burger.addEventListener('click', function () {
+    var open = links.classList.toggle('open');
+    burger.setAttribute('aria-expanded', String(open));
   });
-  window.addEventListener('keyup', function (e) {
-    if (e.key.toLowerCase() === 't') stopStretch();
+  $$('.nav-links a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      links.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+    });
   });
 
-  /* ── Deep links ─────────────────────────────────────────────────────────
-   * "#1200" drops you in at 1200 metres of dog, so a shared link arrives at
-   * the length it is bragging about. */
-  function atLength(m) { goTo(Math.max(0, D.scrollAt(m) + ORIGIN - vh)); }
-
-  function fromHash() {
-    var m = parseFloat((location.hash || '').replace('#', ''));
-    if (isFinite(m) && m > 0) { atLength(m); return true; }
-    return false;
-  }
-  window.addEventListener('hashchange', fromHash);
-
-  /* ── Go ─────────────────────────────────────────────────────────────────── */
-  if (window.pageYOffset > 0) window.scrollTo(0, 0);
-  renderBadges();
-  measure();
-  fromHash();
-  requestRender();
-
-  window.LONGDOG = { goTo: goTo, at: atLength, get v() { return v; } };
+  syncWheel();
 })();

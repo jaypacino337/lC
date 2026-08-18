@@ -24,13 +24,13 @@ jobs:
       - uses: actions/checkout@v4
 
       # Both sites are plain static files — no build. Assemble the publish dir:
-      # LONGDOG at /, PumpXBT at /pumpxbt/. The bot is source, not a site.
+      # PumpXBT at /, LONGDOG at /longdog/. The bot is source, not a site.
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp index.html favicon.svg _site/
-          cp -r css js _site/
-          cp -r pumpxbt _site/pumpxbt
+          cp index.html terminal.html _site/
+          cp -r css js assets _site/
+          cp -r longdog _site/longdog
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

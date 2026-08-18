@@ -3,107 +3,310 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>LONGDOG — he is a long dog</title>
-<meta name="description" content="He is a long dog. Scroll to make him longer. There is no end.">
-<meta name="theme-color" content="#bfe6ff">
-<meta property="og:title" content="LONGDOG">
-<meta property="og:description" content="He is a long dog. Scroll to make him longer. There is no end.">
+<title>PumpXBT — the intelligence layer for pump.fun</title>
+<meta name="description" content="An autonomous agent for pump.fun. Trades a creator-fee-funded treasury, publishes callouts in-app, and routes rewards and realised profit into buyback and burn.">
+<meta name="theme-color" content="#07090a">
+<meta property="og:title" content="PumpXBT — the intelligence layer for pump.fun">
+<meta property="og:description" content="Autonomous agent. Creator-fee treasury. Public callouts. Buyback and burn.">
 <meta property="og:type" content="website">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- EDIT BEFORE LAUNCH: og:url and og:image MUST be absolute URLs on your real
+     domain. Social crawlers do not run JS and cannot resolve relative paths —
+     leaving these wrong means link previews on X/Telegram/Discord show nothing. -->
+<meta property="og:url" content="https://pumpxbt.fun/">
+<meta property="og:image" content="https://pumpxbt.fun/assets/banner.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pumpxbt.fun/assets/banner.png">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<!-- ── world layers (all fixed, driven by the virtual scroll offset) ───────── -->
-<div class="sky" id="sky" aria-hidden="true"></div>
-<div class="decor" id="decor" aria-hidden="true"></div>
-
-<div class="dog" id="dog" aria-hidden="true">
-  <div class="dog-body" id="dogBody"></div>
-  <div class="dog-front" id="dogFront"></div>
+<!-- Stage banner. Rendered from PXBT.stage; hidden entirely once stage is live. -->
+<div class="stagebar" id="stagebar" hidden>
+  <div class="wrap stagebar-inner">
+    <span class="stagebar-dot" aria-hidden="true"></span>
+    <p id="stagebarText"></p>
+  </div>
 </div>
 
-<div class="vignette" aria-hidden="true"></div>
-<div class="grain" aria-hidden="true"></div>
+<div class="grid-bg" aria-hidden="true"></div>
+<div class="glow glow-a" aria-hidden="true"></div>
+<div class="glow glow-b" aria-hidden="true"></div>
 
-<!-- ── hero ────────────────────────────────────────────────────────────────── -->
-<div class="hero" id="hero">
-  <h1 class="hero-title">LONGDOG</h1>
-  <p class="hero-sub">He is a long dog.<br>Scroll to make him longer.</p>
-  <div class="hero-cue" aria-hidden="true"><span></span></div>
+<!-- ── ticker ──────────────────────────────────────────────────────────── -->
+<div class="ticker" id="ticker" aria-hidden="true">
+  <div class="ticker-track" id="tickerTrack"></div>
 </div>
 
-<!-- ── HUD ─────────────────────────────────────────────────────────────────── -->
-<header class="hud hud-top">
-  <a class="brand" href="#top" id="brandLink">LONG<span>DOG</span></a>
-  <div class="readout" id="readout">
-    <output class="readout-len" id="len" aria-live="off">0 m</output>
-    <div class="readout-cmp" id="cmp">a perfectly normal dog</div>
+<!-- ── nav ─────────────────────────────────────────────────────────────── -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="logo" href="#top">
+      <img src="assets/logo.png" alt="" class="logo-img" width="34" height="34"
+           onerror="this.replaceWith(Object.assign(new Image(34,34),{src:'assets/mark.svg',className:'logo-img',alt:''}))">
+      <span class="logo-type">Pump<b>XBT</b></span>
+    </a>
+
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#flywheel">Flywheel</a>
+      <a href="#intel">Intelligence</a>
+      <a href="#callouts">Callouts</a>
+      <a href="#burn">Buyback</a>
+      <a href="terminal.html" class="nav-terminal">Terminal</a>
+    </nav>
+
+    <div class="nav-cta">
+      <button class="ca" id="caBtn" title="Copy contract address">
+        <span class="ca-dot" aria-hidden="true"></span>
+        <code id="caText">CA soon</code>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3h-7A2.5 2.5 0 0 0 3 5.5v7A2.5 2.5 0 0 0 5.5 15" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <a class="btn btn-primary" id="buyTop" href="#" target="_blank" rel="noopener">
+        <span class="lbl-full">Buy on pump.fun</span><span class="lbl-short">Buy</span>
+      </a>
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+    </div>
   </div>
 </header>
 
-<aside class="ruler" id="ruler" aria-hidden="true"></aside>
+<main id="top">
 
-<footer class="hud hud-bottom">
-  <div class="zone" id="zone"><i></i><span>The Backyard</span></div>
-  <nav class="tools" aria-label="Controls">
-    <button class="btn" id="turbo" title="Hold to stretch fast (T)" aria-label="Hold to stretch fast">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v13m0 0 5-5m-5 5-5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-      <em>Stretch</em>
-    </button>
-    <button class="btn" id="tailBtn" title="Look for the tail" aria-label="Look for the tail">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19c6 0 9-2 9-7 0-3 2-5 4-5s3 1.6 3 3.2c0 1.6-1.2 2.8-2.6 2.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-      <em>Tail?</em>
-    </button>
-    <button class="btn" id="badgesBtn" aria-haspopup="dialog" title="Milestones (M)" aria-label="Milestones">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.5 9l6 .6-4.5 4 1.3 5.9L12 16.4 6.7 19.5 8 13.6l-4.5-4 6-.6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-      <em>Milestones</em>
-      <b class="tally" id="tally">0</b>
-    </button>
-    <button class="btn" id="soundBtn" aria-pressed="false" title="Sound (S)" aria-label="Toggle sound">
-      <svg viewBox="0 0 24 24" aria-hidden="true" class="i-off"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" fill="currentColor"/><path d="M16 9.5l4.5 5m0-5-4.5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <svg viewBox="0 0 24 24" aria-hidden="true" class="i-on"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" fill="currentColor"/><path d="M15.8 9a4.4 4.4 0 0 1 0 6M18.4 6.4a8 8 0 0 1 0 11.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <em>Sound</em>
-    </button>
-    <button class="btn" id="shareBtn" title="Share your dog" aria-label="Share">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L8 8m4-4 4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-      <em>Share</em>
-    </button>
-    <button class="btn btn-top" id="topBtn" title="Back to the head (Home)" aria-label="Back to the head">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V7m0 0-5 5m5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-      <em>Head</em>
-    </button>
-  </nav>
-</footer>
+<!-- ── hero ────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <div class="pill reveal"><span class="live-dot"></span> <span id="heroPill">Autonomous agent</span></div>
 
-<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+      <h1 class="reveal">Pump<span class="accent">XBT</span></h1>
 
-<!-- ── milestones panel ────────────────────────────────────────────────────── -->
-<div class="scrim" id="scrim" hidden></div>
-<section class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" hidden>
-  <header class="panel-head">
-    <h2 id="panelTitle">Milestones</h2>
-    <button class="panel-close" id="panelClose" aria-label="Close">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-    </button>
-  </header>
-  <p class="panel-best">Longest dog so far: <strong id="best">0 m</strong></p>
-  <ol class="badges" id="badges"></ol>
-  <p class="panel-foot">The tail has never been observed. Reports are unverified.</p>
+      <p class="lede reveal">pump.fun's agentic layer.</p>
+
+      <p class="sub reveal">
+        An autonomous intelligence agent living on pump.fun. It reads every launch, scores
+        every caller by their real record, and trades its own creator-fee treasury — in
+        public, with receipts. Everything it earns burns supply. Ask it anything on X.
+      </p>
+
+      <div class="hero-btns reveal">
+        <a class="btn btn-primary btn-lg" id="buyHero" href="#" target="_blank" rel="noopener">
+          Buy on pump.fun
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn-ghost btn-lg" href="terminal.html">Open the terminal</a>
+      </div>
+
+      <dl class="hero-stats reveal" id="heroStats">
+        <div class="hstat"><dt>Price</dt><dd data-field="price">—</dd></div>
+        <div class="hstat"><dt>24h</dt><dd data-field="change">—</dd></div>
+        <div class="hstat"><dt>Market cap</dt><dd data-field="mcap">—</dd></div>
+        <div class="hstat"><dt>Liquidity</dt><dd data-field="liq">—</dd></div>
+      </dl>
+      <p class="feed-note" id="feedNote">Awaiting contract address — market data goes live automatically once it is set.</p>
+    </div>
+
+    <div class="hero-art reveal">
+      <div class="art-frame">
+        <div class="art-head">
+          <span class="art-tag"><span class="live-dot"></span> PUMPXBT</span>
+          <span class="art-meta" data-field="changeChip">—</span>
+        </div>
+        <img src="assets/banner.png" alt="PumpXBT" class="art-img"
+             onerror="this.closest('.art-frame').classList.add('no-art');this.remove()">
+        <div class="art-fallback">
+          <img src="assets/mark.svg" alt="" width="120" height="120">
+          <p>Drop <code>logo.png</code> and <code>banner.png</code> into <code>assets/</code></p>
+        </div>
+        <svg class="art-spark" viewBox="0 0 600 140" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--green)" stop-opacity=".38"/>
+              <stop offset="1" stop-color="var(--green)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="sparkArea" fill="url(#sparkFill)" d=""/>
+          <path id="sparkLine" fill="none" stroke="var(--green)" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" d=""/>
+        </svg>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- the page itself is just a tall runway; the scroll position is virtualised -->
-<div class="runway" id="runway"></div>
+<!-- ── stat band ───────────────────────────────────────────────────────── -->
+<section class="band">
+  <div class="wrap band-grid">
+    <div class="bstat reveal"><span class="blabel">Treasury value</span><span class="bval" data-treasury="valueUsd">—</span><span class="bnote">Funded by creator fees</span></div>
+    <div class="bstat reveal"><span class="blabel">Realised profit</span><span class="bval" data-treasury="realisedPnlUsd">—</span><span class="bnote">Closed agent positions</span></div>
+    <div class="bstat reveal"><span class="blabel">Bought back</span><span class="bval" data-treasury="boughtBackUsd">—</span><span class="bnote">Open-market PUMPXBT</span></div>
+    <div class="bstat reveal"><span class="blabel">Burned</span><span class="bval" data-treasury="burnedTokens">—</span><span class="bnote">Permanently removed</span></div>
+  </div>
+</section>
 
-<p class="sr-only">
-  LONGDOG is a scrolling toy. A dachshund's head sits at the top of the page and his body
-  continues downward for as long as you keep scrolling. Use the arrow keys, Page Down, or the
-  Stretch button to lengthen him. Press M for the milestone list, S for sound, Home to return
-  to his head.
-</p>
+<!-- ── flywheel ────────────────────────────────────────────────────────── -->
+<section class="sec" id="flywheel">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <span class="eyebrow">The loop</span>
+      <h2>Fees in. Burn out.</h2>
+      <p>PumpXBT is a closed loop. Creator fees fund the treasury, the agent trades it in public,
+         and everything it earns goes back into buying and burning supply.</p>
+    </header>
 
-<script src="js/data.js"></script>
-<script src="js/dog.js"></script>
+    <div class="wheel-layout">
+      <div class="wheel reveal" aria-hidden="true">
+        <svg viewBox="0 0 320 320">
+          <circle cx="160" cy="160" r="128" class="wheel-track"/>
+          <circle cx="160" cy="160" r="128" class="wheel-dash"/>
+          <circle cx="160" cy="160" r="96" class="wheel-inner"/>
+          <g class="wheel-core">
+            <text x="160" y="150" class="wheel-t1">BUYBACK</text>
+            <text x="160" y="182" class="wheel-t2">&amp; BURN</text>
+          </g>
+        </svg>
+        <div class="wheel-nodes" id="wheelNodes"></div>
+      </div>
+
+      <ol class="steps" id="steps"></ol>
+    </div>
+  </div>
+</section>
+
+<!-- ── intelligence ────────────────────────────────────────────────────── -->
+<section class="sec sec-alt" id="intel">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <span class="eyebrow">Intelligence layer</span>
+      <h2>It reads the chain, not the timeline.</h2>
+      <p>A proprietary signal stack over live pump.fun state. It knows the meta, knows the
+         wallets, knows when the tape is worth trading — and sits out when it isn't.</p>
+    </header>
+    <div class="cards" id="caps"></div>
+  </div>
+</section>
+
+<!-- ── callouts ────────────────────────────────────────────────────────── -->
+<section class="sec" id="callouts">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <span class="eyebrow">Public record</span>
+      <h2>Every call, timestamped. Every result, kept.</h2>
+      <p>Callouts publish in the pump.fun app before the outcome is known. The terminal keeps
+         the score — wins, losses, all of it. The record is the product.</p>
+    </header>
+
+    <div class="term reveal">
+      <div class="term-bar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="term-title">pumpxbt — callouts</span>
+        <span class="term-state" id="termState">live</span>
+      </div>
+      <div class="term-body">
+        <p class="term-line"><span class="prompt">$</span> <span id="termType"></span><span class="caret" aria-hidden="true"></span></p>
+        <div id="calloutList" class="callout-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── buyback & burn ──────────────────────────────────────────────────── -->
+<section class="sec sec-alt" id="burn">
+  <div class="wrap burn-grid">
+    <div class="reveal">
+      <span class="eyebrow">Supply</span>
+      <h2>Performance is deflationary.</h2>
+      <p class="sec-p">Callout rewards and realised trading profit are pooled, spent buying
+        PUMPXBT on the open market, and burned. There is no discretionary treasury spend and no
+        team unlock — the only thing the loop does with profit is remove supply.</p>
+
+      <div class="burn-meter">
+        <div class="burn-meter-head">
+          <span>Supply burned</span>
+          <strong data-treasury="burnedPctSupply">—</strong>
+        </div>
+        <div class="burn-bar"><i id="burnBar" style="width:0%"></i></div>
+      </div>
+
+      <a class="btn btn-ghost" id="burnTx" href="#" target="_blank" rel="noopener" hidden>
+        View latest burn transaction
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+
+    <div class="burn-stats reveal">
+      <div class="bigstat"><span>Fees routed to treasury</span><strong data-treasury="feesRoutedUsd">—</strong></div>
+      <div class="bigstat"><span>Total bought back</span><strong data-treasury="boughtBackUsd">—</strong></div>
+      <div class="bigstat"><span>Tokens burned</span><strong data-treasury="burnedTokens">—</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── roadmap ─────────────────────────────────────────────────────────── -->
+<section class="sec" id="roadmap">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <span class="eyebrow">What's next</span>
+      <h2>More coming.</h2>
+      <p>The agent is the first surface. The intelligence behind it becomes a product of its own.</p>
+    </header>
+    <div class="road" id="road"></div>
+  </div>
+</section>
+
+<!-- ── faq ─────────────────────────────────────────────────────────────── -->
+<section class="sec sec-alt" id="faq">
+  <div class="wrap wrap-narrow">
+    <header class="sec-head reveal"><span class="eyebrow">FAQ</span><h2>Questions.</h2></header>
+    <div class="faq" id="faqList"></div>
+  </div>
+</section>
+
+<!-- ── cta ─────────────────────────────────────────────────────────────── -->
+<section class="cta">
+  <div class="wrap cta-inner reveal">
+    <h2>Fees in. Burn out. Receipts on.</h2>
+    <p>The agent is on X — it answers questions, reads the tape, and remembers who it talked to.</p>
+    <div class="hero-btns">
+      <a class="btn btn-primary btn-lg" id="buyFoot" href="#" target="_blank" rel="noopener">Buy on pump.fun</a>
+      <a class="btn btn-ghost btn-lg" id="xLink" href="#" target="_blank" rel="noopener">Talk to it on X</a>
+      <a class="btn btn-ghost btn-lg" href="terminal.html">Open the terminal</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <div class="foot-brand">
+      <span class="logo-type">Pump<b>XBT</b></span>
+      <p>The intelligence layer for pump.fun.</p>
+    </div>
+    <div class="foot-links">
+      <a href="#flywheel">Flywheel</a>
+      <a href="#intel">Intelligence</a>
+      <a href="#callouts">Callouts</a>
+      <a href="#burn">Buyback</a>
+      <a href="#roadmap">Roadmap</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <p class="disclaimer">
+      PUMPXBT is a memecoin and an experimental autonomous agent. Nothing on this page is
+      financial advice, an offer, or a solicitation. Callouts are a public record of the agent's
+      own activity, not a recommendation. Digital assets are highly volatile and you can lose the
+      entire value of your purchase. Do your own research.
+    </p>
+    <p class="copy">© <span id="year"></span> PumpXBT. Not affiliated with pump.fun.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/config.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
