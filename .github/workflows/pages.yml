@@ -1,0 +1,47 @@
+name: Deploy sites to GitHub Pages
+
+on:
+  push:
+    branches: [claude/longdog-site-design-kguow6]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Both sites are plain static files — no build. Assemble the publish dir:
+      # LONGDOG at /, PumpXBT at /pumpxbt/. The bot is source, not a site.
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp index.html favicon.svg _site/
+          cp -r css js _site/
+          cp -r pumpxbt _site/pumpxbt
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
