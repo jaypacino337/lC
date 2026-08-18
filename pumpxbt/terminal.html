@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PumpXBT Terminal</title>
+<meta name="description" content="The PumpXBT terminal — every callout, every trade, every fee claim and burn. Free preview.">
+<meta name="theme-color" content="#0b0e11">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/terminal.css">
+</head>
+<body class="term-page">
+
+<div class="grid-bg" aria-hidden="true"></div>
+
+<header class="tnav">
+  <div class="twrap tnav-inner">
+    <a class="logo" href="index.html">
+      <img src="assets/logo.png" alt="" class="logo-img" width="30" height="30"
+           onerror="this.replaceWith(Object.assign(new Image(30,30),{src:'assets/mark.svg',className:'logo-img',alt:''}))">
+      <span class="logo-type">Pump<b>XBT</b></span>
+    </a>
+    <span class="tnav-title">TERMINAL <em>· FREE PREVIEW</em></span>
+    <span class="tnav-mode" id="modeChip">connecting…</span>
+  </div>
+</header>
+
+<!-- market strip -->
+<div class="tstrip">
+  <div class="twrap tstrip-inner" id="strip">
+    <span class="ts"><b>PUMPXBT</b> <i data-t="price">—</i></span>
+    <span class="ts">24H <i data-t="change">—</i></span>
+    <span class="ts">MCAP <i data-t="mcap">—</i></span>
+    <span class="ts">LIQ <i data-t="liq">—</i></span>
+    <span class="ts">TAPE <i data-t="regime">—</i></span>
+    <span class="ts">PAPER W/R <i data-t="winrate">—</i></span>
+    <span class="ts ts-right" id="updated">—</span>
+  </div>
+</div>
+
+<main class="twrap tmain">
+
+  <!-- summary -->
+  <section class="tgrid tgrid-4">
+    <div class="tcard"><span class="tk">Treasury actions</span><strong id="sumFees">—</strong><span class="tsub">fee claims recorded</span></div>
+    <div class="tcard"><span class="tk">Realised PnL</span><strong id="sumPnl">—</strong><span class="tsub" id="sumPnlNote">paper — simulated</span></div>
+    <div class="tcard"><span class="tk">Bought back</span><strong id="sumBuyback">—</strong><span class="tsub">open-market PUMPXBT</span></div>
+    <div class="tcard"><span class="tk">Burned</span><strong id="sumBurn">—</strong><span class="tsub">permanently removed</span></div>
+  </section>
+
+  <!-- callouts -->
+  <section class="tpanel">
+    <header class="tpanel-bar">
+      <span class="tdot" aria-hidden="true"></span>
+      <h2>callouts</h2>
+      <span class="tpanel-note" id="calloutsNote"></span>
+    </header>
+    <div class="tscroll">
+      <table class="ttable" id="calloutsTable">
+        <thead><tr><th>token</th><th>call</th><th>score</th><th>when</th><th>status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="tempty" id="calloutsEmpty">Awaiting feed. Callouts appear here the moment the agent queues them.</p>
+    </div>
+  </section>
+
+  <!-- trades -->
+  <section class="tpanel">
+    <header class="tpanel-bar">
+      <span class="tdot" aria-hidden="true"></span>
+      <h2>trades</h2>
+      <span class="tpanel-note" id="tradesNote"></span>
+    </header>
+    <div class="tscroll">
+      <table class="ttable" id="tradesTable">
+        <thead><tr><th>token</th><th>kind</th><th>size</th><th>entry</th><th>now / exit</th><th>pnl</th><th>status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="tempty" id="tradesEmpty">Awaiting feed. Every position — open, floored, closed — lands here with its result.</p>
+    </div>
+  </section>
+
+  <!-- treasury ledger -->
+  <section class="tpanel">
+    <header class="tpanel-bar">
+      <span class="tdot" aria-hidden="true"></span>
+      <h2>treasury ledger</h2>
+      <span class="tpanel-note">fee claims · buybacks · burns</span>
+    </header>
+    <div class="tscroll">
+      <table class="ttable" id="ledgerTable">
+        <thead><tr><th>when</th><th>event</th><th>amount</th><th>note</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="tempty" id="ledgerEmpty">Awaiting feed. Fee claims, buybacks and burns are recorded here as they happen.</p>
+    </div>
+  </section>
+
+  <!-- pro teaser -->
+  <section class="tpanel tpanel-locked">
+    <header class="tpanel-bar">
+      <span class="tdot tdot-locked" aria-hidden="true"></span>
+      <h2>pro</h2>
+      <span class="tpanel-note">coming soon</span>
+    </header>
+    <ul class="tlocked">
+      <li><span>live signal scoring</span><b>locked</b></li>
+      <li><span>wallet scanner</span><b>locked</b></li>
+      <li><span>caller leaderboard</span><b>locked</b></li>
+      <li><span>narrative heatmap</span><b>locked</b></li>
+      <li><span>alerts &amp; api</span><b>locked</b></li>
+    </ul>
+  </section>
+
+  <p class="tdisclaimer" id="tdisclaimer">
+    Nothing here is financial advice. While the badge above reads PAPER, every fill is
+    simulated and no figure on this page is a realised return.
+  </p>
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/terminal.js"></script>
+</body>
+</html>

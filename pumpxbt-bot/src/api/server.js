@@ -18,6 +18,8 @@ import { log } from '../log.js';
 import { Store } from '../store/db.js';
 import { Portfolio } from '../exec/portfolio.js';
 import { RpcPool } from '../sources/rpcPool.js';
+import { RegimeTracker } from '../signals/regime.js';
+import { adaptation, ADAPT } from '../signals/adapt.js';
 import { nowMs } from '../util.js';
 
 const startedAt = nowMs();
@@ -68,10 +70,16 @@ export function buildApi({ store = new Store(), rpc = new RpcPool() } = {}) {
       const totals = Object.fromEntries(
         store.ledgerTotals().map(r => [r.kind, r.total])
       );
+      const learn = adaptation(store.closedPositions(ADAPT.lookback));
       return {
         mode: config.mode,
         paper: config.mode === 'paper',
         generatedAt: nowMs(),
+        regime: new RegimeTracker(store.db).current(),
+        learning: {
+          winRate: learn.winRate, sample: learn.sample,
+          sizeMult: learn.sizeMult, pnlUsd: learn.pnlUsd
+        },
         portfolio: summary,
         treasury: await treasury(),
         totals,

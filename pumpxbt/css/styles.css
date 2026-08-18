@@ -8,16 +8,17 @@
 
 /* ── 1. Tokens & reset ───────────────────────────────────────────────────── */
 :root {
-  --green:      #4ade80;
-  --green-hi:   #86efac;
-  --green-deep: #16a34a;
-  --green-glow: rgba(74, 222, 128, .28);
+  /* pump.fun mint on near-black */
+  --green:      #86efac;
+  --green-hi:   #bbf7d0;
+  --green-deep: #22c55e;
+  --green-glow: rgba(134, 239, 172, .26);
 
-  --bg:      #07090a;
-  --surface: #0c1011;
-  --raised:  #11171a;
-  --line:    rgba(255, 255, 255, .085);
-  --line-hi: rgba(74, 222, 128, .28);
+  --bg:      #0b0e11;
+  --surface: #10151a;
+  --raised:  #161c22;
+  --line:    rgba(255, 255, 255, .08);
+  --line-hi: rgba(134, 239, 172, .3);
 
   --text:  #e8f1ec;
   --muted: #8b9a93;
@@ -138,6 +139,8 @@ main, .foot, .nav, .ticker { position: relative; z-index: 1; }
   transition: color .18s;
 }
 .nav-links a:hover { color: var(--text); }
+.nav-links .nav-terminal { color: var(--green); font-family: var(--mono); font-size: 13px; letter-spacing: .04em; }
+.nav-links .nav-terminal::before { content: "▸ "; }
 
 .nav-cta { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .nav-links + .nav-cta { margin-left: 0; }

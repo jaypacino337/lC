@@ -254,6 +254,7 @@
       ['VOL 24H', m ? usd(m.vol) : DASH, ''],
       ['TREASURY', usd(T.valueUsd), ''],
       ['BURNED', count(T.burnedTokens), ''],
+      ['TERMINAL', 'FREE', 'up'],
       ['AGENT', STAGE.ticker, C.stage === 'live' ? 'up' : '']
     ];
     var html = items.map(function (i) {

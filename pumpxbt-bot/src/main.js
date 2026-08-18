@@ -16,7 +16,9 @@ import { Store } from './store/db.js';
 import { PumpFunClient, deriveActivity } from './sources/pumpfun.js';
 import { RpcPool } from './sources/rpcPool.js';
 import { rebuildAllCallerStats, resolveOutcome, SCORING } from './signals/callerScore.js';
-import { evaluate } from './signals/engine.js';
+import { evaluate, THRESHOLDS } from './signals/engine.js';
+import { RegimeTracker } from './signals/regime.js';
+import { adaptation, ADAPT } from './signals/adapt.js';
 import { Portfolio } from './exec/portfolio.js';
 import { PaperBroker } from './exec/paper.js';
 import { queueCallout, alertText } from './callouts/composer.js';
@@ -32,6 +34,10 @@ export class Bot {
     this.alerts = alerts ?? new Alerts();
     this.portfolio = new Portfolio(this.store);
     this.broker = new PaperBroker(this.store);
+    this.regime = new RegimeTracker(this.store.db);
+
+    /* Set each tick: regime + self-adaptation, applied to the trade pipeline. */
+    this.tuning = { thresholdDelta: 0, sizeMult: 1, regime: 'neutral' };
 
     this.priceBook = new Map();   // mint -> last known price
     this.running = false;
@@ -146,7 +152,14 @@ export class Bot {
       existing: this.store.positionForMint(mint)
     };
 
-    const verdict = evaluate(ctx);
+    /* Regime + self-adaptation move the TRADE bar only; callouts keep flowing
+     * in every regime because coverage is the reward business. */
+    const verdict = evaluate(ctx, {
+      thresholds: {
+        trade: Math.min(0.95, Math.max(0.3,
+          THRESHOLDS.trade + this.tuning.thresholdDelta))
+      }
+    });
 
     this.store.recordDecision({
       mint,
@@ -179,7 +192,8 @@ export class Bot {
       const { token, verdict, activity } = c;
       const isTrade = verdict.trade.should;
       const kind = isTrade ? 'trade' : 'probe';
-      const size = this.portfolio.sizeFor(kind, verdict.trade.convictionFrac);
+      let size = this.portfolio.sizeFor(kind, verdict.trade.convictionFrac);
+      if (isTrade) size = Math.max(this.portfolio.econ.probeUsd, size * this.tuning.sizeMult);
 
       const blocked = this.portfolio.canOpen(kind, size);
       if (blocked) { log.debug('open blocked', { mint: token.mint, blocked }); continue; }
@@ -241,6 +255,17 @@ export class Bot {
   async tick() {
     const t0 = nowMs();
     const { newCallouts, newTrades, trades } = await this.ingest();
+
+    /* Read the tape and the bot's own recent record before deciding anything. */
+    const regime = this.regime.observe(trades);
+    const learn = adaptation(this.store.closedPositions(ADAPT.lookback));
+    this.tuning = {
+      regime: regime.regime,
+      thresholdDelta: regime.thresholdDelta + learn.thresholdDelta,
+      sizeMult: regime.sizeMult * learn.sizeMult,
+      learn
+    };
+
     const resolved = await this.resolveMatured();
     const callersUpdated = rebuildAllCallerStats(this.store);
     const candidates = await this.evaluateCandidates(trades);
@@ -253,6 +278,9 @@ export class Bot {
     log.info('tick', {
       n: this.ticks,
       ms: nowMs() - t0,
+      regime: regime.regime,
+      flowRatio: regime.ratio,
+      winRate: learn.winRate,
       newCallouts, newTrades, resolved, callersUpdated,
       evaluated: candidates.length,
       ...acted,

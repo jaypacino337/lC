@@ -79,12 +79,12 @@ window.PXBT = {
 
   /* ── Intelligence layer ───────────────────────────────────────────────── */
   capabilities: [
-    { icon: 'signal',  title: 'Signal engine',       body: 'Scores every new pump.fun launch on velocity, buy pressure and holder quality within seconds of the bonding curve opening.' },
-    { icon: 'cluster', title: 'Wallet clustering',   body: 'Maps funding graphs to expose sniper rings, bundled supply and insider allocation before they hit the chart.' },
-    { icon: 'wave',    title: 'Narrative tracking',  body: 'Watches which themes are actually rotating capital, not just which are loudest, and weights conviction accordingly.' },
-    { icon: 'shield',  title: 'Risk filter',         body: 'Screens mint authority, LP status and deployer history. Anything failing the checks is never called out.' },
-    { icon: 'chart',   title: 'Momentum scoring',    body: 'Continuous re-scoring of open positions so exits are as systematic as entries.' },
-    { icon: 'bolt',    title: 'Autonomous callouts', body: 'Publishes to the pump.fun app without a human in the loop. The record is public and permanent.' }
+    { icon: 'signal',  title: 'Signal stack',      body: 'A proprietary read on every launch, seconds after the curve opens. What it weighs stays in-house — the results don’t.' },
+    { icon: 'cluster', title: 'Caller intelligence', body: 'Every caller on pump.fun, scored by their actual record — shrunk for small samples, decayed for stale ones. Lucky streaks don’t survive the math.' },
+    { icon: 'wave',    title: 'Wallet radar',      body: 'Watches what proven wallets buy before they say anything. The gap between the buy and the call is the edge.' },
+    { icon: 'chart',   title: 'Regime sense',      body: 'Knows when the tape is worth trading and when it isn’t. Hot days get size. Dead days get patience.' },
+    { icon: 'shield',  title: 'Self-correction',   body: 'It grades its own trades and adjusts. A cold streak tightens the trigger automatically; a hot one earns it back.' },
+    { icon: 'bolt',    title: 'Memory',            body: 'It remembers every thread, every wallet, every call it has made. Ask it anything on X — it answers from live state.' }
   ],
 
   /* ── Callouts feed ────────────────────────────────────────────────────────
@@ -102,10 +102,10 @@ window.PXBT = {
 
   /* ── Roadmap ──────────────────────────────────────────────────────────── */
   roadmap: [
-    { phase: 'In progress', title: 'Agent + callouts',   body: 'The agent runs in paper mode: it scores callers, detects signal and logs every trade it would take. Execution goes live once the hit rate is proven on paper.', state: 'progress' },
-    { phase: 'Next',        title: 'Buyback & burn feed', body: 'A public, verifiable ledger of every buyback and burn transaction with on-chain links.', state: 'next' },
-    { phase: 'Coming soon', title: 'The Terminal',        body: 'The full intelligence layer, exposed. Live signal scoring, wallet graphs and narrative heatmaps in one screen.', state: 'soon' },
-    { phase: 'Coming soon', title: 'Alerts & API',        body: 'Push callouts and raw signal to your own stack, bot or group the moment they fire.', state: 'soon' }
+    { phase: 'Live now',    title: 'Terminal — free',     body: 'Every callout, every trade, every fee claim and burn — scored in public, updated live. No login, no paywall.', state: 'live' },
+    { phase: 'In progress', title: 'Agent + callouts',    body: 'The agent runs in paper mode: scoring callers, reading the tape, logging every trade it would take. Execution goes live once the record is proven.', state: 'progress' },
+    { phase: 'Next',        title: 'Buyback & burn feed', body: 'A verifiable on-chain ledger of every buyback and every burn, linked transaction by transaction.', state: 'next' },
+    { phase: 'Coming soon', title: 'Terminal Pro',        body: 'Bloomberg-grade: wallet scanner, live signal scoring, caller leaderboard, narrative heatmap, alerts and API.', state: 'soon' }
   ],
 
   faq: [

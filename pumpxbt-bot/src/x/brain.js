@@ -15,6 +15,8 @@
 import { config } from '../config.js';
 import { log } from '../log.js';
 import { fetchJson, nowMs } from '../util.js';
+import { RegimeTracker } from '../signals/regime.js';
+import { adaptation, ADAPT } from '../signals/adapt.js';
 
 const MAX_LEN = 270;   // X caps at 280; leave headroom
 
@@ -48,6 +50,14 @@ export function grounding(store) {
       text: c.text, when: c.created_at
     }));
     g.openPositions = store.openPositions().length;
+    /* Lets it answer "how's the tape today?" with the bot's actual read —
+     * regime only, never the methodology behind it. */
+    const r = new RegimeTracker(store.db).current();
+    if (r) g.marketRead = { regime: r.regime, asOf: r.at };
+    const learn = adaptation(store.closedPositions(ADAPT.lookback));
+    if (learn.winRate !== null) {
+      g.paperRecord = { winRate: learn.winRate, closedTrades: learn.sample };
+    }
   } catch (err) {
     log.debug('grounding partial', { err: err.message });
   }
