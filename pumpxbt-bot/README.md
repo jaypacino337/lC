@@ -103,6 +103,31 @@ sellableUsd = positionValue − CALL_ELIGIBILITY_FLOOR_USD
 tokens it becomes real money, so the ledger tracks it as `flooredCapitalUsd`
 rather than letting it quietly accumulate. Watch that number.
 
+## X reply agent
+
+`npm run x` — a separate service that watches mentions of your X account and
+replies as PumpXBT, with memory. It remembers every thread, user, and reply in
+the same SQLite file, so it never double-replies and each reply is written
+against the thread's history and the bot's real state (stage, callout count,
+top-caller scores — never invented numbers).
+
+Three credential tiers, all optional:
+
+| Configured | Behaviour |
+| --- | --- |
+| nothing | idles with a warning |
+| `X_BEARER_TOKEN` only | reads mentions, composes replies, stores them as **drafts** — nothing is ever sent |
+| + the four OAuth 1.0a keys | posts replies live |
+
+With `ANTHROPIC_API_KEY` set, Claude (`claude-opus-5`, server-side refusal
+fallbacks enabled) writes the replies; without it, deterministic grounded
+templates are used. Either way the guardrails are enforced *outside* the model:
+a hard length cap, a banned-claims scrub (anything reading as guaranteed
+returns is dropped, not edited), paper-mode disclosure on any performance
+question, and hard rate caps per window and per user. Start in dry-run, read
+the drafts in the `x_replies` table, then add the write keys when you like
+what it says.
+
 ## Ledger API
 
 Read-only. No route can move funds or mutate strategy state, so it is safe to

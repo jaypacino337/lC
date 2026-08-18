@@ -12,6 +12,7 @@
     "paper": "PXBT_MODE=paper node src/main.js",
     "replay": "PXBT_SOURCE=fixture node src/main.js --once",
     "api": "node src/api/server.js",
+    "x": "node src/x/run.js",
     "test": "node --test test/*.test.js",
     "schema": "node -e \"import('./src/store/db.js').then(m=>{m.open().close();console.log('schema ok')})\""
   },

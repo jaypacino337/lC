@@ -62,6 +62,19 @@ export const config = {
 
   treasuryWallet: str('TREASURY_WALLET'),
 
+  x: {
+    bearer:       str('X_BEARER_TOKEN'),
+    apiKey:       str('X_API_KEY'),
+    apiSecret:    str('X_API_SECRET'),
+    accessToken:  str('X_ACCESS_TOKEN'),
+    accessSecret: str('X_ACCESS_SECRET'),
+    handle:       str('X_HANDLE'),
+    userId:       str('X_USER_ID'),
+    maxRepliesPer15m:       num('X_MAX_REPLIES_PER_15M', 8),
+    maxRepliesPerUserPerDay: num('X_MAX_REPLIES_PER_USER_PER_DAY', 3),
+    pollIntervalMs:         num('X_POLL_INTERVAL_MS', 90_000)
+  },
+
   telegram: {
     token:  str('TELEGRAM_BOT_TOKEN'),
     chatId: str('TELEGRAM_CHAT_ID'),
