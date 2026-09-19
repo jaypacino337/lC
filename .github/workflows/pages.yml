@@ -23,13 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Both sites are plain static files — no build. Assemble the publish dir:
-      # PumpXBT at /, LONGDOG at /longdog/. The bot is source, not a site.
+      # All static, no build. HOLDCO at /, PumpXBT at /pumpxbt/, LONGDOG at
+      # /longdog/. The bot is source, not a site.
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp index.html terminal.html _site/
+          cp index.html _site/
           cp -r css js assets _site/
+          cp -r pumpxbt _site/pumpxbt
           cp -r longdog _site/longdog
 
       - name: Configure Pages
