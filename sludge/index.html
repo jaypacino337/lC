@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SLUDGE — the AI that brews coins</title>
+<meta name="description" content="SLUDGE reads the internet, distills the narrative, and brews it into a coin. Scored on real onchain volume. Mutates hourly. The vat is pre-launch.">
+<meta name="theme-color" content="#0c0f0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- hazard stage bar — the honest one -->
+<div class="hazard" id="hazardBar">
+  <div class="hazard-inner wrap">
+    <span id="hazardText">THE VAT IS PRE-LAUNCH — the brewer below is a simulation. Nothing gets deployed.</span>
+  </div>
+</div>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><span class="brand-blob" aria-hidden="true"></span>SLUDGE</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#brewer">Brewer</a>
+      <a href="#loop">The Loop</a>
+      <a href="#vat">The Vat</a>
+      <a href="#token">$SLUDGE</a>
+    </nav>
+    <div class="nav-cta">
+      <span class="ca" id="caPill">CA SOON</span>
+      <a class="btn btn-goo" href="#" data-link="buy">BUY $SLUDGE</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ── hero ────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">AN AI WITH A VAT AND NO SUPERVISION</p>
+    <h1 class="drip-title">SLUDGE</h1>
+    <p class="lede">It reads the internet. It finds the narrative.<br>
+       It brews the coin. Every hour it keeps what pays<br class="br-d">
+       and dissolves what doesn’t.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-goo btn-lg" href="#brewer">BREW ONE NOW</a>
+      <a class="btn btn-lg" href="#loop">HOW THE VAT WORKS</a>
+    </div>
+  </div>
+  <svg class="drip-edge" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,0 L1440,0 L1440,28 C1400,30 1380,64 1352,60 C1330,57 1330,30 1300,32
+      C1240,36 1250,80 1214,78 C1180,76 1190,34 1150,32 L1020,30 C990,32 995,55 968,58
+      C935,62 940,30 900,30 L780,28 C750,30 760,88 722,86 C688,84 700,32 660,30
+      L520,28 C495,30 500,48 476,52 C445,57 450,28 410,28 L300,26 C270,28 280,66 246,64
+      C216,62 225,28 190,28 L90,26 C60,28 70,44 40,46 C20,47 10,28 0,28 Z" fill="#0c0f0a"/>
+  </svg>
+</section>
+
+<!-- ── brewer ──────────────────────────────────────────────────────────── -->
+<section class="sec sec-brewer" id="brewer">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">01 · THE BREWER</span>
+      <h2>DESCRIBE A COIN.<br>OR LET THE SLUDGE DECIDE.</h2>
+      <p class="sim-note">SIMULATION — this demo brews names, art and theses in your browser.
+         Nothing is launched, nothing touches a chain.</p>
+    </div>
+
+    <div class="brew-rig">
+      <div class="brew-controls">
+        <label class="lbl" for="brewInput">FEED THE VAT</label>
+        <textarea id="brewInput" maxlength="60" rows="2"
+          placeholder="e.g. a raccoon that day-trades from a dumpster"></textarea>
+        <div class="brew-btns">
+          <button class="btn btn-goo" id="brewBtn">BREW IT</button>
+          <button class="btn" id="randomBtn">LET SLUDGE DECIDE</button>
+          <button class="btn" id="againBtn" hidden>BREW AGAIN</button>
+        </div>
+      </div>
+
+      <div class="brew-out" id="brewOut" hidden>
+        <div class="specimen">
+          <canvas id="blobCanvas" width="260" height="280" aria-label="Generated sludge creature"></canvas>
+          <span class="specimen-tag" id="specimenTag">SPECIMEN #0000</span>
+        </div>
+        <div class="brew-sheet">
+          <div class="sheet-row"><span class="lbl">NAME</span><strong id="coinName">—</strong></div>
+          <div class="sheet-row"><span class="lbl">TICKER</span><strong id="coinTicker">—</strong></div>
+          <div class="sheet-row sheet-thesis"><span class="lbl">THE CASE</span><em id="coinThesis">—</em></div>
+          <div class="sheet-split">
+            <div class="sheet-row"><span class="lbl">VISCOSITY</span><strong id="coinVisc">—</strong></div>
+            <div class="sheet-row"><span class="lbl">TOXICITY</span><strong id="coinTox">—</strong></div>
+          </div>
+          <p class="sheet-note">Brewed locally. Not deployed. Not advice. Not even a real liquid.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── the loop ────────────────────────────────────────────────────────── -->
+<section class="sec" id="loop">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">02 · THE LOOP</span>
+      <h2>CRAWL. BREW. SCORE. MUTATE.</h2>
+    </div>
+    <div class="loop-grid" id="loopGrid"></div>
+    <p class="loop-note">Scoring is onchain volume only. The vat cannot grade its own homework.</p>
+  </div>
+</section>
+
+<!-- ── the vat ─────────────────────────────────────────────────────────── -->
+<section class="sec" id="vat">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">03 · THE VAT</span>
+      <h2>EVERY BATCH, ON THE RECORD.</h2>
+      <p class="sec-sub">When the launcher goes live, every coin the vat brews lands here with
+         its launch time, its volume score, and whether the lesson survived the hour.</p>
+    </div>
+    <div class="vat-table-wrap">
+      <table class="vat-table">
+        <thead><tr><th>BATCH</th><th>COIN</th><th>BREWED</th><th>VOLUME SCORE</th><th>VERDICT</th></tr></thead>
+        <tbody id="vatRows"></tbody>
+      </table>
+      <div class="vat-empty" id="vatEmpty">
+        <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span>
+        NO BATCHES YET — THE VAT IS STILL HEATING UP
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── token ───────────────────────────────────────────────────────────── -->
+<section class="sec" id="token">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">04 · $SLUDGE</span>
+      <h2>THE RUNOFF FLOWS BACK.</h2>
+    </div>
+    <div class="tok-grid">
+      <div class="tok-card"><span class="tag">PLANNED</span>
+        <h3>CREATOR FEES</h3>
+        <p>Every coin the vat launches generates creator fees. The runoff routes back to $SLUDGE.</p></div>
+      <div class="tok-card"><span class="tag">PLANNED</span>
+        <h3>FEED PRIORITY</h3>
+        <p>Holders get first access to feed the vat — your prompt brews before the timeline’s does.</p></div>
+      <div class="tok-card"><span class="tag">PLANNED</span>
+        <h3>THE LAB</h3>
+        <p>Batch analytics, narrative feeds and vat controls, unlocked with $SLUDGE.</p></div>
+    </div>
+    <p class="legal">$SLUDGE is a memecoin attached to an experimental, pre-launch AI system.
+       The brewer on this page is a simulation. Nothing here is financial advice, and volatile
+       tokens can lose their entire value. Do not feed the vat anything you cannot afford to lose.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <span class="brand"><span class="brand-blob" aria-hidden="true"></span>SLUDGE</span>
+    <nav class="foot-links">
+      <a href="#brewer">Brewer</a><a href="#loop">Loop</a><a href="#vat">Vat</a>
+      <a href="#" data-link="x">X</a><a href="#" data-link="pump">pump.fun</a>
+    </nav>
+    <span class="foot-note">© <span id="year"></span> the vat · biohazard suit not included</span>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/brewer.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
