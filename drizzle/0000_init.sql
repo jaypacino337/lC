@@ -27,6 +27,7 @@ CREATE TABLE "influencers" (
 	"graduation_reason" text,
 	"graduation_checked_at" timestamp with time zone,
 	"market_cap_usd" integer,
+	"bonding_progress" integer,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

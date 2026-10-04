@@ -29,6 +29,7 @@ export async function runGraduationCheck(db: DB, f: FetchLike = fetch, now = new
           graduationCheckedAt: now,
           graduationReason: g.reason,
           marketCapUsd: mcap ? Math.round(mcap) : inf.marketCapUsd,
+          bondingProgress: g.progress === null ? inf.bondingProgress : Math.round(g.progress),
           ...(g.graduated ? { graduated: true, graduatedAt: now } : {}),
         })
         .where(eq(influencers.id, inf.id));

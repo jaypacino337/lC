@@ -38,3 +38,13 @@ export function cronAuthorized(req: Request): boolean {
   if (!secret) return !config.isProd();
   return req.headers.get("authorization") === `Bearer ${secret}`;
 }
+
+/** Dev-only time travel for cron routes (`?now=ISO`), used to simulate a full day in verification. */
+export function cronNow(req: Request): Date {
+  const q = new URL(req.url).searchParams.get("now");
+  if (q && config.devRoutes()) {
+    const d = new Date(q);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return new Date();
+}

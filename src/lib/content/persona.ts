@@ -83,7 +83,7 @@ export function templateCharacter(input: PersonaInput): CharacterSheet {
     tagline: `${titleCase(subject)} ${trait}`.slice(0, 120),
     look: `A stylised, clearly fictional ${subject}: ${pick(rng, LOOKS)}. Same face, proportions and signature accessory in every post.`,
     voice: pick(rng, VOICES),
-    backstory: `${name} started as a ${subject} that ${trait.replace(/^(who|that)\s+/i, "")}. One day the internet noticed, and ${name} decided to document everything - the wins, the weird detours and the small daily rituals.`,
+    backstory: `${name} started out as a ${subject} ${trait}. One day the internet noticed, and ${name} decided to document everything - the wins, the weird detours and the small daily rituals.`,
     postingStyle: pick(rng, STYLES),
     recurringLocations: locations,
     catchphrases: pickN(rng, ["see you on the next one", "main character hours", "stay curious", "logging off to touch grass", "tiny wins count"], 2),

@@ -1,5 +1,5 @@
 {
-  "id": "f297b3c8-5c7f-490c-8d27-17f07b5b5055",
+  "id": "40934c14-311f-4934-8448-d15330c87f6b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -171,6 +171,12 @@
         },
         "market_cap_usd": {
           "name": "market_cap_usd",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bonding_progress": {
+          "name": "bonding_progress",
           "type": "integer",
           "primaryKey": false,
           "notNull": false

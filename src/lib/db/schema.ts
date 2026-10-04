@@ -41,6 +41,7 @@ export const influencers = pgTable(
     graduationReason: text("graduation_reason"),
     graduationCheckedAt: ts("graduation_checked_at"),
     marketCapUsd: integer("market_cap_usd"),
+    bondingProgress: integer("bonding_progress"), // 0-100 for pump.fun coins, null if unknown
     createdAt: ts("created_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("influencers_slug_idx").on(t.slug), uniqueIndex("influencers_mint_idx").on(t.mint), index("influencers_owner_idx").on(t.ownerWallet)],

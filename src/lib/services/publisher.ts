@@ -97,7 +97,8 @@ async function publishOne(db: DB, post: Post, inf: Influencer, now: Date, f: Fet
       const step = await provider.render({
         kind: post.mediaType as "image" | "video",
         prompt: post.mediaPrompt,
-        seed: inf.seed + post.slot,
+        // Placeholder art draws the face from the seed, so keep it fixed; real providers keep identity via the reference image.
+        seed: provider.real ? inf.seed + post.slot : inf.seed,
         referenceImageUrl: inf.referenceImageUrl,
         job: (post.mediaJob as Record<string, unknown> | null)?.media as Record<string, unknown> | undefined,
         palette: inf.character.palette,

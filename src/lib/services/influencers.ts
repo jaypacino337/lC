@@ -50,6 +50,7 @@ export async function createInfluencer(
       graduationReason: grad.reason,
       graduationCheckedAt: now,
       marketCapUsd: p.token.marketCapUsd ? Math.round(p.token.marketCapUsd) : null,
+      bondingProgress: grad.progress === null ? null : Math.round(grad.progress),
     })
     .returning();
   return row;
