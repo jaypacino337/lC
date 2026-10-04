@@ -268,7 +268,7 @@ export function AgentPage(app, id) {
     const A = [];
     for (const t of (d.history || []).slice(0, 12)) A.push({ ts: t.ts, k: t.side === 'BUY' ? 'buy' : 'sell', ic: t.side === 'BUY' ? IC.plus : IC.down, text: `${t.side === 'BUY' ? 'Bought' : 'Sold'} $${t.symbol} · ${sol(t.sol, 3)} SOL${t.side === 'SELL' && t.pnlPct != null ? ' · ' + pct(t.pnlPct) : ''}` });
     for (const x of (d.decisions || []).filter((x) => x.note).slice(0, 8)) A.push({ ts: x.ts, k: x.levelUp ? 'lvl' : 'note', ic: x.levelUp ? IC.star : IC.gear, text: x.levelUp ? `Promoted to ${x.levelUp}` : String(x.reason || '').split('.')[0] });
-    for (const x of (d.deposits || []).slice(0, 6)) A.push({ ts: x.ts, k: 'dep', ic: IC.wallet, text: `Added ${sol(x.amount, 3)} SOL` });
+    for (const x of (d.deposits || []).slice(0, 6)) A.push({ ts: x.ts, k: 'dep', ic: IC.wallet, text: `Added ${sol(x.amount, 3)} ${x.kind && x.kind.startsWith('paper') ? 'paper ' : ''}SOL` });
     for (const x of (d.withdrawals || []).slice(0, 6)) A.push({ ts: x.ts, k: 'wd', ic: IC.down, text: `Withdrew ${sol(x.amount, 3)} SOL` });
     for (const x of (d.feeClaims || []).slice(0, 6)) A.push({ ts: x.ts, k: 'fee', ic: IC.coin, text: `Claimed ${sol(x.claimedSol, 3)} SOL creator fees` });
     if (d.paused) A.push({ ts: Date.now(), k: 'pause', ic: IC.pause, text: 'Builder paused' });
@@ -426,14 +426,14 @@ export function AgentPage(app, id) {
     </section>`;
 
   const feesHTML = () => `<section class="card coin-card">
-      <div class="agent-tag">CREATOR FEES · ${cfg.fees.creatorSharePct > 0 ? `${Math.round(cfg.fees.creatorSharePct * 100)}% CREATOR / ` : ''}${cfg.flywheel?.enabled ? `${Math.round(cfg.flywheel.pct * 100)}% BURN / ${Math.round((1 - cfg.flywheel.pct - (cfg.fees.creatorSharePct || 0)) * 100)}% BUILDER` : cfg.fees.creatorSharePct > 0 ? `${Math.round((1 - cfg.fees.creatorSharePct) * 100)}% BUILDER` : '100% BUILDER'}</div>
+      ${d.paper ? '<div class="agent-tag">CREATOR FEES</div><p class="muted" style="font-size:13px">None in paper mode: no coin was launched.</p>' : `<div class="agent-tag">CREATOR FEES · ${cfg.fees.creatorSharePct > 0 ? `${Math.round(cfg.fees.creatorSharePct * 100)}% CREATOR / ` : ''}${cfg.flywheel?.enabled ? `${Math.round(cfg.flywheel.pct * 100)}% BURN / ${Math.round((1 - cfg.flywheel.pct - (cfg.fees.creatorSharePct || 0)) * 100)}% BUILDER` : cfg.fees.creatorSharePct > 0 ? `${Math.round((1 - cfg.fees.creatorSharePct) * 100)}% BUILDER` : '100% BUILDER'}</div>
       <dl class="kv">
         <dt>Kept by builder</dt><dd>${sol(d.feesKeptSol, 4)} SOL</dd>
         ${d.feesToCreatorSol > 0 || cfg.fees.creatorSharePct > 0 ? `<dt>Sent to creator</dt><dd>${sol(d.feesToCreatorSol, 4)} SOL</dd>` : ''}
         ${d.nextFeeClaimAt ? `<dt>Next claim</dt><dd data-countdown-plain="${d.nextFeeClaimAt}"></dd>` : ''}
       </dl>
       <div class="agent-tag" style="margin-top:4px">CLAIMS</div>
-      <dl class="kv">${d.feeClaims.map((x) => `<dt data-ago="${x.ts}">${ago(x.ts)}</dt><dd>${sol(x.claimedSol, 4)} SOL ${txLink(x.sig, 'tx')}${x.toCreatorSol > 0 ? `<br><span class="muted" style="font-weight:500">${sol(x.toCreatorSol, 4)} to creator ${x.shareSig ? txLink(x.shareSig, 'tx') : ''}</span>` : ''}</dd>`).join('') || '<dt class="muted">No claims yet</dt><dd></dd>'}</dl>
+      <dl class="kv">${d.feeClaims.map((x) => `<dt data-ago="${x.ts}">${ago(x.ts)}</dt><dd>${sol(x.claimedSol, 4)} SOL ${txLink(x.sig, 'tx')}${x.toCreatorSol > 0 ? `<br><span class="muted" style="font-weight:500">${sol(x.toCreatorSol, 4)} to creator ${x.shareSig ? txLink(x.shareSig, 'tx') : ''}</span>` : ''}</dd>`).join('') || '<dt class="muted">No claims yet</dt><dd></dd>'}</dl>`}
       ${cfg.flywheel?.enabled && d.flywheel ? `<div class="agent-tag" style="margin-top:4px">🔥 BUYBACK &amp; BURN · <a class="ext" href="#/burns">all burns</a></div>
       <dl class="kv">
         <dt>Burned so far</dt><dd>${sol(d.flywheel.sol, 4)} SOL · ${fmtTok(d.flywheel.tokens)} tokens</dd>
