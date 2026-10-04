@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <title>Ham, the HamGPT hamster</title>
+  <style>
+    .cheek{transform-box:fill-box;transform-origin:center;transform:scale(var(--cheek,1));transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+  </style>
+  <!-- ears -->
+  <circle cx="112" cy="128" r="34" fill="#d98c45"/>
+  <circle cx="288" cy="128" r="34" fill="#d98c45"/>
+  <circle cx="114" cy="130" r="19" fill="#f6a9a0"/>
+  <circle cx="286" cy="130" r="19" fill="#f6a9a0"/>
+  <!-- body -->
+  <ellipse cx="200" cy="250" rx="138" ry="124" fill="#eca35a"/>
+  <path d="M120 170 Q200 120 280 170 Q260 150 200 146 Q140 150 120 170Z" fill="#f2b673" opacity=".7"/>
+  <ellipse cx="200" cy="300" rx="90" ry="78" fill="#fdebd0"/>
+  <!-- cheeks -->
+  <ellipse class="cheek" cx="122" cy="238" rx="50" ry="44" fill="#f8c993"/>
+  <ellipse class="cheek" cx="278" cy="238" rx="50" ry="44" fill="#f8c993"/>
+  <ellipse cx="120" cy="232" rx="17" ry="10" fill="#ff9a8a" opacity=".55"/>
+  <ellipse cx="280" cy="232" rx="17" ry="10" fill="#ff9a8a" opacity=".55"/>
+  <!-- eyes -->
+  <ellipse cx="160" cy="196" rx="12" ry="13" fill="#2b1d12"/>
+  <ellipse cx="240" cy="196" rx="12" ry="13" fill="#2b1d12"/>
+  <circle cx="164" cy="191" r="4" fill="#fff"/>
+  <circle cx="244" cy="191" r="4" fill="#fff"/>
+  <!-- nose, mouth, teeth -->
+  <ellipse cx="200" cy="222" rx="9" ry="6" fill="#e86f7e"/>
+  <path d="M200 228 v8 M200 236 q-9 9 -18 2 M200 236 q9 9 18 2" stroke="#2b1d12" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <rect x="193" y="239" width="6.5" height="10" rx="1.5" fill="#fff" stroke="#2b1d12" stroke-width="1.5"/>
+  <rect x="200.5" y="239" width="6.5" height="10" rx="1.5" fill="#fff" stroke="#2b1d12" stroke-width="1.5"/>
+  <!-- whiskers -->
+  <g stroke="#8a5a2b" stroke-width="2" stroke-linecap="round" opacity=".6">
+    <path d="M170 228 L120 220"/><path d="M170 234 L122 240"/>
+    <path d="M230 228 L280 220"/><path d="M230 234 L278 240"/>
+  </g>
+  <!-- headset -->
+  <path d="M78 196 C70 70 330 70 322 196" stroke="#2b1d12" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <rect x="58" y="176" width="34" height="52" rx="14" fill="#ff7a1a" stroke="#2b1d12" stroke-width="5"/>
+  <rect x="308" y="176" width="34" height="52" rx="14" fill="#ff7a1a" stroke="#2b1d12" stroke-width="5"/>
+  <path d="M76 226 C80 270 120 284 160 270" stroke="#2b1d12" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <circle cx="166" cy="268" r="10" fill="#2b1d12"/>
+  <!-- paws holding a seed token -->
+  <g transform="rotate(-18 200 318)">
+    <ellipse cx="200" cy="318" rx="24" ry="36" fill="#3a2a1d"/>
+    <path d="M200 284 V352 M188 292 V346 M212 292 V346" stroke="#e9dcc6" stroke-width="3"/>
+  </g>
+  <ellipse cx="172" cy="322" rx="17" ry="13" fill="#f6b3a8"/>
+  <ellipse cx="228" cy="322" rx="17" ry="13" fill="#f6b3a8"/>
+  <!-- feet -->
+  <ellipse cx="146" cy="370" rx="24" ry="10" fill="#f6b3a8"/>
+  <ellipse cx="254" cy="370" rx="24" ry="10" fill="#f6b3a8"/>
+</svg>

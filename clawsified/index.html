@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CLAWSIFIED — $CLAWSF</title>
+<meta name="description" content="A spy agency of AI cats tailing every wallet on Solana. Agent 00Paw and the squad check the receipts and name the Daily Ten. Everything else is clawsified.">
+<meta name="theme-color" content="#1b1916">
+<!-- After you pick a domain, make og:image / twitter:image absolute (https://yourdomain/assets/og.png). -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="CLAWSIFIED — $CLAWSF">
+<meta property="og:description" content="A spy agency of AI cats tailing every wallet on Solana. Everything else is clawsified.">
+<meta property="og:image" content="assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CLAWSIFIED — $CLAWSF">
+<meta name="twitter:description" content="A spy agency of AI cats tailing every wallet on Solana.">
+<meta name="twitter:image" content="assets/og.png">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Special+Elite&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="notice">
+  <div class="wrap">PRE-LAUNCH · $CLAWSF is not trading yet. The only real contract address will appear on this page and on our X.</div>
+</div>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><img src="assets/favicon.svg" alt="" width="34" height="34">CLAWSIFIED</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#briefing">Briefing</a>
+      <a href="#squad">The Squad</a>
+      <a href="#dossier">Your Dossier</a>
+      <a href="#ten">Daily Ten</a>
+    </nav>
+    <button class="ca-pill" type="button" data-ca>CA: coming soon</button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="kicker">FILE 00 · EYES ONLY · SOLANA DIVISION</p>
+        <h1 class="title"><span>CLAW</span><span>SIFIED</span></h1>
+        <p class="hook">A spy agency of AI cats tailing every wallet on the chain.</p>
+        <p class="sub">Agent 00Paw and his squad watch the trades, check the receipts, and name the best traders among holders every night. Everything else is <span class="redact" tabindex="0" data-reveal="clawsified">clawsified</span>.</p>
+        <div class="cta-row">
+          <a class="btn btn-red" href="#dossier">Get your codename</a>
+          <button class="btn btn-ghost" type="button" data-ca>$CLAWSF · CA: coming soon</button>
+        </div>
+      </div>
+      <div class="hero-art">
+        <div class="folder">
+          <div class="folder-tab">AGENT 00PAW</div>
+          <div class="polaroid">
+            <img class="mascot" src="assets/agent-00paw-cutout.svg" alt="Agent 00Paw: a black cat in a fedora, sunglasses and trench coat, with an earpiece" width="400" height="400">
+            <span class="glint" aria-hidden="true"></span>
+          </div>
+          <dl class="folder-meta">
+            <div><dt>Codename</dt><dd>00PAW</dd></div>
+            <div><dt>Clearance</dt><dd>Nine lives</dd></div>
+            <div><dt>Weakness</dt><dd><span class="redact" tabindex="0" data-reveal="red dots">red dots</span></dd></div>
+          </dl>
+          <div class="stamp" aria-hidden="true">CLAWSIFIED</div>
+        </div>
+      </div>
+    </div>
+    <div class="ticker-tape" aria-hidden="true"><div class="tape-track" id="tape"></div></div>
+  </section>
+
+  <!-- BRIEFING -->
+  <section class="section" id="briefing">
+    <div class="wrap">
+      <p class="label">01 / THE BRIEFING</p>
+      <h2>Your wallet is being watched. Good.</h2>
+      <p class="lede">CLAWSIFIED turns the chain into a spy game. AI cat agents tail holder wallets, rebuild the trades and rank who actually played it best. Holders go head to head; the cats keep the file.</p>
+      <div class="cards">
+        <article class="card">
+          <span class="card-no">A</span>
+          <h3>The Agency</h3>
+          <p>A swarm of AI agents, each one a cat with a job. They read public on-chain data. They never touch your wallet, and you never connect one to look around.</p>
+        </article>
+        <article class="card">
+          <span class="card-no">B</span>
+          <h3>The Game</h3>
+          <p>Holder vs holder. From the moment you qualify until midnight New York, realized + unrealized PNL sets your rank. Earlier gains do not count. A new day, a new fight for the top.</p>
+        </article>
+        <article class="card">
+          <span class="card-no">C</span>
+          <h3>The Drop</h3>
+          <p>The plan: the Daily Ten share a reward pool funded by creator fees. It goes live only when funding is confirmed, and every payout gets a public receipt.</p>
+        </article>
+      </div>
+      <p class="status"><b>Status:</b> pre-launch. The leaderboard and rewards are planned, not running. We'll post receipts before we post claims.</p>
+    </div>
+  </section>
+
+  <!-- SQUAD -->
+  <section class="section section-dark" id="squad">
+    <div class="wrap">
+      <p class="label">02 / THE SQUAD</p>
+      <h2>Five cats. Eyes on the field.</h2>
+      <p class="lede">Every rank needs evidence. Each operative does one job and signs off before the next one starts.</p>
+      <div class="squad" id="squadGrid"></div>
+    </div>
+  </section>
+
+  <!-- DOSSIER (interactive) -->
+  <section class="section" id="dossier">
+    <div class="wrap dossier-wrap">
+      <div>
+        <p class="label">03 / RECRUITMENT</p>
+        <h2>Request your dossier.</h2>
+        <p class="lede">Type your name or X handle. The Director assigns your codename, clearance, handler and first mission. Tap the black bars to declassify.</p>
+        <form class="dossier-form" id="dossierForm" autocomplete="off">
+          <label for="handle" class="sr">Your name or handle</label>
+          <input id="handle" name="handle" maxlength="24" placeholder="@yourhandle" required>
+          <button class="btn btn-red" type="submit">Open file</button>
+        </form>
+        <p class="fine">Just for fun. Same name, same file. Nothing is looked up, stored or sent.</p>
+      </div>
+      <div class="file" id="file" aria-live="polite">
+        <div class="file-head">
+          <span>AGENCY FILE № <b id="fNo">——</b></span>
+          <span class="file-flag">TOP SECRET</span>
+        </div>
+        <div class="file-body" id="fBody">
+          <p class="file-empty">No file opened. Enter a name to begin.</p>
+        </div>
+        <div class="file-actions" id="fActions" hidden>
+          <button class="btn btn-small" type="button" id="revealAll">Declassify all</button>
+          <a class="btn btn-small btn-red" id="shareX" target="_blank" rel="noopener">Post my file on X</a>
+          <button class="btn btn-small btn-ghost" type="button" id="shred">Shred</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAILY TEN -->
+  <section class="section section-paper" id="ten">
+    <div class="wrap">
+      <p class="label">04 / THE DAILY TEN</p>
+      <h2>Ranked by the record.</h2>
+      <div class="ten-grid">
+        <div class="board">
+          <div class="board-head"><span>#</span><span>Wallet</span><span>PNL + UPNL</span></div>
+          <ol class="board-rows" id="board"></ol>
+          <p class="board-note">No agents ranked yet. The board opens after launch, and only with real data.</p>
+        </div>
+        <ul class="rules">
+          <li><b>Qualify.</b> Hold the threshold of $CLAWSF (announced at launch). Tracking starts at your qualification snapshot.</li>
+          <li><b>Trade.</b> Realized PNL + open-position change, in USD, until 12 AM New York.</li>
+          <li><b>Money moved is not money earned.</b> Deposits and transfers never count as profit.</li>
+          <li><b>One standard.</b> $CLAWSF trades are excluded. Snapshots are frozen before any reward is allocated.</li>
+          <li><b>No gaming it.</b> HISS flags manipulation for review. Proven abuse gets excluded.</li>
+          <li><b>The AI explains, it doesn't decide.</b> Scores are deterministic. No agent can change a score or authorize a payout.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOKEN -->
+  <section class="section section-dark" id="token">
+    <div class="wrap token">
+      <div>
+        <p class="label">05 / $CLAWSF</p>
+        <h2>The file is still sealed.</h2>
+        <p class="lede">$CLAWSF launches fair on pump.fun. No presale, no team allocation. When it's live, the contract address lands here first.</p>
+      </div>
+      <div class="ca-card">
+        <p class="ca-label">Contract address</p>
+        <p class="ca-value" id="caValue">coming soon</p>
+        <button class="btn btn-red" type="button" id="caCopy" disabled>Copy CA</button>
+        <div class="socials" id="socials"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p><b>CLAWSIFIED ($CLAWSF)</b> is a memecoin with a game attached. It is not an investment and promises no returns. The cats are fictional. Planned features ship when they work, and not before. Never share your seed phrase. Nobody from the agency will DM you first.</p>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

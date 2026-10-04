@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <title>Agent 00Paw</title>
+  <g id="paw">
+    <!-- coat -->
+    <path d="M62 400 C72 322 128 286 200 286 C272 286 328 322 338 400Z" fill="#b8925a"/>
+    <path d="M200 292 L148 298 L116 400 L176 400Z" fill="#a07a46"/>
+    <path d="M200 292 L252 298 L284 400 L224 400Z" fill="#a07a46"/>
+    <path d="M176 292 L224 292 L212 400 L188 400Z" fill="#f3ead8"/>
+    <path d="M200 298 l-11 13 l11 76 l11 -76z" fill="#c8102e"/>
+    <path d="M136 302 L200 292 L166 246Z" fill="#c9a36a"/>
+    <path d="M264 302 L200 292 L234 246Z" fill="#c9a36a"/>
+    <!-- head -->
+    <ellipse cx="200" cy="198" rx="112" ry="90" fill="#26221f"/>
+    <ellipse cx="200" cy="246" rx="52" ry="32" fill="#36302b"/>
+    <!-- glasses -->
+    <path d="M108 170 h86 v22 q0 26 -30 26 h-28 q-28 0 -28 -26z" fill="#0b0b0b"/>
+    <path d="M206 170 h86 v22 q0 26 -28 26 h-28 q-30 0 -30 -26z" fill="#0b0b0b"/>
+    <rect x="186" y="172" width="28" height="7" rx="3" fill="#0b0b0b"/>
+    <path d="M122 176 l14 0 l-20 34 l-6 -6z" fill="#fff" opacity=".35"/>
+    <path d="M220 176 l14 0 l-20 34 l-6 -6z" fill="#fff" opacity=".35"/>
+    <!-- nose + mouth -->
+    <path d="M190 232 h20 l-10 11z" fill="#e58aa0"/>
+    <path d="M200 243 q-10 14 -24 6" stroke="#e9e2d0" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M200 243 q12 12 28 0" stroke="#e9e2d0" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <!-- whiskers -->
+    <g stroke="#e9e2d0" stroke-width="3" stroke-linecap="round" opacity=".85">
+      <path d="M150 238 L68 226"/><path d="M150 248 L66 252"/><path d="M152 258 L76 276"/>
+      <path d="M250 238 L332 226"/><path d="M250 248 L334 252"/><path d="M248 258 L324 276"/>
+    </g>
+    <!-- earpiece -->
+    <circle cx="308" cy="204" r="9" fill="#d8d8d8"/>
+    <path d="M306 212 c-14 10 6 14 -6 24 c-12 10 8 14 -4 24 c-10 8 -18 16 -30 30" stroke="#d8d8d8" stroke-width="3.5" fill="none"/>
+    <!-- hat crown -->
+    <path d="M112 128 C116 70 140 44 200 50 C260 44 284 70 288 128Z" fill="#3b3a3f"/>
+    <path d="M168 58 Q200 74 232 58 Q214 52 200 52 Q186 52 168 58Z" fill="#2b2a2e"/>
+    <!-- ears through the hat -->
+    <ellipse cx="150" cy="88" rx="22" ry="6" fill="#18171a"/>
+    <ellipse cx="250" cy="88" rx="22" ry="6" fill="#18171a"/>
+    <path d="M130 90 L142 22 L172 88Z" fill="#26221f"/>
+    <path d="M270 90 L258 22 L228 88Z" fill="#26221f"/>
+    <path d="M140 84 L145 40 L162 84Z" fill="#e58aa0" opacity=".8"/>
+    <path d="M260 84 L255 40 L238 84Z" fill="#e58aa0" opacity=".8"/>
+    <!-- band + brim -->
+    <rect x="114" y="106" width="172" height="20" fill="#c8102e"/>
+    <ellipse cx="200" cy="130" rx="152" ry="20" fill="#2f2e33"/>
+    <ellipse cx="200" cy="125" rx="120" ry="9" fill="#3b3a3f"/>
+  </g>
+</svg>

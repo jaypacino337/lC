@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HamGPT — $HAMGPT</title>
+<meta name="description" content="HamGPT is a hamster with a headset that routes your prompts through free-tier AI models and stuffs its cheeks with every free token it finds. One balance for chat and API.">
+<meta name="theme-color" content="#ff7a1a">
+<!-- After you pick a domain, make og:image / twitter:image absolute (https://yourdomain/assets/og.png). -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="HamGPT — the AI that never pays for tokens">
+<meta property="og:description" content="A hamster routes your prompts through free-tier AI models and hoards every free token. One balance for chat and API. $HAMGPT">
+<meta property="og:image" content="assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="HamGPT — the AI that never pays for tokens">
+<meta name="twitter:description" content="A hamster routes your prompts through free-tier AI and hoards every free token. $HAMGPT">
+<meta name="twitter:image" content="assets/og.png">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="notice">
+  <div class="wrap">PRE-LAUNCH · $HAMGPT isn't trading yet, and the chat below is a toy demo. No model is connected yet.</div>
+</div>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><img src="assets/favicon.svg" alt="" width="34" height="34">HamGPT</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#try">Try Ham</a>
+      <a href="#how">How it works</a>
+      <a href="#credits">Cheek Credits</a>
+      <a href="#token">$HAMGPT</a>
+    </nav>
+    <button class="ca-pill" type="button" data-ca>CA: coming soon</button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="kicker"><span class="dot"></span> FREE-TIER AI · ONE CHEEK-FULL AT A TIME</p>
+        <h1 class="title">Ham<span>GPT</span></h1>
+        <p class="hook">The AI that never pays for tokens.</p>
+        <p class="sub">A hamster with a headset routes your prompts through free-tier models and stuffs its cheeks with every free token it can find. Chat and API share one balance. Ham does the hoarding so you don't do the paying.</p>
+        <div class="cta-row">
+          <a class="btn btn-orange" href="#try">Feed Ham a prompt</a>
+          <button class="btn btn-ghost" type="button" data-ca>$HAMGPT · CA: coming soon</button>
+        </div>
+      </div>
+      <div class="hero-art">
+        <div class="wheel-stage" id="heroStage">
+          <svg class="wheel" viewBox="0 0 400 400" aria-hidden="true">
+            <circle cx="200" cy="200" r="186" fill="none" stroke="#2b1d12" stroke-width="10"/>
+            <circle cx="200" cy="200" r="168" fill="none" stroke="#2b1d12" stroke-width="4" stroke-dasharray="4 18"/>
+            <g stroke="#2b1d12" stroke-width="5" stroke-linecap="round">
+              <path d="M200 20V380M20 200H380M73 73L327 327M327 73L73 327"/>
+            </g>
+            <circle cx="200" cy="200" r="16" fill="#2b1d12"/>
+          </svg>
+          <div class="ham" id="heroHam"><img src="assets/ham.svg" alt="Ham, a golden hamster wearing an orange headset, holding a sunflower seed" width="400" height="400"></div>
+          <div class="stand" aria-hidden="true"></div>
+          <div class="bubble" id="heroBubble">free tokens?? 👀</div>
+        </div>
+      </div>
+    </div>
+    <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+  </section>
+
+  <!-- INTERACTIVE -->
+  <section class="section" id="try">
+    <div class="wrap">
+      <p class="label">01 / TRY HAM</p>
+      <h2>Feed Ham a prompt.</h2>
+      <p class="lede">Watch Ham sprint the wheel, check the free lanes and stash the tokens. Every message fills the cheeks a bit more.</p>
+      <div class="demo">
+        <div class="chat">
+          <div class="chat-head">
+            <span class="chat-title"><span class="live-dot"></span> Ham · free-tier router</span>
+            <span class="tag">DEMO</span>
+          </div>
+          <div class="chat-log" id="chatLog" aria-live="polite">
+            <div class="msg ham-msg">Hi, I'm Ham. Ask me anything. I'll find a free lane for it. (Right now I'm only pretending. The real router ships with launch.)</div>
+          </div>
+          <div class="chips" id="chips"></div>
+          <form class="chat-form" id="chatForm" autocomplete="off">
+            <label for="prompt" class="sr">Your prompt</label>
+            <input id="prompt" maxlength="200" placeholder="Ask anything. Build something." required>
+            <button class="btn btn-orange btn-send" type="submit" aria-label="Send">Send</button>
+          </form>
+        </div>
+        <aside class="side">
+          <div class="mini-stage" id="miniStage">
+            <div class="mini-wheel" aria-hidden="true"></div>
+            <div class="ham mini" id="miniHam"><img src="assets/ham.svg" alt="" width="160" height="160"></div>
+          </div>
+          <div class="meter">
+            <div class="meter-top"><span>Cheek capacity</span><b id="cheekPct">0%</b></div>
+            <div class="meter-bar"><span id="cheekBar"></span></div>
+          </div>
+          <div class="router">
+            <p class="router-title">Router log</p>
+            <ol class="router-log" id="routerLog"><li class="muted">waiting for a prompt…</li></ol>
+          </div>
+          <button class="btn btn-small btn-ghost" type="button" id="emptyCheeks">Empty cheeks</button>
+        </aside>
+      </div>
+      <p class="fine">Demo only: replies are pre-written, lanes are pretend, and nothing you type leaves your browser.</p>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section class="section section-cream" id="how">
+    <div class="wrap">
+      <p class="label">02 / HOW IT WORKS</p>
+      <h2>A router with whiskers.</h2>
+      <p class="lede">Ham isn't a new model. Ham is the little guy who knows where all the free ones are.</p>
+      <div class="steps">
+        <article class="step">
+          <span class="step-no">01</span>
+          <h3>Ham checks the lanes</h3>
+          <p>Free-tier model routing. Ham checks which free lanes still have quota, skips the rate-limited ones and runs your request where it costs nothing.</p>
+        </article>
+        <article class="step">
+          <span class="step-no">02</span>
+          <h3>One balance, two doors</h3>
+          <p>One usage balance for chat and API. When the free lanes run dry, credits cover the rest. Credits are usage, not cash and not a token.</p>
+        </article>
+        <article class="step">
+          <span class="step-no">03</span>
+          <h3>A burrow for your work</h3>
+          <p>Your research, code and ideas in one place. Bring your notes as a context pack, or just start with a question.</p>
+        </article>
+      </div>
+      <div class="api">
+        <div class="api-copy">
+          <h3>Same Ham, from your code.</h3>
+          <p>An OpenAI-style chat endpoint with scoped keys and the same shared balance. Text only at launch.</p>
+          <span class="tag tag-soon">API opens after launch</span>
+        </div>
+        <pre class="code" aria-label="Example API request"><code><span class="c">#</span> coming soon
+curl https://&lt;your-domain&gt;/api/v1/chat/completions \
+  -H "Authorization: Bearer $HAM_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"auto-free",
+       "messages":[{"role":"user",
+       "content":"hi ham"}]}'</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREDITS -->
+  <section class="section section-orange" id="credits">
+    <div class="wrap credits">
+      <div>
+        <p class="label label-dark">03 / CHEEK CREDITS</p>
+        <h2>Hold $HAMGPT. Get daily cheek-fulls.</h2>
+        <p class="lede">The plan: holders claim a share of a daily credit pool for HamGPT. Your daily edge, and more when you need it.</p>
+      </div>
+      <ul class="pouch">
+        <li><b>Proportional.</b> A qualifying balance sets your share of the day's pool. No fixed credit value per token is promised.</li>
+        <li><b>Funded or it doesn't happen.</b> Pools are paid from real funding. Free quotas aren't cash, and they don't count as funding.</li>
+        <li><b>Creator fees feed the hamster.</b> The plan is for fees to go to compute, infrastructure and scaling.</li>
+        <li><b>Receipts.</b> Funding and usage records get published so you can check them.</li>
+      </ul>
+      <p class="status">Status: planned. Claims open only after the router and funding are live.</p>
+    </div>
+  </section>
+
+  <!-- MANIFESTO -->
+  <section class="manifesto">
+    <div class="wrap">
+      <p>“AI is becoming an everyday expense. Access to it shouldn't belong to a handful of companies.”</p>
+      <span>Ham, mid-sunflower-seed</span>
+    </div>
+  </section>
+
+  <!-- TOKEN -->
+  <section class="section" id="token">
+    <div class="wrap token">
+      <div>
+        <p class="label">04 / $HAMGPT</p>
+        <h2>The seed hasn't dropped yet.</h2>
+        <p class="lede">$HAMGPT launches fair on pump.fun. No presale, no team bag. The contract address shows up here first.</p>
+      </div>
+      <div class="ca-card">
+        <p class="ca-label">Contract address</p>
+        <p class="ca-value" id="caValue">coming soon</p>
+        <button class="btn btn-orange" type="button" id="caCopy" disabled>Copy CA</button>
+        <div class="socials" id="socials"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p><b>HamGPT ($HAMGPT)</b> is a memecoin with a product plan. It is not an investment and promises no returns. Ham is a cartoon hamster, not a person or an AI lab. Planned features ship when they work. Never enter a seed phrase anywhere. Nobody from the burrow will DM you first.</p>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
