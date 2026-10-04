@@ -75,7 +75,7 @@ export const xConnector: Connector = {
     const withMedia = input.mediaIsReal && input.mediaUrl && input.mediaType === "image";
     if (withMedia) reqs.push({ method: "POST", url: `${X_API}/media/upload`, body: { media: `<bytes of ${input.mediaUrl}>`, media_category: "tweet_image" } });
     reqs.push({ method: "POST", url: `${X_API}/tweets`, body: buildTweetBody(input.caption, withMedia ? "<media_id>" : null) });
-    if (input.mediaType === "video") reqs[reqs.length - 1].note = "Video clips are posted to X as text + still for now (chunked video upload not implemented).";
+    if (input.mediaType === "video") reqs[reqs.length - 1].note = "Clips are posted to X as text-only for now (chunked video upload not implemented).";
     return reqs;
   },
   async publish(input, account, f: FetchLike = fetch) {
