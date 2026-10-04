@@ -1,19 +1,21 @@
 /* ============================================================================
- * pump.fun adapter.
+ * pump.fun market data — the ONLY file that knows where data comes from.
  *
- * ⚠️  THE ENDPOINT SHAPES BELOW ARE UNVERIFIED.
+ * Live sources, every one probed from the build sandbox on 2026-10-04 with the
+ * captured responses kept under test/fixtures/:
  *
- * I could not reach pump.fun or its docs from the environment this was written
- * in, so the request paths and response field names in `parseCallout` /
- * `parseTrade` are best guesses. They are almost certainly wrong in detail.
+ *   launches + creator buys   PumpPortal websocket (free subscribeNewToken /
+ *                             subscribeMigration)          pumpportal.stream.json
+ *   all trades (optional)     PumpPortal subscribeTokenTrade — metered, only
+ *                             with PUMPPORTAL_API_KEY
+ *   price / liq / mcap / 5m   DexScreener tokens/v1        dexscreener.tokens.json
+ *   curve state (fallback)    on-chain BondingCurve account rpc.bondingCurve.json
  *
- * This is deliberately the ONLY file that knows what pump.fun's API looks like.
- * Everything downstream consumes the normalised shapes documented below, so
- * correcting reality costs you one file:
- *
- *   1. Open devtools on pump.fun, watch the network tab
- *   2. Fix PATHS and the parse* functions to match what you actually see
- *   3. Drop a real response into test/fixtures/ and run `npm test`
+ * What is NOT available: pump.fun's in-app callouts have no documented public
+ * feed (frontend-api.pump.fun returns Cloudflare 1016; the v3 host has no
+ * callouts route). Live mode therefore ingests zero callouts and says so in
+ * /api/health instead of guessing an endpoint. The caller-reputation engine
+ * still runs on fixtures and on any callouts that do get recorded.
  *
  * Normalised shapes the rest of the bot expects:
  *
@@ -28,35 +30,53 @@
 import { readFileSync } from 'node:fs';
 import { config } from '../config.js';
 import { log } from '../log.js';
-import { fetchJson, retry, hashId, nowMs } from '../util.js';
+import { hashId, nowMs } from '../util.js';
+import { PumpPortalStream, eventToTrade } from './pumpportal.js';
+import { DexScreener } from './dexscreener.js';
+import { SolanaReader, cached } from './solana.js';
 
 const FIXTURE = new URL('../../test/fixtures/pumpfun.sample.json', import.meta.url);
+const TRADE_LOOKBACK_MS = 30 * 60_000;
+const CHAIN_FALLBACKS_PER_TICK = 10;
+const CURVE_TTL_MS = 15_000;
 
 export class PumpFunClient {
-  constructor({ source = config.source, base = config.pumpfun.base } = {}) {
+  constructor({ source = config.source, stream, dex, chain } = {}) {
     this.source = source;
-    this.base = base.replace(/\/$/, '');
-    this.warned = false;
+    if (source === 'live') {
+      this.stream = stream ?? new PumpPortalStream({
+        apiKey: config.pumpportal.apiKey,
+        tradeSubs: config.pumpportal.tradeSubs
+      });
+      this.dex = dex ?? new DexScreener();
+      this.chain = chain ?? new SolanaReader();
+      this.solUsd = cached(() => this.dex.solUsd(), 60_000);
+    }
+    this.chainBudget = CHAIN_FALLBACKS_PER_TICK;
+    this.curveCache = new Map();   // mint -> { at, token } for unindexed launches
+    this.warnedCallouts = false;
   }
 
-  async get(path, params = {}) {
-    const url = new URL(this.base + path);
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
-    }
-    if (!this.warned) {
-      this.warned = true;
-      log.warn('pump.fun endpoints are unverified — confirm paths before trusting live output',
-        { base: this.base });
-    }
-    return retry(() => fetchJson(url.toString(), {
-      timeoutMs: 9000,
-      headers: { accept: 'application/json' }
-    }), {
-      attempts: 3,
-      shouldRetry: (e) => e.status === 429 || e.status >= 500 || e.name === 'AbortError',
-      onRetry: (e, n) => log.debug('pump.fun retry', { path, attempt: n, err: e.message })
-    });
+  /** False in live mode: positions are marked from token() quotes only. */
+  get marksFromTrades() { return this.source !== 'live'; }
+
+  /** Opens the PumpPortal socket (live only). */
+  async start() {
+    if (this.source !== 'live') return false;
+    return this.stream.start();
+  }
+
+  stop() { this.stream?.stop(); }
+
+  health() {
+    if (this.source !== 'live') return { source: 'fixture' };
+    return {
+      source: 'live',
+      pumpportal: this.stream.health(),
+      dexscreener: 'tokens/v1',
+      chain: this.chain.endpoint,
+      callouts: 'unavailable — pump.fun publishes no documented callout feed'
+    };
   }
 
   /**
@@ -89,23 +109,27 @@ export class PumpFunClient {
   }
 
   /* ── Callouts ─────────────────────────────────────────────────────────── */
-  async recentCallouts({ limit = 100 } = {}) {
+  async recentCallouts() {
     if (this.source === 'fixture') return this.fixture().callouts.map(parseCallout);
-    const raw = await this.get(config.pumpfun.calloutsPath, { limit, offset: 0 });
-    return asArray(raw).map(parseCallout).filter(Boolean);
+    if (!this.warnedCallouts) {
+      this.warnedCallouts = true;
+      log.warn('live callouts unavailable: pump.fun has no documented public callout feed — ingesting none');
+    }
+    return [];
   }
 
   /* ── Trades ───────────────────────────────────────────────────────────── */
-  async recentTrades({ mint, limit = 200 } = {}) {
+  async recentTrades({ mint } = {}) {
     if (this.source === 'fixture') {
       const all = this.fixture().trades.map(parseTrade);
       return mint ? all.filter(t => t.mint === mint) : all;
     }
-    const path = mint
-      ? `${config.pumpfun.tradesPath}/${encodeURIComponent(mint)}`
-      : config.pumpfun.tradesPath;
-    const raw = await this.get(path, { limit });
-    return asArray(raw).map(parseTrade).filter(Boolean);
+    this.chainBudget = CHAIN_FALLBACKS_PER_TICK;
+    const solUsd = await this.solUsd().catch(() => null);
+    const events = this.stream.recent({ sinceMs: nowMs() - TRADE_LOOKBACK_MS })
+      .filter(e => !mint || e.mint === mint);
+    /* Newest first, so the candidate universe favours fresh launches. */
+    return events.map(e => eventToTrade(e, solUsd)).filter(Boolean).reverse();
   }
 
   /* ── Tokens ───────────────────────────────────────────────────────────── */
@@ -113,27 +137,76 @@ export class PumpFunClient {
     if (this.source === 'fixture') {
       return this.fixture().tokens.map(parseToken).find(t => t.mint === mint) ?? null;
     }
-    const raw = await this.get(`/coins/${encodeURIComponent(mint)}`);
-    return raw ? parseToken(raw) : null;
+    return (await this.tokenMap([mint])).get(mint) ?? null;
   }
 
   async tokens(mints) {
-    const out = [];
+    if (this.source === 'fixture') {
+      const out = [];
+      for (const m of mints) { const t = await this.token(m); if (t) out.push(t); }
+      return out;
+    }
+    return [...(await this.tokenMap(mints)).values()].filter(Boolean);
+  }
+
+  /** Batch lookup; call once per tick with the whole candidate set to stay under rate limits. */
+  async warm(mints) {
+    if (this.source === 'live' && mints.length) await this.tokenMap(mints).catch(() => null);
+  }
+
+  async tokenMap(mints) {
+    const out = await this.dex.tokens(mints);
+    const create = (m) => this.stream.creates.get(m);
     for (const m of mints) {
+      const t = out.get(m);
+      if (t) {
+        if (!t.createdAt && create(m)) t.createdAt = create(m).at;
+        if (this.stream.migrated.has(m)) t.complete = true;
+        continue;
+      }
+      /* Not indexed yet (seconds-old launch): read the curve itself. */
+      const hit = this.curveCache.get(m);
+      if (hit && nowMs() - hit.at < CURVE_TTL_MS) { out.set(m, hit.token); continue; }
+      if (this.chainBudget-- <= 0) continue;
       try {
-        const t = await this.token(m);
-        if (t) out.push(t);
+        const token = await this.curveToken(m);
+        this.curveCache.set(m, { at: nowMs(), token });
+        if (this.curveCache.size > 500) this.curveCache.delete(this.curveCache.keys().next().value);
+        out.set(m, token);
       } catch (err) {
-        log.debug('token fetch failed', { mint: m, err: err.message });
+        log.debug('curve read failed', { mint: m, err: err.message });
       }
     }
     return out;
   }
+
+  async curveToken(mint) {
+    const curve = await this.chain.bondingCurve(mint);
+    if (!curve) return null;
+    const solUsd = await this.solUsd().catch(() => null);
+    const c = this.stream.creates.get(mint);
+    const price = solUsd && curve.priceSol ? curve.priceSol * solUsd : null;
+    return {
+      mint,
+      symbol: c?.symbol || '???',
+      name: c?.name || '',
+      price,
+      mcap: price ? price * curve.totalSupply : null,
+      liquidity: solUsd ? curve.realSol * solUsd : null,
+      createdAt: c?.at ?? null,
+      buyers5m: null, volume5m: null, netInflow5m: null,
+      complete: curve.complete,
+      progress: curve.progress,
+      source: 'chain',
+      raw: curve
+    };
+  }
 }
 
-/* ── Parsers ────────────────────────────────────────────────────────────────
- * Each reads defensively across several plausible field names, so a partial
- * guess still yields usable data rather than undefined everywhere. */
+/* ── Fixture parsers ────────────────────────────────────────────────────────
+ * Used for the bundled strategy fixture (synthetic, see its _comment). Each
+ * reads defensively across several field names so hand-written scenarios stay
+ * easy to author. */
 
 const pick = (o, ...keys) => {
   for (const k of keys) {
@@ -148,7 +221,7 @@ const numOr = (v, d = null) => {
   return Number.isFinite(n) ? n : d;
 };
 
-/** Timestamps arrive as ms, seconds or ISO strings depending on the endpoint. */
+/** Timestamps arrive as ms, seconds or ISO strings depending on the source. */
 function toMs(v) {
   if (v === undefined || v === null) return null;
   if (typeof v === 'number') return v > 1e12 ? v : v * 1000;
@@ -204,7 +277,7 @@ export function parseToken(r) {
     mcap: numOr(pick(r, 'usd_market_cap', 'market_cap', 'mcap')),
     liquidity: numOr(pick(r, 'liquidity', 'virtual_sol_reserves', 'liquidity_usd')),
     createdAt: toMs(pick(r, 'created_timestamp', 'created_at', 'launch_time')),
-    /* Derived elsewhere from the trade feed when the API does not supply them. */
+    /* Derived elsewhere from the trade feed when the source does not supply them. */
     buyers5m: numOr(pick(r, 'buyers_5m', 'unique_buyers_5m'), null),
     volume5m: numOr(pick(r, 'volume_5m', 'vol_5m'), null),
     netInflow5m: numOr(pick(r, 'net_inflow_5m'), null),
@@ -213,16 +286,7 @@ export function parseToken(r) {
   };
 }
 
-function asArray(x) {
-  if (Array.isArray(x)) return x;
-  if (!x || typeof x !== 'object') return [];
-  for (const k of ['data', 'results', 'items', 'callouts', 'trades', 'coins']) {
-    if (Array.isArray(x[k])) return x[k];
-  }
-  return [];
-}
-
-/** Derives velocity metrics from a trade list when the API does not give them. */
+/** Derives velocity metrics from a trade list when the source does not give them. */
 export function deriveActivity(trades, windowMs = 5 * 60_000, now = nowMs()) {
   const recent = trades.filter(t => t.at >= now - windowMs);
   const buys = recent.filter(t => t.isBuy);

@@ -1,112 +1,36 @@
-# PumpXBT
+# PumpXBT site
 
-Marketing site for PumpXBT — the intelligence layer and autonomous agent for
-pump.fun.
+A pro trading terminal look: graphite surfaces, one orange accent, dense data grids,
+mono tabular numerals. It's static and has no build step. Fonts are self-hosted
+(`assets/fonts`, OFL).
 
-Static, dependency-free, no build step. Dark terminal aesthetic on the pump.fun
-green.
+| Page | What |
+|---|---|
+| `index.html` | landing page: live launch tape, PUMPXBT quote, flywheel KPIs, the 5-step loop with live figures, callouts, burn meter |
+| `terminal.html` | the desk: flywheel panel, live launches, paper positions, callouts, top callers, full decision audit (including rejections), source health |
 
-## Running it
+## Every number has a source
+| figure | source | needs |
+|---|---|---|
+| launches tape + grid | PumpPortal websocket `subscribeNewToken` / `subscribeMigration` (free, browser connects directly) | nothing |
+| PUMPXBT price / mcap / liq / vol, SOL | DexScreener `tokens/v1` | `token.address` |
+| claimable fees, treasury + creator SOL, burned, supply, curve | bot ledger API → Solana RPC | `ledgerApi` + bot env |
+| worker mode / cycles / last cycle | bot ledger API → memcoinz worker `/health` | `ledgerApi` + `WORKER_URL` on the bot |
+| agent P&L, positions, callouts, decisions | bot ledger API (paper: labelled SIMULATED) | `ledgerApi` |
 
+When a source is missing or down, the figure shows `—`. There is deliberately no
+config field for typing treasury numbers in by hand.
+
+## Configure (`js/config.js`)
+- `token.address` / `token.pumpUrl`: once the coin exists
+- `ledgerApi`: the PumpXBT bot's public URL (add this site's origin to the bot's `CORS_ORIGINS`)
+- `stage`: `prelaunch | paper | live`. The ledger API's own `paper` flag wins when it's reachable
+- `feeds.market` / `feeds.launches`: turn the client-side feeds off
+
+Before launch, also fix `og:url` / `og:image` in both HTML files so they point at the real domain.
+
+## Run + QA
 ```sh
-python3 -m http.server 8000
-# open http://localhost:8000  — terminal at /terminal.html, LONGDOG at /longdog/
+python3 -m http.server 8123          # in pumpxbt/
+~/memcoinz/bin/mc qa http://localhost:8123/ --pages /,/terminal.html
 ```
-
-## Deploying
-
-PumpXBT lives at the **repo root**, so every host deploys it with zero
-configuration — no root directory, no build command, no output directory.
-
-**Vercel / Netlify / Cloudflare Pages:** import the repo, change nothing,
-deploy. Done.
-
-**GitHub Pages:** Settings → Pages → Source: GitHub Actions. The bundled
-workflow (`.github/workflows/pages.yml`) publishes on every push.
-
-The scrolling-dog toy ships alongside at `/longdog/`; the trading agent
-source is in `pumpxbt-bot/` (not part of the site build).
-
-## Before launch — do these four things
-
-**0. Fix the social card URLs.** In `index.html`, `og:url`, `og:image` and
-`twitter:image` are absolute URLs pointing at `pumpxbt.fun`. Change them to your
-real domain. Social crawlers do not run JavaScript and cannot resolve relative
-paths — if these are wrong, link previews on X, Telegram and Discord render
-blank. Test with the X Card Validator after deploying.
-
-
-**1. Add your brand files.** Drop `logo.png` and `banner.png` into `assets/`.
-See `assets/README.md` for sizes. Until they exist the site falls back to a
-placeholder mark and a "drop your files here" panel — it never shows a broken
-image.
-
-**2. Set the contract address.** In `js/config.js`:
-
-```js
-token: { address: 'YOUR_MINT_ADDRESS', pumpUrl: 'https://pump.fun/coin/...' }
-```
-
-The moment this is set, price / 24h change / market cap / liquidity go live via
-the Dexscreener public API, refreshing every 60 seconds. Until it is set every
-market figure renders as an em dash with a note explaining why.
-
-**3. Fill in the treasury numbers.** Also in `js/config.js`. These have no
-public feed so they are yours to maintain:
-
-```js
-treasury: {
-  valueUsd: null, realisedPnlUsd: null, feesRoutedUsd: null,
-  boughtBackUsd: null, burnedTokens: null, burnedPctSupply: null,
-  lastBurnTx: ''
-}
-```
-
-Any field left `null` renders as `—`. That is deliberate: **the site never
-displays an invented number.** Set `lastBurnTx` to a signature and the "view
-latest burn transaction" button appears, linked to Solscan.
-
-## The callouts section
-
-`callouts.sample` is `true` out of the box. While true, the terminal panel is
-badged **SAMPLE DATA** in amber and the prompt reads `# awaiting live feed`.
-
-Set it to `false` only once `callouts.items` contains real, published callouts.
-Leaving it `true` with real-looking rows would present a fabricated track
-record as a genuine one.
-
-```js
-callouts: {
-  sample: false,
-  items: [{ ticker: 'ABC', note: 'thesis…', at: '2h ago', status: 'win' }]
-}
-```
-
-`status` accepts `win` (green) or `open` (amber).
-
-## Editing content
-
-Everything on the page is driven by `js/config.js` — the flywheel steps,
-capability cards, roadmap and FAQ are all arrays. Add or reorder entries and
-the page rebuilds itself; no HTML editing needed.
-
-The flywheel diagram derives its node positions from the number of steps, so
-adding a sixth step re-spaces the circle automatically.
-
-## Files
-
-| Path             | What it does                                              |
-| ---------------- | --------------------------------------------------------- |
-| `index.html`     | Page structure                                             |
-| `css/styles.css` | Design system and all layout                               |
-| `js/config.js`   | **Everything you edit** — token, treasury, copy, roadmap   |
-| `js/app.js`      | Rendering, live market data, scroll interactions           |
-| `assets/`        | Your `logo.png` and `banner.png` go here                   |
-
-## Notes
-
-- Respects `prefers-reduced-motion`; scales to a 390px phone.
-- The hero sparkline is decorative and deterministic — it is not price history
-  and is never labelled as such.
-- Footer carries a risk disclaimer. Keep it.
-- Not affiliated with pump.fun.
