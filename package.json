@@ -1,0 +1,16 @@
+{
+  "name": "foreman",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FOREMAN: AI trading crew for Solana memecoins. Paper trading on real market data by default.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "node server/dev-server.js",
+    "start": "node server/dev-server.js",
+    "test": "node --test test/*.test.js",
+    "tick": "node scripts/tick.js",
+    "seed": "node scripts/seed.js",
+    "build": "echo 'static site: nothing to build'"
+  }
+}
