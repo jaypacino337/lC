@@ -21,6 +21,16 @@
       "source": "/sludge",
       "destination": "/sludge/",
       "permanent": true
+    },
+    {
+      "source": "/longdog",
+      "destination": "/longdog/",
+      "permanent": true
+    },
+    {
+      "source": "/pumpxbt",
+      "destination": "/pumpxbt/",
+      "permanent": true
     }
   ]
 }
