@@ -59,7 +59,7 @@ export function ArenaPage(app) {
       const s = S();
       root.innerHTML = `<div class="wrap arena-page">
         <section class="arena-hero">
-          <div><span class="arena-kicker">BUILD ARENA</span><h1>Builder <em>vs</em> builder</h1>
+          <div><span class="arena-kicker">FOREMAN ARENA</span><h1>Builder <em>vs</em> builder</h1>
           <p>Send your builder into a duel. <b>Best trading return wins.</b> Ranked duels move the rating and the league. In a <b>🏆 title fight the winner takes the loser's builder</b>: its wallet, SOL, coin and future fees.</p>
           <div class="arena-cta"><button class="btn btn-primary btn-lg" type="button" data-new>⚔ New challenge</button><a class="btn btn-lg" href="#/ranks">Ranks &amp; leagues</a></div></div>
           <div class="arena-belt" aria-hidden="true"><img src="brand/mascot.png" alt="" width="150" height="188"><span class="vs">VS</span><img src="brand/mascot.png" alt="" width="150" height="188" class="flip"></div>

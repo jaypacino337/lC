@@ -1,4 +1,4 @@
-// BUILD home: hero + live 3D site office, platform stats, builder jobs, your builders,
+// FOREMAN home: hero + live 3D site office, platform stats, builder jobs, your builders,
 // a builder's office + career, "Builders, right now" (what every builder decided and why),
 // the just-bonded phone and the live trade feed.
 import { createOffice, OFFICE_NAMES, MAIN_OFFICE } from '../office3d.js';
@@ -9,7 +9,7 @@ import { robotParts, robotSVG } from '../robot.js';
 import { STRAT_ICONS, stratIcon, stratKey, strategyById, avatar, feedItem, coinThumb, esc, sol, signedSol, pct, tone, ago, usd, age } from '../ui.js';
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SEL_KEY = 'build-home-builder';
+const SEL_KEY = 'foreman-home-builder';
 const store = { get() { try { return localStorage.getItem(SEL_KEY); } catch { return null; } }, set(v) { try { localStorage.setItem(SEL_KEY, String(v)); } catch {} } };
 
 // the six jobs on the home page: every built-in strategy + your own
@@ -42,7 +42,7 @@ export function HomePage(app) {
   const stTxt = (a) => (a.paused ? 'Paused' : a.status === 'ACTIVE' ? 'Working' : 'Idle');
 
   // ── hero ──
-  const fallbackHTML = () => `<img class="office-img" src="brand/banner.jpg" alt="The BUILD site office">
+  const fallbackHTML = () => `<img class="office-img" src="brand/banner.jpg" alt="The FOREMAN site office">
     <button type="button" class="fb-bub ob ob-shill" data-role="shill" style="left:36.3%;top:44.5%"><span class="ob-t"><b>Content Creator</b><small>Posting on X</small></span></button>
     <button type="button" class="fb-bub ob ob-trade" data-role="trade" style="left:57.5%;top:32.5%"><span class="ob-t"><b>Trader</b><small>Trading 24/7</small></span></button>
     <button type="button" class="fb-bub ob ob-research" data-role="research" style="left:36.1%;top:70.1%"><span class="ob-t"><b>Researcher</b><small>Finding trends</small></span></button>
@@ -58,16 +58,16 @@ export function HomePage(app) {
 
   const statsHTML = (s) => `
     <div class="ps-row"><div><b>${(s.agentsTotal || 0).toLocaleString('en-US')}</b><small>Builders created</small></div><span class="ps-bars">${IC.stats}</span></div>
-    <div class="ps-row"><div><b>${sol(s.volume24hSol || 0, 1)} <i>SOL</i></b><small>Traded by builders · 24h</small></div><span class="ps-bars">${IC.stats}</span></div>
-    <div class="ps-row"><div><b class="${tone(s.pnlSol)}">${signedSol(s.pnlSol || 0, 2)} <i>SOL</i></b><small>Total PnL</small></div><span class="ps-bars">${IC.stats}</span></div>
-    <div class="ps-mini"><span><b>${s.agentsActive || 0}</b> working</span><span><b>${(s.trades24h || 0).toLocaleString('en-US')}</b> trades 24h</span><span><b>${sol(s.aumSol || 0, 2)}</b> SOL in wallets</span></div>`;
+    <div class="ps-row"><div><b>${sol(s.volume24hSol || 0, 1)} <i>SOL</i></b><small>Traded by builders · 24h${s.paper ? ' · paper' : ''}</small></div><span class="ps-bars">${IC.stats}</span></div>
+    <div class="ps-row"><div><b class="${tone(s.pnlSol)}">${signedSol(s.pnlSol || 0, 2)} <i>SOL</i></b><small>Total PnL${s.paper ? ' · paper (simulated)' : ''}</small></div><span class="ps-bars">${IC.stats}</span></div>
+    <div class="ps-mini"><span><b>${s.agentsActive || 0}</b> working</span><span><b>${(s.trades24h || 0).toLocaleString('en-US')}</b> trades 24h</span><span><b>${sol(s.aumSol || 0, 2)}</b> ${s.paper ? 'paper SOL managed' : 'SOL in wallets'}</span></div>`;
 
   // recent activity: trades, launches and promotions, newest first
   const activityHTML = (snap) => {
     const items = [];
     for (const t of (snap.feed || []).slice(0, 10)) items.push({ ts: t.ts, seed: t.avatarSeed, href: `#/builder/${t.agentNo}`, text: `${esc(t.agentName)} ${t.side === 'BUY' ? 'bought' : 'sold'} <b>$${esc(t.symbol)}</b>${t.side === 'SELL' && t.pnlPct != null ? ` <span class="${tone(t.pnlPct)}">${pct(t.pnlPct)}</span>` : ''}` });
     const byId = Object.fromEntries((snap.agents || []).map((a) => [a.id, a]));
-    for (const c of (snap.coins || []).slice(0, 6)) { const a = byId[c.agentId]; if (a) items.push({ ts: c.createdAt, seed: a.avatarSeed, href: `#/builder/${a.no}`, text: `${esc(a.name)} launched <b>$${esc(c.ticker)}</b>` }); }
+    for (const c of (snap.coins || []).slice(0, 6)) { const a = byId[c.agentId]; if (a) items.push({ ts: c.createdAt, seed: a.avatarSeed, href: `#/builder/${a.no}`, text: c.paper ? `${esc(a.name)} clocked in <span class="muted">(paper)</span>` : `${esc(a.name)} launched <b>$${esc(c.ticker)}</b>` }); }
     for (const th of (snap.thoughts || []).filter((x) => x.levelUp).slice(0, 4)) items.push({ ts: th.ts, seed: th.avatarSeed, href: `#/builder/${th.agentNo}`, text: `${esc(th.agentName)} promoted to <b>${esc(th.levelUp)}</b>` });
     items.sort((a, b) => b.ts - a.ts);
     if (!items.length) return '<div class="ra-empty">Quiet on site. Build the first builder and it shows up here.</div>';
@@ -117,7 +117,7 @@ export function HomePage(app) {
   };
   const officeCardHTML = (snap) => {
     const a = selected(snap);
-    if (!a) return `<div class="bo-grid"><div class="bo-stage bo-static"><img src="brand/banner.jpg" alt="A BUILD site office"></div>
+    if (!a) return `<div class="bo-grid"><div class="bo-stage bo-static"><img src="brand/banner.jpg" alt="A FOREMAN site office"></div>
       <div class="bo-info"><div class="bo-card"><b>Every builder gets an office</b><p>It starts in ${esc(OFFICE_NAMES[1])} and moves up with every promotion, all the way to ${esc(OFFICE_NAMES[6])}.</p></div><a class="btn btn-primary btn-block" href="#/build">Build your builder</a></div></div>`;
     return `<div class="bo-grid"><div class="bo-stage" id="h-bo-stage"></div>${infoHTML(a)}</div>`;
   };
@@ -178,11 +178,11 @@ export function HomePage(app) {
 
   const feedHTML = (feed) => {
     const items = (feed || []).filter((t) => feedFilter === 'all' || t.side === feedFilter).slice(0, 30);
-    return items.length ? items.map((t) => feedItem(t)).join('') : `<div class="feed-empty">No trades yet. Builders start trading a few seconds after their coin launches.</div>`;
+    return items.length ? items.map((t) => feedItem(t)).join('') : `<div class="feed-empty">No trades yet. Builders trade when a token fits their plan; quiet markets mean fewer trades.</div>`;
   };
   const newBuildsHTML = (snap) => {
     const byId = Object.fromEntries(snap.agents.map((a) => [a.id, a]));
-    if (!snap.coins.length) return `<a class="hire empty" href="#/build"><span class="hire-av">${avatar('crew-launch', 56)}</span><span class="hire-t"><b>Your coin here</b><small>The first build gets the first desk</small></span><span class="hire-cta">Build →</span></a>`;
+    if (!snap.coins.length) return `<a class="hire empty" href="#/build"><span class="hire-av">${avatar('crew-launch', 56)}</span><span class="hire-t"><b>Your coin here</b><small>The first hire gets the first desk</small></span><span class="hire-cta">Build →</span></a>`;
     return snap.coins.slice(0, 5).map((c) => {
       const a = byId[c.agentId];
       const fresh = Date.now() - c.createdAt < 15 * 60_000;
@@ -199,11 +199,11 @@ export function HomePage(app) {
     return `<div class="wrap home">
       <section class="hero2">
         <div class="hero2-copy">
-          <h1 class="brick-word" aria-label="BUILD"><span>B</span><span>U</span><span>I</span><span>L</span><span class="y">D</span></h1>
-          <h2 class="hero2-h">Build your AI builder<br>and let it <em>work for you.</em></h2>
-          <p class="hero2-p">Launch a coin, give your builder a job and it gets its own Solana wallet. It trades real SOL, keeps every creator fee, explains every move and grows 24/7.</p>
+          <h1 class="brick-word" aria-label="FOREMAN"><span>F</span><span>O</span><span>R</span><span>E</span><span>M</span><span>A</span><span class="y">N</span></h1>
+          <h2 class="hero2-h">Hire your AI builder<br>and let it <em>work for you.</em></h2>
+          <p class="hero2-p">${cfg.paper ? 'Give your builder a job and a paper bankroll. It trades Solana memecoins 24/7 on live pump.fun and DexScreener prices, explains every move and climbs the career ladder. <b>Paper trading: simulated SOL, real market data.</b>' : 'Launch a coin, give your builder a job and it gets its own Solana wallet. It trades real SOL, keeps every creator fee, explains every move and grows 24/7.'}</p>
           <div class="hero2-cta">
-            <a class="btn btn-primary btn-lg" href="#/build">${IC.brick}<span>Build Your Builder</span>${IC.arrow}</a>
+            <a class="btn btn-primary btn-lg" href="#/build">${IC.brick}<span>Hire Your Builder</span>${IC.arrow}</a>
             <a class="btn btn-lg btn-ghost" href="#/how">${IC.play}<span>How it works</span></a>
           </div>
         </div>

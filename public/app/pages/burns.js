@@ -32,7 +32,7 @@ const burnRows = (list, { loading, err, empty, dev }) => {
   </tr>`).join('');
 };
 
-// ── BUILDER BURNS: pct of every builder's creator fees buys + burns the BUILD coin ──
+// ── BUILDER BURNS: pct of every builder's creator fees buys + burns the FOREMAN coin ──
 export function AgentBurnsPage(app) {
   const cfg = app.api.config;
   let el, data = null, loading = true, err = null;
@@ -49,7 +49,7 @@ export function AgentBurnsPage(app) {
       const F = cfg.flywheel || {};
       root.innerHTML = `<div class="wrap">
         <div class="page-head"><div><h1>Builder Burns</h1>
-          <p>${F.enabled ? `<b>${Math.round((F.pct || 0) * 100)}% of every creator-fee claim</b> from every builder buys the BUILD coin and <b>burns it forever</b>. Every buy and every burn is on-chain: click a transaction to check it on Solscan.` : 'The flywheel is switched off right now.'}</p></div>
+          <p>${F.enabled ? `<b>${Math.round((F.pct || 0) * 100)}% of every creator-fee claim</b> from every builder buys the FOREMAN coin and <b>burns it forever</b>. Every buy and every burn is on-chain: click a transaction to check it on Solscan.` : 'The flywheel is switched off right now.'}</p></div>
           <div class="right"><a class="btn" href="#/dev-burns">🔥 Dev Burns →</a></div></div>
         ${coinBox(F.mint)}
         <div id="bn-stats"></div>
@@ -65,9 +65,9 @@ export function AgentBurnsPage(app) {
           <ol>
             <li>Every builder claims the pump.fun creator fees of its own coin.</li>
             <li>${Math.round((F.pct || 0) * 100)}% of each claim is set aside in the builder's wallet. The rest keeps trading.</li>
-            <li>When ${F.minBuySol || 0.01} SOL or more is collected, the builder buys the BUILD coin with it.</li>
+            <li>When ${F.minBuySol || 0.01} SOL or more is collected, the builder buys the FOREMAN coin with it.</li>
             <li>Right after, it burns every token it bought (they are gone for good) and closes the empty account.</li>
-            ${cfg.skins?.payWith?.burn ? `<li>Skins are paid in BUILD too: ${(cfg.skins.payWith.burnPct ?? 1) >= 1 ? 'every token paid for a skin' : Math.round(cfg.skins.payWith.burnPct * 100) + '% of every skin payment'} is burned here as well (marked SKIN).</li>` : ''}
+            ${cfg.skins?.payWith?.burn ? `<li>Skins are paid in FOREMAN too: ${(cfg.skins.payWith.burnPct ?? 1) >= 1 ? 'every token paid for a skin' : Math.round(cfg.skins.payWith.burnPct * 100) + '% of every skin payment'} is burned here as well (marked SKIN).</li>` : ''}
           </ol>
         </section>
       </div>`;
@@ -78,7 +78,7 @@ export function AgentBurnsPage(app) {
   };
 }
 
-// ── DEV BURNS: pct of the BUILD dev wallet's own creator fees → buyback + burn ──
+// ── DEV BURNS: pct of the FOREMAN dev wallet's own creator fees → buyback + burn ──
 export function DevBurnsPage(app) {
   const cfg = app.api.config;
   let el, data = null, loading = true, err = null;
@@ -111,7 +111,7 @@ export function DevBurnsPage(app) {
       const F = cfg.flywheel || {};
       root.innerHTML = `<div class="wrap">
         <div class="page-head"><div><h1>Dev Burns</h1>
-          <p>The server claims the <b>BUILD dev wallet's</b> pump.fun creator fees by itself. <b>10% of every claim</b> buys the BUILD coin and burns exactly the tokens it bought. Every claim, buy and burn links to Solscan.</p></div>
+          <p>The server claims the <b>FOREMAN dev wallet's</b> pump.fun creator fees by itself. <b>10% of every claim</b> buys the FOREMAN coin and burns exactly the tokens it bought. Every claim, buy and burn links to Solscan.</p></div>
           <div class="right"><a class="btn" href="#/burns">🔥 Builder Burns →</a></div></div>
         <p class="muted" id="dv-off" hidden>The dev buyback is not switched on yet.</p>
         <p class="burn-warn" id="dv-err" hidden></p>

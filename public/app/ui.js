@@ -22,7 +22,7 @@ export function pixIcon(rows) {
   return `<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true">${rects}</svg>`;
 }
 
-// Pixel icons for the BUILD crew: LAUNCH → SHILL → TRADE → FEES
+// Pixel icons for the FOREMAN crew: LAUNCH → SHILL → TRADE → FEES
 export const ICONS = {
   launch: pixIcon(['.....#.....', '....###....', '...#####...', '...##.##...', '...##.##...', '...#####...', '...#####...', '..#######..', '.##.###.##.', '.#..###..#.', '....#.#....']),
   shill: pixIcon(['#.......#', '##.....##', '.##...##.', '..##.##..', '...###...', '..##.##..', '.##...##.', '##.....##', '#.......#']),
@@ -33,8 +33,13 @@ export const ICONS = {
   moon: pixIcon(['..####...', '.##......', '##.......', '##.......', '##.......', '###......', '.###...##', '..######.', '...####..']),
 };
 
-export function agentLoop(extraClass = '') {
-  const items = [
+export function agentLoop(extraClass = '', paper = false) {
+  const items = paper ? [
+    ['launch', 'Hire', 'Pick a look, a job and a paper bankroll. One free signature, no SOL moves'],
+    ['shill', 'Shill', 'One click writes a post for X with its paper P&L'],
+    ['trade', 'Trade', 'Buys and sells on live prices with simulated fills, every market tick'],
+    ['fees', 'Explain', 'Every BUY, SELL and HOLD comes with the reason, in public'],
+  ] : [
     ['launch', 'Launch', 'Your coin goes live on pump.fun, created by the builder\'s own wallet'],
     ['shill', 'Shill', 'One click writes a post for X with the coin, CA and live P&L'],
     ['trade', 'Trade', 'Buys and sells real SOL with fixed rules, every few seconds'],
@@ -79,6 +84,7 @@ export function sourceChip(source) {
   if (source === 'time-exit') return `<span class="chip">Time exit</span>`;
   if (source === 'stop-loss') return `<span class="chip chip-sl">Stop loss</span>`;
   if (source === 'withdraw') return `<span class="chip">Withdrawal</span>`;
+  if (source === 'stale') return `<span class="chip">No price · closed</span>`;
   if (source === 'rugged') return `<span class="chip chip-sl">Rugged · written off</span>`;
   return '';
 }
@@ -104,6 +110,7 @@ export function feedItem(t, fresh = false) {
         <span class="fi-amt">${sol(t.sol, 3)} <small>SOL</small></span>
         ${pnl}
         ${sourceChip(t.source)}
+        ${t.paper ? '<span class="chip chip-paper" title="Simulated fill at the live price">paper</span>' : ''}
         <span class="fi-tx">${txLink(t.sig, 'tx')}</span>
       </div>
       ${t.reason ? `<p class="fi-reason">${esc(t.reason)}</p>` : ''}
@@ -200,9 +207,9 @@ export function riskWarning(st, { checkbox = false, checked = false } = {}) {
   </div>`;
 }
 
-// a skin's price in BUILD (skins are paid only in the BUILD coin, same value as their SOL price)
+// a skin's price in FOREMAN (skins are paid only in the FOREMAN coin, same value as their SOL price)
 const fmtBig = (n) => (n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : Math.round(n).toLocaleString('en'));
 export function skinPriceLabel(item, S) {
   const px = S?.payWith?.tokenPriceSol;
-  return px > 0 ? `≈ ${fmtBig(item.priceSol / px)} BUILD` : `${item.priceSol} SOL in BUILD`;
+  return px > 0 ? `≈ ${fmtBig(item.priceSol / px)} FOREMAN` : `${item.priceSol} SOL in FOREMAN`;
 }

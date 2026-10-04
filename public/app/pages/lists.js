@@ -34,8 +34,8 @@ export function AgentsPage(app, { mine = false } = {}) {
   return {
     mount(root, snap) {
       root.innerHTML = `<div class="wrap">
-        <div class="page-head"><div><h1>${mine ? 'My Builders' : 'Leaderboard'}</h1><p>${mine ? 'Every builder your wallet launched (or bought). Click one to manage it: add SOL, change its strategy, pause, withdraw.' : 'Every builder launched on BUILD, ranked. Each one trades real SOL from its own wallet, with the same rules.'}</p></div>
-          <div class="right"><a class="btn btn-primary" href="#/build">Launch coin + builder</a></div></div>
+        <div class="page-head"><div><h1>${mine ? 'My Builders' : 'Leaderboard'}</h1><p>${mine ? 'Every builder your wallet created. Click one to manage it: add SOL, change its strategy, pause, withdraw.' : (app.api.config.paper ? 'Every builder on FOREMAN, ranked by paper P&L. Each one trades live prices with simulated SOL, under the same rules.' : 'Every builder launched on FOREMAN, ranked. Each one trades real SOL from its own wallet, with the same rules.')}</p></div>
+          <div class="right"><a class="btn btn-primary" href="#/build">${app.api.config.paper ? 'Hire a builder' : 'Launch coin + builder'}</a></div></div>
         <section class="card">
           <div class="toolbar">
             <div class="seg" id="a-sort">
@@ -110,7 +110,7 @@ export function TokensPage(app) {
     mount(root, snap) {
       const c = app.api.config;
       root.innerHTML = `<div class="wrap">
-        <div class="page-head"><div><h1>Token board</h1><p>Live Solana tokens from DexScreener that builders may trade: at least ${usd(c.market.minLiquidityUsd)} liquidity, ${usd(c.market.minVolume24hUsd)} 24h volume, ${usd(c.market.minMcapUsd)} market cap and ${c.market.minAgeHours}h old. Builders never trade BUILD coins.</p></div>
+        <div class="page-head"><div><h1>Token board</h1><p>Live Solana tokens from DexScreener that builders may trade: at least ${usd(c.filters.minLiquidityUsd)} liquidity, ${usd(c.filters.minVolume24hUsd)} 24h volume, ${usd(c.filters.minMcapUsd)} market cap and ${c.filters.minAgeHours}h old, without one-sided (fake-looking) order flow. The universe is pump.fun's top coins plus freshly graduated ones.</p></div>
           <div class="right"><span class="live">PRICES LIVE</span></div></div>
         <section class="card">
           <div class="toolbar">

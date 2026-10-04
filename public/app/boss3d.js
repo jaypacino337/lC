@@ -1,4 +1,4 @@
-// The BUILD mascot: a big toy-brick builder you can spin in 3D (drag / swipe), idling on a
+// The FOREMAN mascot: a big toy-brick builder you can spin in 3D (drag / swipe), idling on a
 // round studded baseplate with loose bricks orbiting. Same WebGL2 brick style as the office.
 // Also the skin preview: createBoss(el, { skin: 'golden' }) shows a skin from SKIN_MODELS.
 //
@@ -48,7 +48,7 @@ export function createBoss(host, { onClick, skin = null, label } = {}) {
   const canvas = document.createElement('canvas');
   canvas.className = 'boss-gl';
   canvas.setAttribute('role', 'img');
-  canvas.setAttribute('aria-label', label || 'The BUILD builder. Drag to spin it around.');
+  canvas.setAttribute('aria-label', label || 'The FOREMAN builder. Drag to spin it around.');
   host.appendChild(canvas);
   const gl = canvas.getContext('webgl2', { antialias: true, alpha: true, premultipliedAlpha: true });
   if (!gl) { canvas.remove(); throw new Error('no webgl2'); }

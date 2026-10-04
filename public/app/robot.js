@@ -1,4 +1,4 @@
-// BUILD crew: every agent is a little toy-brick builder (hard hat, face, hair, outfit, gear),
+// FOREMAN crew: every agent is a little toy-brick builder (hard hat, face, hair, outfit, gear),
 // drawn as pixel blocks with a darker side face so it reads like a 3D brick figure.
 // Everything is generated from a seed (the agent's avatar seed): same agent, same builder.
 // API: robotSVG(seed, { stand }), robotPNG(seed, size), robotTraits(seed), robotParts(seed, full).

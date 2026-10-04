@@ -66,18 +66,18 @@ export function AgentPage(app, id) {
     const st = d.rawStatus;
     const T = [];
     if (st === 'ACTIVE') {
-      T.push({ act: 'deposit', label: 'Add SOL', sub: 'fund the builder', bg: '#E4282E', icon: 'plus', creator: true });
+      T.push({ act: 'deposit', label: d.paper ? 'Add paper SOL' : 'Add SOL', sub: d.paper ? 'simulated top-up' : 'fund the builder', bg: '#E4282E', icon: 'plus', creator: true });
       T.push(d.paused
         ? { act: 'resume', label: 'Resume', sub: 'start trading', bg: '#1E9C47', icon: 'play', creator: true }
         : { act: 'pause', label: 'Pause', sub: 'stop new trades', bg: '#E8A32E', icon: 'pause', creator: true, dark: true });
       const title = d.arena?.current?.stake === 'builder';
-      T.push({ act: 'withdraw', label: 'Withdraw', sub: d.market ? 'locked: for sale' : title ? 'locked: title fight' : 'SOL to your wallet', bg: '#3A3A42', icon: 'down', creator: true });
+      T.push({ act: 'withdraw', label: 'Withdraw', sub: d.market ? 'locked: for sale' : title ? 'locked: title fight' : d.paper ? 'paper balance' : 'SOL to your wallet', bg: '#3A3A42', icon: 'down', creator: true });
       if (cfg.arena?.enabled) T.push(mine
         ? { act: 'arena', label: 'Arena', sub: d.arena?.current ? `in duel #${d.arena.current.no}` : 'challenge a builder', bg: '#B3261E', icon: 'swords', creator: !d.arena?.current }
         : { act: 'arena-target', label: 'Challenge', sub: 'duel this builder', bg: '#B3261E', icon: 'swords', creator: false });
-      T.push({ act: 'shill', label: 'Shill on X', sub: 'ready-made post', bg: '#0B0B0D', icon: 'x', creator: false, off: !d.coin?.mint });
+      T.push({ act: 'shill', label: 'Shill on X', sub: 'ready-made post', bg: '#0B0B0D', icon: 'x', creator: false, off: !d.coin?.mint && !d.paper });
       T.push({ act: 'strategy', label: 'Strategy', sub: strat().name, bg: '#2F5FD0', icon: 'target', creator: true });
-      T.push({ act: 'pump', label: 'pump.fun', sub: 'coin page', bg: '#26262C', icon: 'link', creator: false, off: !d.coin?.mint });
+      if (d.coin?.mint) T.push({ act: 'pump', label: 'pump.fun', sub: 'coin page', bg: '#26262C', icon: 'link', creator: false });
       if (cfg.market?.enabled) {
         const L = d.market;
         T.push(L && L.escrow
@@ -222,7 +222,7 @@ export function AgentPage(app, id) {
     return `<section class="ag-hero">
       <div class="ag-hero-art" aria-hidden="true"></div>
       <div class="ag-hero-in">
-        <div class="ag-no">${d.no ? 'BUILDER #' + String(d.no).padStart(3, '0') : 'NEW BUILDER'}${d.coin?.createdAt ? ` · launched ${age(d.coin.createdAt)} ago` : ''}</div>
+        <div class="ag-no">${d.no ? 'BUILDER #' + String(d.no).padStart(3, '0') : 'NEW BUILDER'}${d.coin?.createdAt ? ` · ${d.paper ? 'hired' : 'launched'} ${age(d.coin.createdAt)} ago` : ''}</div>
         <h1>${esc(d.name)}</h1>
         <div class="ag-chips">
           ${d.level ? `<span class="ag-chip lv">${IC.gear}${esc(d.level.name)}</span>` : ''}
@@ -230,12 +230,12 @@ export function AgentPage(app, id) {
           ${d.company ? coBadge(d.company) : ''}
           ${d.coin?.ticker ? `<span class="ag-chip coin">${IC.target}$${esc(d.coin.ticker)}</span>` : ''}
           <span class="ag-chip">${stratIcon(strat())}${esc(strat().name)}</span>
-          <span class="ag-chip">${IC.coin}Solana Mainnet</span>
+          <span class="ag-chip${d.paper ? ' paper' : ''}">${IC.coin}${d.paper ? 'Paper · live prices' : 'Solana Mainnet'}</span>
           ${d.x?.connected ? `<a class="ag-chip ag-chip-x" href="https://x.com/${esc(d.x.handle)}" target="_blank" rel="noopener">${IC.x}@${esc(d.x.handle)}</a>` : ''}
         </div>
         <span class="ag-status ${st[0]}">${d.paused ? IC.pause : st[0] === 'work' ? IC.play : ''}${esc(st[1])}</span>
         ${d.rawStatus === 'ACTIVE' ? `<div class="ag-lvbar">${levelBar(d.level)}</div>` : ''}
-        <div class="ag-walletbar"><span class="ag-wl">Builder wallet</span><code class="ag-addr">${esc(d.wallet)}</code><button type="button" class="ag-copy" data-copy="${esc(d.wallet)}" title="Copy">${IC.copy}</button><a class="btn ag-scan" href="https://solscan.io/account/${esc(d.wallet)}" target="_blank" rel="noopener"><span>View on Solscan</span>${IC.ext}</a></div>
+        ${d.paper ? `<div class="ag-walletbar"><span class="ag-wl">Paper builder</span><code class="ag-addr">No on-chain wallet · simulated SOL · never send funds here</code></div>` : `<div class="ag-walletbar"><span class="ag-wl">Builder wallet</span><code class="ag-addr">${esc(d.wallet)}</code><button type="button" class="ag-copy" data-copy="${esc(d.wallet)}" title="Copy">${IC.copy}</button><a class="btn ag-scan" href="https://solscan.io/account/${esc(d.wallet)}" target="_blank" rel="noopener"><span>View on Solscan</span>${IC.ext}</a></div>`}
       </div>
       <div class="ag-actions">
         ${p ? `<div class="ag-main"><button type="button" class="btn btn-primary btn-lg ag-go" data-tile="${esc(p.act)}">${IC[p.icon] || ''}<span>${esc(p.label)}</span></button>${T.length > 1 ? `<button type="button" class="btn btn-primary btn-lg ag-chev" data-menu aria-label="More actions">${IC.chev}</button>` : ''}</div>` : ''}
@@ -248,11 +248,11 @@ export function AgentPage(app, id) {
   };
 
   const statsHTML = () => `
-    <div class="ag-stat"><span class="ag-sic">${IC.wallet}</span><div><small>SOL BALANCE</small><b>${sol(d.balanceSol, 4)} <i>SOL</i></b><span>free SOL in the builder wallet</span></div></div>
+    <div class="ag-stat"><span class="ag-sic">${IC.wallet}</span><div><small>${d.paper ? 'PAPER SOL' : 'SOL BALANCE'}</small><b>${sol(d.balanceSol, 4)} <i>SOL</i></b><span>${d.paper ? 'free simulated SOL' : 'free SOL in the builder wallet'}</span></div></div>
     <div class="ag-stat"><span class="ag-sic">${IC.bars}</span><div><small>PORTFOLIO VALUE</small><b>${sol(d.equitySol, 4)} <i>SOL</i></b><span>${usd(d.equitySol * (app.api.snapshot.stats.solUsd || 0))} incl. positions</span></div></div>
-    <div class="ag-stat"><span class="ag-sic">${IC.up}</span><div><small>TOTAL P&amp;L</small><b class="${tone(d.pnlSol)}">${signedSol(d.pnlSol, 4)} <i>SOL</i></b><span><em class="${tone(d.pnlSol)}">${pct(d.pnlPct, 1)}</em> on ${sol(d.depositedSol, 3)} SOL deposited</span></div></div>
+    <div class="ag-stat"><span class="ag-sic">${IC.up}</span><div><small>TOTAL P&amp;L${d.paper ? ' · PAPER' : ''}</small><b class="${tone(d.pnlSol)}">${signedSol(d.pnlSol, 4)} <i>SOL</i></b><span><em class="${tone(d.pnlSol)}">${pct(d.pnlPct, 1)}</em> on ${sol(d.depositedSol, 3)} SOL deposited</span></div></div>
     <div class="ag-stat"><span class="ag-sic">${IC.swap}</span><div><small>TOTAL TRADES</small><b>${d.trades}</b><span>${d.closedTrades} closed · ${d.winRate == null ? 'no win rate yet' : Math.round(d.winRate * 100) + '% wins'}</span></div></div>
-    <div class="ag-stat"><span class="ag-sic coin">${IC.coin}</span><div><small>CREATOR FEES KEPT</small><b>${sol(d.feesKeptSol, 4)} <i>SOL</i></b><span>${d.feesToCreatorSol > 0 ? `${sol(d.feesToCreatorSol, 4)} SOL sent to creator` : 'all fees stay with the builder'}</span></div></div>`;
+    ${d.paper ? `<div class="ag-stat"><span class="ag-sic coin">${IC.coin}</span><div><small>FEES PAID · PAPER</small><b>${sol(d.feesPaidSol || 0, 4)} <i>SOL</i></b><span>simulated network fees; pool fees + price impact are in each fill</span></div></div>` : `<div class="ag-stat"><span class="ag-sic coin">${IC.coin}</span><div><small>CREATOR FEES KEPT</small><b>${sol(d.feesKeptSol, 4)} <i>SOL</i></b><span>${d.feesToCreatorSol > 0 ? `${sol(d.feesToCreatorSol, 4)} SOL sent to creator` : 'all fees stay with the builder'}</span></div></div>`}`;
 
   const stratCardHTML = () => {
     const st = strat();
@@ -375,7 +375,7 @@ export function AgentPage(app, id) {
         <td class="r muted">${price(t.priceUsd)}</td>
         <td class="r">${t.side === 'SELL' ? `<b class="${tone(t.pnlPct)}">${pct(t.pnlPct)}</b><br><span class="${tone(t.pnlSol)}" style="font-size:12px">${signedSol(t.pnlSol, 4)} SOL</span>` : '<span class="muted">–</span>'}</td>
         <td>${sourceChip(t.source) || '<span class="chip">Builder</span>'}</td>
-        <td>${txLink(t.sig)}</td>
+        <td>${t.sig ? txLink(t.sig) : t.paper ? '<span class="chip chip-paper">paper</span>' : ''}</td>
       </tr>`).join('')}</tbody></table></div>
       ${d.history.length > 25 ? `<button class="card-foot" style="width:100%;border:0;border-top:1px solid var(--line);background:transparent;cursor:pointer;text-align:left" id="ag-more">${showAll ? 'Show fewer' : 'Show all ' + d.history.length + ' recent trades'}</button>` : ''}`;
   };
@@ -385,7 +385,7 @@ export function AgentPage(app, id) {
     return `<ul class="decisions">${d.decisions.map((x) => `<li>
       <div class="top">${sidePill(x.action)}${x.count > 1 ? `<span class="muted" style="font-size:12px;font-weight:600">${x.failed ? `tried ${x.count > 999 ? '999+' : x.count}×` : `×${x.count} in a row`}</span>` : ''}${x.symbol ? `<b>$${esc(x.symbol)}</b>` : ''}<span class="when" data-ago="${x.ts}">${ago(x.ts)}</span></div>
       ${x.reason ? `<p>${esc(x.reason)}</p>` : ''}
-      ${x.blocked ? `<div class="blocked${x.failed ? ' failed' : ''}">${esc(x.blocked)}</div>` : x.action !== 'HOLD' ? '<div class="approved">Approved by risk check · executed on-chain</div>' : ''}
+      ${x.blocked ? `<div class="blocked${x.failed ? ' failed' : ''}">${esc(x.blocked)}</div>` : x.action !== 'HOLD' ? `<div class="approved">Approved by risk check · ${d.paper ? 'paper fill' : 'executed on-chain'}</div>` : ''}
     </li>`).join('')}</ul>`;
   };
 
@@ -394,35 +394,35 @@ export function AgentPage(app, id) {
     const link = (u) => (/^https?:\/\//i.test(u) ? u : 'https://' + u);
     const tw = c.twitter ? (c.twitter.startsWith('http') ? c.twitter : 'https://x.com/' + c.twitter.replace(/^@/, '')) : '';
     return `<section class="card coin-card">
-      <div class="coin-head">${coinThumb(c, 56)}<div><div class="agent-tag">ASSOCIATED COIN</div><div class="t">${esc(c.name)}<small>$${esc(c.ticker)}</small></div></div></div>
+      <div class="coin-head">${coinThumb(c, 56)}<div><div class="agent-tag">${c.paper ? 'NAME TAG · PAPER (NO COIN LAUNCHED)' : 'ASSOCIATED COIN'}</div><div class="t">${esc(c.name)}<small>$${esc(c.ticker)}</small></div></div></div>
       ${c.description ? `<p style="color:var(--ink-2);font-size:14px">${esc(c.description)}</p>` : ''}
       <dl class="kv">
         ${c.mint ? `<dt>Market cap</dt><dd>${usd(c.mcapUsd)}</dd><dt>All-time high</dt><dd>${usd(c.athUsd)}</dd>` : ''}
-        ${c.createdAt ? `<dt>Launched</dt><dd>${age(c.createdAt)} ago</dd>` : ''}
+        ${c.createdAt ? `<dt>${c.paper ? 'Hired' : 'Launched'}</dt><dd>${age(c.createdAt)} ago</dd>` : ''}
         ${c.mint ? `<dt>Mint</dt><dd><span class="mono">${short(c.mint, 6)}</span> ${copyBtn(c.mint)}</dd>` : ''}
         ${c.launchSig ? `<dt>Launch tx</dt><dd>${txLink(c.launchSig)}</dd>` : ''}
         ${tw ? `<dt>X / Twitter</dt><dd><a class="ext" href="${esc(tw)}" target="_blank" rel="noopener">${esc(c.twitter)}</a></dd>` : ''}
         ${c.website ? `<dt>Website</dt><dd><a class="ext" href="${esc(link(c.website))}" target="_blank" rel="noopener">${esc(c.website.replace(/^https?:\/\//, ''))}</a></dd>` : ''}
       </dl>
       ${c.mint ? `<a class="btn btn-sm" href="https://pump.fun/coin/${esc(c.mint)}" target="_blank" rel="noopener">View on pump.fun ↗</a>` : ''}
-      <p class="note">The builder wallet is this coin's creator on pump.fun. Builders never trade BUILD coins.</p>
+      <p class="note">${c.paper ? 'Paper builders have a name tag and ticker only: nothing exists on pump.fun.' : 'The builder wallet is this coin\'s creator on pump.fun. Builders never trade FOREMAN coins.'}</p>
     </section>`;
   };
 
   const walletHTML = () => `<section class="card coin-card">
       <div class="agent-tag">WALLETS</div>
       <dl class="kv">
-        <dt>Builder wallet</dt><dd>${addrLink(d.wallet, short(d.wallet, 6))}</dd>
+        <dt>Builder wallet</dt><dd>${d.paper ? 'none (paper)' : addrLink(d.wallet, short(d.wallet, 6))}</dd>
         <dt>Keys</dt><dd>${esc(d.custody || '')}</dd>
         <dt>Creator wallet</dt><dd>${addrLink(d.creator, short(d.creator, 6))}</dd>
-        <dt>Net deposited</dt><dd>${sol(d.depositedSol, 4)} SOL</dd>
+        <dt>${d.paper ? 'Paper deposited' : 'Net deposited'}</dt><dd>${sol(d.depositedSol, 4)} SOL</dd>
         ${d.launchCostSol ? `<dt>Coin creation cost</dt><dd>${sol(d.launchCostSol, 4)} SOL</dd>` : ''}
         ${d.withdrawnSol ? `<dt>Withdrawn</dt><dd>${sol(d.withdrawnSol, 4)} SOL</dd>` : ''}
       </dl>
       <div class="agent-tag" style="margin-top:4px">DEPOSITS &amp; WITHDRAWALS</div>
       <dl class="kv">${[...d.deposits.map((x) => ({ ...x, dir: '+' })), ...d.withdrawals.map((x) => ({ ...x, dir: '−' }))].sort((a, b) => b.ts - a.ts).slice(0, 12)
         .map((x) => `<dt data-ago="${x.ts}">${ago(x.ts)}</dt><dd>${x.dir}${sol(x.amount, 4)} SOL ${x.sig ? txLink(x.sig, 'tx') : ''}</dd>`).join('') || '<dt class="muted">None yet</dt><dd></dd>'}</dl>
-      <p class="note">The trading logic never sees a private key. It proposes BUY / SELL / HOLD; the server checks the rules, simulates the transaction and only then signs.</p>
+      <p class="note">${d.paper ? 'Paper mode: every fill is simulated at the live DexScreener price with a 0.3% pool fee, price impact from pool liquidity and a network fee. No keys, no transactions.' : 'The trading logic never sees a private key. It proposes BUY / SELL / HOLD; the server checks the rules, simulates the transaction and only then signs.'}</p>
     </section>`;
 
   const feesHTML = () => `<section class="card coin-card">
@@ -451,7 +451,7 @@ export function AgentPage(app, id) {
     </section>`;
 
   // ── builder market: for sale banner / sell card / owner history ──
-  // ── builder NFT (whoever holds it owns the builder) + selling on the BUILD market (NFT builders only) ──
+  // ── builder NFT (whoever holds it owns the builder) + selling on the FOREMAN market (NFT builders only) ──
   const nftHTML = () => {
     if (!cfg.agentNft?.enabled || d.rawStatus !== 'ACTIVE') return '';
     const mine = isCreator();
@@ -461,7 +461,7 @@ export function AgentPage(app, id) {
     if (d.nftJob && d.nftJob.status !== 'failed') return `<section class="card mk-agent nft-card"><div class="mk-agent-row"><span class="mk-badge nft">🎟 NFT</span><span class="mk-agent-sub"><b>Making the NFT…</b> It lands in the owner wallet in about a minute.${mine && d.nftJob.error ? `<br><small class="muted">Still trying: ${esc(d.nftJob.error)}</small>` : ''}</span></div></section>`;
     if (!mine) return '';
     return `<section class="card mk-agent nft-card"><div class="mk-agent-row"><span class="mk-badge nft">🎟 NFT</span>
-        <span class="mk-agent-sub"><b>Turn this builder into an NFT</b> to be able to sell it. Whoever holds the NFT owns the builder. Free: BUILD pays the mint.${d.nftJob?.status === 'failed' ? ' <span class="err-t">The last try failed, you can try again.</span>' : ''}</span>
+        <span class="mk-agent-sub"><b>Turn this builder into an NFT</b> to be able to sell it. Whoever holds the NFT owns the builder. Free: FOREMAN pays the mint.${d.nftJob?.status === 'failed' ? ' <span class="err-t">The last try failed, you can try again.</span>' : ''}</span>
         <span class="right"><button class="btn btn-sm" type="button" data-act="nft-mint">🎟 Make it an NFT</button></span></div></section>`;
   };
 
@@ -470,8 +470,8 @@ export function AgentPage(app, id) {
     const L = d.market, mine = isCreator(), fee = cfg.market.feePct ?? 0.05;
     const hist = (d.sales || []).length ? `<div class="mk-hist"><span class="agent-tag">OWNERS</span>${d.sales.map((s) => `<span>Sold for <b>${sol(s.priceSol, 3)} SOL</b> <span class="muted" data-ago="${s.ts}">${ago(s.ts)}</span> ${txLink(s.paySig, 'tx')}</span>`).join('')}</div>` : '';
     if (L && L.escrow) return `<section class="card mk-agent on-sale">
-        <div class="mk-agent-row"><span class="mk-badge">FOR SALE</span><span class="mk-price"><small>Price</small><span>${+L.price.toFixed(4)} <em>SOL</em></span>${L.priceTokens ? `<small class="mk-tok">≈ ${Math.round(L.priceTokens).toLocaleString('en')} BUILD</small>` : ''}</span>
-        <span class="muted mk-agent-sub">Listed <span data-ago="${L.listedAt}">${ago(L.listedAt)}</span> by ${esc(short(L.seller, 4))}${mine ? ` · you get the BUILD worth ${sol(L.price * (1 - fee), 4)} SOL` : ''}</span>
+        <div class="mk-agent-row"><span class="mk-badge">FOR SALE</span><span class="mk-price"><small>Price</small><span>${+L.price.toFixed(4)} <em>SOL</em></span>${L.priceTokens ? `<small class="mk-tok">≈ ${Math.round(L.priceTokens).toLocaleString('en')} FOREMAN</small>` : ''}</span>
+        <span class="muted mk-agent-sub">Listed <span data-ago="${L.listedAt}">${ago(L.listedAt)}</span> by ${esc(short(L.seller, 4))}${mine ? ` · you get the FOREMAN worth ${sol(L.price * (1 - fee), 4)} SOL` : ''}</span>
         <span class="right">${mine ? '<button class="btn btn-sm" type="button" data-act="market-list">Change price</button><button class="btn btn-sm" type="button" data-act="market-delist">Remove from market</button>' : '<button class="btn btn-primary" type="button" data-mkbuy="1">Buy this builder</button>'}</span></div>
         ${mine ? '<p class="note">The NFT is in the market wallet and withdrawals are locked while it is for sale. Remove it any time: the NFT comes back to you.</p>' : ''}${hist}</section>`;
     if (!mine) return hist ? `<section class="card mk-agent">${hist}</section>` : '';
@@ -481,7 +481,7 @@ export function AgentPage(app, id) {
     const ready = !!d.nft?.asset;
     const minting = d.nftJob && d.nftJob.status !== 'failed';
     return `<section class="card mk-agent sell-card${ready ? '' : ' off'}">
-        <div class="mk-agent-row"><span class="mk-badge sell">SELL</span><span class="mk-agent-sub">${ready ? `<b>Sell this builder on the Builder Market.</b> You set the price in SOL, the buyer pays in BUILD. You get the BUILD minus ${Math.round(fee * 100)}%.` : minting ? '<b>Selling unlocks when the NFT is ready.</b> The builder NFT is being made (about a minute).' : '<b>Only NFT builders can be sold.</b> Make it an NFT first (free, below), then this button works.'}</span>
+        <div class="mk-agent-row"><span class="mk-badge sell">SELL</span><span class="mk-agent-sub">${ready ? `<b>Sell this builder on the Builder Market.</b> You set the price in SOL, the buyer pays in FOREMAN. You get the FOREMAN minus ${Math.round(fee * 100)}%.` : minting ? '<b>Selling unlocks when the NFT is ready.</b> The builder NFT is being made (about a minute).' : '<b>Only NFT builders can be sold.</b> Make it an NFT first (free, below), then this button works.'}</span>
         <span class="right"><button class="btn ${ready ? 'btn-primary' : ''}" type="button" ${ready ? 'data-act="market-list"' : 'disabled title="Make it an NFT first"'}>🤝 Sell this builder</button></span></div>${hist}</section>`;
   };
 
@@ -500,11 +500,11 @@ export function AgentPage(app, id) {
         <section class="card ag-recent" id="ag-recent">${recentHTML()}</section>
         <section class="card ag-notes" id="ag-notes">${notesHTML()}</section>
       </div>
-      <section class="card ag-x" id="ag-x">${xHTML()}</section>
-      <section class="card ag-arena" id="ag-arena">${arenaHTML()}</section>
+      <section class="card ag-x" id="ag-x" ${d.x?.enabled ? '' : 'hidden'}>${xHTML()}</section>
+      <section class="card ag-arena" id="ag-arena" ${cfg.arena?.enabled ? '' : 'hidden'}>${arenaHTML()}</section>
       <section class="card"><header class="card-head"><h2>Current positions</h2><span class="sub" id="ag-pos-n">${d.positions.length} of ${strat().maxOpen}</span></header><div id="ag-pos">${positionsHTML()}</div></section>
       <div class="two">
-        <section class="card" id="ag-trades-card"><header class="card-head"><h2>Trade history</h2><span class="sub">on-chain, newest first</span></header><div id="ag-trades">${tradesHTML()}</div></section>
+        <section class="card" id="ag-trades-card"><header class="card-head"><h2>Trade history</h2><span class="sub">${d.paper ? 'paper fills on live prices, newest first' : 'on-chain, newest first'}</span></header><div id="ag-trades">${tradesHTML()}</div></section>
         <section class="card" id="ag-dec-card"><header class="card-head"><h2>Decision log</h2><span class="sub">what the builder did and why</span></header><div id="ag-dec">${decisionsHTML()}</div></section>
       </div>
       <div class="three" id="ag-cards">${coinHTML()}${walletHTML()}${feesHTML()}</div>`

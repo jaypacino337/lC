@@ -60,7 +60,7 @@ export function SkinsPage(app) {
       <div class="sk-img"><img src="brand/skins/${esc(x.id)}-stand.png" alt="${esc(x.name)}" loading="lazy"></div>
       <b class="sk-name">${esc(x.name)}${x.nft ? ' <span class="nft-tag">NFT</span>' : ''}</b>
       <small class="sk-tl">${esc(x.tagline || '')}</small>
-      <div class="sk-price">${IC.brick}<b>${x.priceSol} SOL</b><span>paid in BUILD</span></div>
+      <div class="sk-price">${IC.brick}<b>${x.priceSol} SOL</b><span>paid in FOREMAN</span></div>
       ${x.stock ? `<div class="sk-bar"><i style="width:${pctLeft}%"></i></div><small class="sk-sup">Supply: <b>${left(x)} / ${x.stock.max} left</b>${x.maxPerWallet ? ' · 1 per wallet' : ''}</small>` : '<small class="sk-sup">Unlimited</small>'}
       <button class="btn btn-primary btn-block" type="button" data-get="${esc(x.id)}" ${out ? 'disabled' : ''}>${out ? 'Sold out' : 'Get skin'}</button>
     </article>`;
@@ -73,14 +73,14 @@ export function SkinsPage(app) {
       <div class="pg-hero-copy">
         <span class="pg-eyebrow">CUSTOMIZE YOUR BUILDER</span>
         <h1 class="pg-big">Skins</h1>
-        <p class="pg-lede">Give your builder a new look. Skins are limited unlocks bought with the BUILD coin and tied to your builder. Same value as the SOL price shown.</p>
+        <p class="pg-lede">Give your builder a new look. Skins are limited unlocks bought with the FOREMAN coin and tied to your builder. Same value as the SOL price shown.</p>
         <div class="pg-cta"><button class="btn btn-primary btn-lg" type="button" id="sk-browse"><span>Browse all skins</span>${IC.arrow}</button></div>
       </div>
-      <div class="pg-hero-art"><img src="brand/pages/skins-hero.jpg" alt="The BUILD skin shop"></div>
+      <div class="pg-hero-art"><img src="brand/pages/skins-hero.jpg" alt="The FOREMAN skin shop"></div>
       <ul class="sk-perks">
         <li>${IC.check}<span><b>Unique looks</b><small>Stand out on the leaderboard</small></span></li>
-        <li>${IC.check}<span><b>Same value</b><small>Paid in BUILD coin</small></span></li>
-        <li>${IC.check}<span><b>Linked to your builder</b><small>Works everywhere on BUILD</small></span></li>
+        <li>${IC.check}<span><b>Same value</b><small>Paid in FOREMAN coin</small></span></li>
+        <li>${IC.check}<span><b>Linked to your builder</b><small>Works everywhere on FOREMAN</small></span></li>
       </ul>
     </section>
 
@@ -107,7 +107,7 @@ export function SkinsPage(app) {
         <img src="brand/pages/gift.png" alt="" loading="lazy">
       </section>
     </div>
-    <p class="hint skins-pay">Paid in BUILD to <code class="mono">${esc(S.payTo || 'the shop wallet')}</code>. The exact token amount is fixed for 10 minutes when you buy.${(S.items || []).some((x) => x.nft) ? ' NFT skins go to your wallet: whoever holds the NFT can dress one builder.' : ''}</p>
+    <p class="hint skins-pay">Paid in FOREMAN to <code class="mono">${esc(S.payTo || 'the shop wallet')}</code>. The exact token amount is fixed for 10 minutes when you buy.${(S.items || []).some((x) => x.nft) ? ' NFT skins go to your wallet: whoever holds the NFT can dress one builder.' : ''}</p>
   </div>`;
 
   const paintGrid = () => { el.querySelector('#sk-grid').innerHTML = gridHTML(); };

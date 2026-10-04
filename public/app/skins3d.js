@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-//  BUILD skins: paid builder outfits in the same toy-brick style as the office crew.
+//  FOREMAN skins: paid builder outfits in the same toy-brick style as the office crew.
 //  Each model returns meshes for the parts posed() expects (torso, head, armL, armR, leg)
 //  plus a resting pose. Rendered by boss3d.js (3D viewer) and the agent's own office,
 //  and pre-rendered to brand/skins/<id>-stand.png / -bust.png for avatars.

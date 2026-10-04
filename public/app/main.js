@@ -1,4 +1,4 @@
-// BUILD frontend entry (live, Solana mainnet)
+// FOREMAN frontend entry (paper trading on live Solana market data by default)
 import { createApi } from './api.js';
 import { robotSVG } from './robot.js';
 import { ICONS, avatar, STRAT_ICONS, strategyRules, stratIcon, stratKey, riskTag, riskWarning, skinPriceLabel } from './ui.js';
@@ -45,11 +45,11 @@ const NAV_IC = {
   how: nic('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5v.7"/><path d="M12 17.5v.01"/>'),
 };
 
-// X badge: the official X mark on a yellow 2x1 brick (BUILD style)
+// X badge: the official X mark on a yellow 2x1 brick (FOREMAN style)
 const X_BADGE = `<span class="xb-hat-wrap" aria-hidden="true"><svg class="xb-hatsvg" viewBox="0 0 48 48"><rect x="6" y="14" width="36" height="30" rx="8" fill="#151515"/><path fill="#fff" d="M30.9 21h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H14l7.9-9-8.4-11h7l4.8 6.4zm-1.2 18h1.9L19.3 23h-2z"/><path d="M9 15.5c0-7 6.7-12.5 15-12.5s15 5.5 15 12.5z" fill="#FFD21F"/><path d="M21 3.4h6v11.6h-6z" fill="#E5B400"/><rect x="4" y="14" width="40" height="5" rx="2.5" fill="#FFD21F"/><rect x="4" y="17.2" width="40" height="1.8" rx=".9" fill="#E5B400"/><circle cx="16" cy="9" r="1.6" fill="#FFE680"/></svg></span>`;
 
-// BUILD wordmark: chunky letters, the last one yellow
-const WORDMARK = `<span class="brand-name">BUIL<span class="brand-d">D</span></span>`;
+// FOREMAN wordmark: chunky letters, the last one yellow
+const WORDMARK = `<span class="brand-name">FOREMA<span class="brand-d">N</span></span>`;
 
 function shell(cfg) {
   const x = cfg.xUrl || '';
@@ -57,7 +57,7 @@ function shell(cfg) {
   return `
   <header class="topbar">
     <div class="topbar-in">
-      <a class="brand" href="#/" aria-label="BUILD home"><img class="brand-logo" src="brand/logo-96.png" alt="" width="44" height="44">${WORDMARK}</a>
+      <a class="brand" href="#/" aria-label="FOREMAN home"><img class="brand-logo" src="brand/logo-96.png" alt="" width="44" height="44">${WORDMARK}</a>
       <nav class="topnav" id="topnav" aria-label="Main">
         <a href="#/" data-r="home">Home</a>
         <a href="#/build" data-r="launch">Build</a>
@@ -68,7 +68,7 @@ function shell(cfg) {
         <a href="#/how" data-r="how">Docs</a>
       </nav>
       <div class="top-right">
-        <span class="mode-pill live-pill" id="mode-pill">MAINNET</span>
+        <span class="mode-pill${cfg.paper ? '' : ' live-pill'}" id="mode-pill" title="${cfg.paper ? 'Paper trading: real prices, simulated fills. No real SOL moves.' : 'Live on Solana mainnet'}">${cfg.paper ? 'PAPER' : 'MAINNET'}</span>
         ${x ? `<a class="x-link" href="${esc(x)}" target="_blank" rel="noopener" aria-label="Follow ${esc(xHandle(x))} on X" title="Follow ${esc(xHandle(x))} on X">${X_BADGE}</a>` : ''}
         <button class="ca-chip soon" id="ca-chip" type="button" title="Contract address: coming soon"><span class="ca-tag">CA</span><span class="ca-val">Coming soon</span></button>
         <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle light / dark theme"></button>
@@ -94,9 +94,10 @@ function shell(cfg) {
     </nav>
     <a class="side-card" href="#/build"><img src="brand/mascot.png" alt="" width="120" height="150" loading="lazy"><b>Your builders work 24/7.</b><span>Build, customize and let them do the work for you.</span></a>
   </aside>
+  ${cfg.paper ? `<div class="paper-banner" role="note"><b>PAPER TRADING</b><span>Builders trade on live pump.fun / DexScreener prices with simulated SOL. No real funds move, P&amp;L is simulated.${cfg.storageWarning ? ' ' + esc(cfg.storageWarning) : ''}</span></div>` : ''}
   <div class="tape" aria-label="Token prices"><div class="tape-track" id="tape"></div></div>
   <main id="page"></main>
-  <footer class="foot"><span class="foot-brand"><img src="brand/logo-96.png" alt="" width="26" height="26"><b>BUILD</b> · build your builder, it works for you</span>${x ? `<a class="foot-x" href="${esc(x)}" target="_blank" rel="noopener">${X_BADGE}${esc(xHandle(x))}</a>` : ''}<span>Real SOL on Solana mainnet</span><span>Not financial advice. Memecoins are extremely risky.</span></footer>
+  <footer class="foot"><span class="foot-brand"><img src="brand/logo-96.png" alt="" width="26" height="26"><b>FOREMAN</b> · hire your builder, it works for you</span>${x ? `<a class="foot-x" href="${esc(x)}" target="_blank" rel="noopener">${X_BADGE}${esc(xHandle(x))}</a>` : ''}<span>${cfg.paper ? 'Paper trading: simulated SOL, live market prices' : 'Real SOL on Solana mainnet'}</span><span>Not financial advice. Memecoins are extremely risky.</span></footer>
   <div class="toasts" id="toasts" aria-live="polite"></div>`;
 }
 
@@ -139,7 +140,7 @@ function toast(html, seed) {
 
 async function boot() {
   const app = document.getElementById('app');
-  app.innerHTML = `<div class="wrap"><div class="card"><div class="feed-empty boot"><img src="brand/mascot.png" alt="BUILD" width="120" height="150"><span>stacking bricks at BUILD<span class="cursor"></span></span></div></div></div>`;
+  app.innerHTML = `<div class="wrap"><div class="card"><div class="feed-empty boot"><img src="brand/mascot.png" alt="FOREMAN" width="120" height="150"><span>clocking in at FOREMAN<span class="cursor"></span></span></div></div></div>`;
   const api = await createApi();
   app.innerHTML = shell(api.config || {});
   paintThemeBtn();
@@ -188,7 +189,7 @@ async function boot() {
     return new Promise((resolve) => {
       let done = false;
       const m = modal('Connect wallet', `
-        <p>Your wallet is the creator wallet. It launches coins, funds builders and receives your share of creator fees. Each builder gets its own separate wallet.</p>
+        <p>${api.config.paper ? 'Your wallet is your login: you sign free messages to create and manage builders. In paper mode nothing is ever sent from it.' : 'Your wallet is the creator wallet. It launches coins, funds builders and receives your share of creator fees. Each builder gets its own separate wallet.'}</p>
         <div class="wallet-list" id="c-list"></div>
         <div class="err" id="c-err" hidden></div>
         <p class="note">Solana wallets only. In MetaMask, pick a Solana account.</p>`, { onClose: () => { off(); if (!done) resolve(null); } });
@@ -329,7 +330,41 @@ async function boot() {
     }
   }
 
+  // Paper mode: "add SOL" tops up the simulated balance after a free signature. No transfer.
+  function paperDepositModal(agent, after) {
+    const presets = [0.25, 0.5, 1, 2.5];
+    const m = modal(`Add paper SOL to ${agent.name}`, `
+      <p><b>Paper trading:</b> this adds simulated SOL to ${esc(agent.name)}'s paper balance so it can trade bigger. Nothing leaves your wallet: you only sign a free message. Added SOL counts as deposited, so it never shows up as profit.</p>
+      <div class="field"><label for="f-amt">Amount</label><div class="input-affix suf"><input class="input" id="f-amt" type="number" min="0.01" step="0.01" value="0.5" inputmode="decimal"><span class="suf-t">SOL</span></div>
+      <div class="presets" id="f-pre">${presets.map((v) => `<button type="button" data-v="${v}" class="${v === 0.5 ? 'on' : ''}">${v} SOL</button>`).join('')}</div></div>
+      <div class="err" id="f-err" hidden></div>
+      <button class="btn btn-primary btn-block btn-lg" id="f-go">Sign and add paper SOL</button>`);
+    const amt = m.body.querySelector('#f-amt');
+    m.body.querySelector('#f-pre').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      amt.value = b.dataset.v;
+      m.body.querySelectorAll('#f-pre button').forEach((x) => x.classList.toggle('on', x === b));
+    });
+    m.body.querySelector('#f-go').addEventListener('click', async () => {
+      const v = Math.round(Number(amt.value) * 1e4) / 1e4;
+      const err = m.body.querySelector('#f-err'), btn = m.body.querySelector('#f-go');
+      if (!(v > 0)) { err.hidden = false; err.textContent = 'Enter an amount.'; return; }
+      btn.disabled = true; btn.textContent = `Sign in ${wallet.name || 'your wallet'}…`;
+      try {
+        const auth = await signAction(actionMessage('paper-deposit', agent.wallet, [`Amount: ${v} SOL (paper)`]));
+        await api.deposit(agent.id, { amountSol: v, ...auth });
+        m.close();
+        toast(`<b>Added ${v} paper SOL to ${esc(agent.name)}</b>Simulated balance only.`, agent.avatarSeed);
+        after && after();
+      } catch (e) {
+        err.hidden = false; err.textContent = e.message || 'Could not add paper SOL.';
+        btn.disabled = false; btn.textContent = 'Sign and add paper SOL';
+      }
+    });
+  }
+
   function depositModal(agent, isLaunch, after) {
+    if (api.config.paper) return paperDepositModal(agent, after);
     const need = isLaunch ? Math.max(0, agent.requiredSol - agent.balanceSol) : 0.25;
     const presets = isLaunch ? [] : [0.1, 0.25, 0.5, 1];
     const m = modal(isLaunch ? `Fund ${agent.name}` : `Add SOL to ${agent.name}`, `
@@ -433,7 +468,7 @@ async function boot() {
     let sel = pick || agent.skin || items[0]?.id || 'default';
     let viewer = null;
     const m = modal(`Skins for ${agent.name}`, `
-      <p>Give ${esc(agent.name)} a new look everywhere on BUILD. <b>Skins are paid only in the BUILD coin</b>, from your creator wallet, at the same value as their SOL price.${S.payWith?.burn ? ` <b>${(S.payWith?.burnPct ?? 1) >= 1 ? 'Every BUILD token paid for a skin is' : Math.round(S.payWith.burnPct * 100) + '% of every skin payment is'} burned.</b>` : ''}${items.some((x) => x.nft) ? ' NFT skins go to your wallet: one NFT dresses one builder, and if you sell the NFT the skin goes with it.' : ''}</p>
+      <p>Give ${esc(agent.name)} a new look everywhere on FOREMAN. <b>Skins are paid only in the FOREMAN coin</b>, from your creator wallet, at the same value as their SOL price.${S.payWith?.burn ? ` <b>${(S.payWith?.burnPct ?? 1) >= 1 ? 'Every FOREMAN token paid for a skin is' : Math.round(S.payWith.burnPct * 100) + '% of every skin payment is'} burned.</b>` : ''}${items.some((x) => x.nft) ? ' NFT skins go to your wallet: one NFT dresses one builder, and if you sell the NFT the skin goes with it.' : ''}</p>
       <div class="skin-stage" id="sk-stage"></div>
       <div class="skin-list" id="sk-list"></div>
       <div class="err" id="sk-err" hidden></div>
@@ -465,7 +500,7 @@ async function boot() {
       btn.disabled = wearing;
       const soldOut = it?.stock && it.stock.sold >= it.stock.max && !owned.has(sel);
       btn.disabled = wearing || soldOut;
-      btn.textContent = wearing ? 'Wearing it' : sel === 'default' || owned.has(sel) ? 'Sign and wear it' : soldOut ? 'Sold out' : `${it.stock ? 'Reserve + buy' : 'Buy'} with BUILD (${skinPriceLabel(it, S)})`;
+      btn.textContent = wearing ? 'Wearing it' : sel === 'default' || owned.has(sel) ? 'Sign and wear it' : soldOut ? 'Sold out' : `${it.stock ? 'Reserve + buy' : 'Buy'} with FOREMAN (${skinPriceLabel(it, S)})`;
     };
     q('#sk-list').addEventListener('click', (e) => { const b = e.target.closest('.skin-card'); if (!b || b.dataset.id === sel) return; sel = b.dataset.id; paint(); stage(); });
     q('#sk-go').addEventListener('click', async () => {
@@ -484,14 +519,14 @@ async function boot() {
             const h = await api.holdSkin(agent.id, { skin: sel, ...auth });
             it.stock = { ...it.stock, ...h };
           }
-          // exact price in BUILD right now (same value as the SOL price), valid 10 minutes
-          btn.textContent = 'Getting the BUILD price…';
+          // exact price in FOREMAN right now (same value as the SOL price), valid 10 minutes
+          btn.textContent = 'Getting the FOREMAN price…';
           const qt = await api.quoteSkin(agent.id, sel);
           const n = Number(qt.tokens).toLocaleString('en', { maximumFractionDigits: 2 });
-          btn.textContent = `Confirm ${n} BUILD in ${wallet.name || 'your wallet'}…`;
+          btn.textContent = `Confirm ${n} FOREMAN in ${wallet.name || 'your wallet'}…`;
           let sig;
           try { sig = await sendToken({ to: qt.payTo, mint: qt.mint, program: qt.program, raw: qt.raw, decimals: qt.decimals, fromAccount: qt.fromAccount }, api.blockhash); }
-          catch (e) { throw new Error(/insufficient|0x1\b|custom program error: 0x1/i.test(String(e.message)) ? `Not enough BUILD in your wallet: this skin costs ${n} BUILD (${it.priceSol} SOL value).` : (e.message || 'The payment was not sent.')); }
+          catch (e) { throw new Error(/insufficient|0x1\b|custom program error: 0x1/i.test(String(e.message)) ? `Not enough FOREMAN in your wallet: this skin costs ${n} FOREMAN (${it.priceSol} SOL value).` : (e.message || 'The payment was not sent.')); }
           btn.textContent = 'Confirming the payment on-chain…';
           let r = null, lastErr = null;
           for (let i = 0; i < 4 && !r; i++) {
@@ -500,7 +535,7 @@ async function boot() {
           }
           if (!r) throw new Error((lastErr?.message || 'Could not confirm the payment.') + ` Transaction: ${sig}`);
           owned.add(sel); agent.skins = [...owned]; agent.skin = sel;
-          toast(`<b>Skin bought: ${esc(it.name)}</b>Paid ${n} BUILD${S.payWith?.burn ? ((S.payWith?.burnPct ?? 1) >= 1 ? ' (they get burned)' : ` (${Math.round(S.payWith.burnPct * 100)}% gets burned)`) : ''}. ${esc(agent.name)} is wearing it now.${it.nft ? ' The NFT is on its way to your wallet.' : ''} <a class="ext" href="https://solscan.io/tx/${esc(sig)}" target="_blank" rel="noopener">View tx ↗</a>`, 'skin:' + sel);
+          toast(`<b>Skin bought: ${esc(it.name)}</b>Paid ${n} FOREMAN${S.payWith?.burn ? ((S.payWith?.burnPct ?? 1) >= 1 ? ' (they get burned)' : ` (${Math.round(S.payWith.burnPct * 100)}% gets burned)`) : ''}. ${esc(agent.name)} is wearing it now.${it.nft ? ' The NFT is on its way to your wallet.' : ''} <a class="ext" href="https://solscan.io/tx/${esc(sig)}" target="_blank" rel="noopener">View tx ↗</a>`, 'skin:' + sel);
         } else {
           btn.textContent = `Sign in ${wallet.name || 'your wallet'}…`;
           const auth = await signAction(actionMessage('skin', agent.wallet, [`Skin: ${sel}`]));
@@ -716,7 +751,7 @@ async function boot() {
     let listed = agent.market;
     const max = C.maxWalletSol ?? 0.01;
     const m = modal(listed ? `Change the price of ${agent.name}` : `Sell ${agent.name}`, `
-      <p>Sell ${esc(agent.name)} on the <a class="ext" href="#/market">Builder Market</a>. The buyer gets the builder, its coin and <b>all its future creator fees</b>, its level and track record. You set the price in SOL, the buyer pays in BUILD, and you get it minus the <b>${Math.round(fee * 100)}% market fee</b>, sent to <code class="mono">${esc(short(agent.creator, 4))}</code> automatically.</p>
+      <p>Sell ${esc(agent.name)} on the <a class="ext" href="#/market">Builder Market</a>. The buyer gets the builder, its coin and <b>all its future creator fees</b>, its level and track record. You set the price in SOL, the buyer pays in FOREMAN, and you get it minus the <b>${Math.round(fee * 100)}% market fee</b>, sent to <code class="mono">${esc(short(agent.creator, 4))}</code> automatically.</p>
       <div id="mk-empty"></div>
       <div class="field"><label for="mk-price">Price</label><div class="input-affix suf"><input class="input" id="mk-price" type="number" min="${C.minPriceSol ?? 0.05}" max="${C.maxPriceSol ?? 1000}" step="0.01" inputmode="decimal" value="${listed ? listed.price : ''}" placeholder="e.g. 2.5"><span class="suf-t">SOL</span></div></div>
       <p class="hint" id="mk-you-get"></p>
@@ -738,7 +773,7 @@ async function boot() {
           const auth = await signAction(actionMessage('withdraw', agent.wallet, ['Amount: all']));
           b.textContent = open ? 'Selling trades + sending…' : 'Sending…';
           const r = await api.withdraw(agent.id, { all: true, ...auth });
-          toast(`<b>Withdrew ${sol(r.amount, 4)} SOL</b><a class="ext" href="https://solscan.io/tx/${esc(r.sig)}" target="_blank" rel="noopener">View transaction ↗</a>`, agent.avatarSeed);
+          toast(`<b>Withdrew ${sol(r.amount, 4)} ${r.paper ? 'paper ' : ''}SOL</b>${r.sig ? `<a class="ext" href="https://solscan.io/tx/${esc(r.sig)}" target="_blank" rel="noopener">View transaction ↗</a>` : ''}`, agent.avatarSeed);
           agent = (await api.getAgent(agent.id)) || agent;
           paintEmpty();
         } catch (e) { q('#mk-err').hidden = false; q('#mk-err').textContent = e.message || 'Could not withdraw.'; b.disabled = false; b.textContent = 'Withdraw everything now'; }
@@ -757,7 +792,7 @@ async function boot() {
       } catch (e) { err.hidden = false; err.textContent = e.message || 'Could not remove it.'; b.disabled = false; }
     });
     const inp = q('#mk-price'), get = q('#mk-you-get');
-    const show = () => { const v = Number(inp.value); const px = C.tokenPriceSol; get.innerHTML = v > 0 ? `The buyer pays in BUILD. You receive the BUILD worth <b>${sol(v * (1 - fee), 4)} SOL</b>${px > 0 ? ` (≈ ${Math.round((v * (1 - fee)) / px).toLocaleString('en')} BUILD at today's price)` : ''} when it sells.` : ''; };
+    const show = () => { const v = Number(inp.value); const px = C.tokenPriceSol; get.innerHTML = v > 0 ? `The buyer pays in FOREMAN. You receive the FOREMAN worth <b>${sol(v * (1 - fee), 4)} SOL</b>${px > 0 ? ` (≈ ${Math.round((v * (1 - fee)) / px).toLocaleString('en')} FOREMAN at today's price)` : ''} when it sells.` : ''; };
     inp.addEventListener('input', show); show();
     q('#mk-go').addEventListener('click', async () => {
       const err = q('#mk-err'), btn = q('#mk-go');
@@ -793,11 +828,11 @@ async function boot() {
     const m = modal(`Make ${agent.name} an NFT`, `
       <p>${esc(agent.name)} becomes an NFT in your wallet <code class="mono">${esc(short(agent.creator, 4))}</code>. <b>From then on, whoever holds the NFT owns the builder</b>: its wallet and SOL, its coin, its future creator fees, its strategy and level.</p>
       <ul class="cs-risk-list big">
-        <li>Only NFT builders can be sold on the BUILD Builder Market. After the mint, the Sell button works.</li>
+        <li>Only NFT builders can be sold on the FOREMAN Builder Market. After the mint, the Sell button works.</li>
         <li>If you send the NFT to another wallet, that wallet gets the builder. If someone steals it from your wallet, they get the builder.</li>
         <li>It cannot be undone.</li>
       </ul>
-      <p class="note">Free for you: BUILD pays the mint.</p>
+      <p class="note">Free for you: FOREMAN pays the mint.</p>
       <label class="check"><input type="checkbox" id="nf-ok"> <span>I understand: whoever holds this NFT owns the builder.</span></label>
       <div class="err" id="nf-err" hidden></div>
       <button class="btn btn-primary btn-block btn-lg" id="nf-go" disabled>Sign and make the NFT</button>`);
@@ -841,12 +876,12 @@ async function boot() {
     const fmtBag = (n) => (n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : Math.round(n).toLocaleString('en'));
     const approx = x.priceTokens || (C.tokenPriceSol > 0 ? x.price / C.tokenPriceSol : 0);
     const m = modal(`Buy ${x.name}`, `
-      <div class="mk-buy-head">${avatar(x.avatarSeed, 56)}<div><b>${esc(x.name)}</b><br><span class="agent-tag">${agentNo(x.no)}${x.coin?.ticker ? ' · $' + esc(x.coin.ticker) : ''}</span></div><span class="mk-price"><small>Price</small><span>${+x.price.toFixed(4)} <em>SOL</em></span>${approx ? `<small class="mk-tok">≈ ${fmtBag(approx)} BUILD</small>` : ''}</span></div>
-      <p><b>Paid in the BUILD coin</b>, worth the SOL price at this moment. You get the builder, its coin and <b>all its future creator fees</b>, its level, its legacy skins and its strategy. It comes with an <b>empty wallet</b>: fund it with Add SOL to start trading.</p>
-      <ol class="mk-steps"><li>Sign “I buy this builder” in your wallet (free).</li><li>Send the BUILD amount (fixed for 10 minutes) to the market wallet <code class="mono">${esc(short(C.payTo || '', 4))}</code>.</li><li>The server checks the payment and the builder is yours. If someone was faster, your BUILD comes back automatically.</li></ol>
+      <div class="mk-buy-head">${avatar(x.avatarSeed, 56)}<div><b>${esc(x.name)}</b><br><span class="agent-tag">${agentNo(x.no)}${x.coin?.ticker ? ' · $' + esc(x.coin.ticker) : ''}</span></div><span class="mk-price"><small>Price</small><span>${+x.price.toFixed(4)} <em>SOL</em></span>${approx ? `<small class="mk-tok">≈ ${fmtBag(approx)} FOREMAN</small>` : ''}</span></div>
+      <p><b>Paid in the FOREMAN coin</b>, worth the SOL price at this moment. You get the builder, its coin and <b>all its future creator fees</b>, its level, its legacy skins and its strategy. It comes with an <b>empty wallet</b>: fund it with Add SOL to start trading.</p>
+      <ol class="mk-steps"><li>Sign “I buy this builder” in your wallet (free).</li><li>Send the FOREMAN amount (fixed for 10 minutes) to the market wallet <code class="mono">${esc(short(C.payTo || '', 4))}</code>.</li><li>The server checks the payment and the builder is yours. If someone was faster, your FOREMAN comes back automatically.</li></ol>
       <label class="check"><input type="checkbox" id="mk-ok"> <span>I understand that past results do not guarantee future profit, and memecoin trading can lose all the SOL in it.</span></label>
       <div class="err" id="mk-err" hidden></div>
-      <button class="btn btn-primary btn-block btn-lg" id="mk-go" disabled>Buy with BUILD${approx ? ` (≈ ${fmtBag(approx)})` : ''}</button>`);
+      <button class="btn btn-primary btn-block btn-lg" id="mk-go" disabled>Buy with FOREMAN${approx ? ` (≈ ${fmtBag(approx)})` : ''}</button>`);
     const ok = m.body.querySelector('#mk-ok'), btn = m.body.querySelector('#mk-go'), err = m.body.querySelector('#mk-err');
     ok.addEventListener('change', () => { btn.disabled = !ok.checked; });
     btn.addEventListener('click', async () => {
@@ -861,22 +896,22 @@ async function boot() {
         const fresh = await api.getAgent(x.id);
         if (!fresh?.market) throw new Error('This builder is not for sale any more.');
         if (fresh.market.price !== x.price) throw new Error(`The price changed to ${fresh.market.price} SOL. Close this and try again.`);
-        btn.textContent = 'Getting the BUILD price…';
+        btn.textContent = 'Getting the FOREMAN price…';
         const qt = await api.marketQuote(x.id, wallet.address);
         const n = Number(qt.tokens).toLocaleString('en', { maximumFractionDigits: 0 });
         btn.textContent = `Sign in ${wallet.name || 'your wallet'}…`;
-        const intent = ['BUILD action', 'Action: market-buy', `Builder: ${x.wallet}`, `Buyer: ${wallet.address}`, `Price: ${x.price} SOL`, `Nonce: ${Math.random().toString(36).slice(2, 12)}`, `Issued: ${new Date().toISOString()}`].join('\n');
+        const intent = ['FOREMAN action', 'Action: market-buy', `Builder: ${x.wallet}`, `Buyer: ${wallet.address}`, `Price: ${x.price} SOL`, `Nonce: ${Math.random().toString(36).slice(2, 12)}`, `Issued: ${new Date().toISOString()}`].join('\n');
         const auth = await signAction(intent);
-        btn.textContent = `Confirm ${n} BUILD in ${wallet.name || 'your wallet'}…`;
+        btn.textContent = `Confirm ${n} FOREMAN in ${wallet.name || 'your wallet'}…`;
         let payment;
         try { payment = await sendToken({ to: qt.payTo, mint: qt.mint, program: qt.program, raw: qt.raw, decimals: qt.decimals, fromAccount: qt.fromAccount }, api.blockhash); }
-        catch (e) { throw new Error(/insufficient|0x1\b|custom program error: 0x1/i.test(String(e.message)) ? `Not enough BUILD in your wallet: this builder costs ${n} BUILD (${x.price} SOL value).` : (e.message || 'The payment was not sent.')); }
+        catch (e) { throw new Error(/insufficient|0x1\b|custom program error: 0x1/i.test(String(e.message)) ? `Not enough FOREMAN in your wallet: this builder costs ${n} FOREMAN (${x.price} SOL value).` : (e.message || 'The payment was not sent.')); }
         const p = { ts: Date.now(), agentId: x.id, agentNo: x.no, buyer: wallet.address, payment, ...auth };
         pendingBuy.set(p);
         btn.textContent = 'Confirming the payment on-chain…';
         await finishBuy(p);
         m.close();
-        toast(`<b>You bought ${esc(x.name)}!</b>Paid ${n} BUILD. It is yours now. Add SOL so it can trade. <a class="ext" href="#/builder/${x.no}">Open it</a>`, x.avatarSeed);
+        toast(`<b>You bought ${esc(x.name)}!</b>Paid ${n} FOREMAN. It is yours now. Add SOL so it can trade. <a class="ext" href="#/builder/${x.no}">Open it</a>`, x.avatarSeed);
         after && after();
         ctx.navigate('#/builder/' + x.no);
       } catch (e) {
@@ -888,7 +923,7 @@ async function boot() {
 
   function withdrawModal(agent, after) {
     const m = modal(`Withdraw from ${agent.name}`, `
-      <p>SOL goes back to your creator wallet <code class="mono">${esc(short(agent.creator, 4))}</code>. Free SOL in the builder wallet: <b>${sol(agent.balanceSol, 4)} SOL</b>.</p>
+      ${api.config.paper ? `<p><b>Paper withdrawal:</b> simulated SOL leaves the builder's paper balance (it is counted in its P&amp;L). Nothing is sent to your wallet. Free paper SOL: <b>${sol(agent.balanceSol, 4)} SOL</b>.</p>` : `<p>SOL goes back to your creator wallet <code class="mono">${esc(short(agent.creator, 4))}</code>. Free SOL in the builder wallet: <b>${sol(agent.balanceSol, 4)} SOL</b>.</p>`}
       <div class="seg" id="w-mode"><button class="on" data-m="amount">Amount</button><button data-m="all">Everything</button></div>
       <div class="field" id="w-amt-f"><label for="w-amt">Amount</label><div class="input-affix suf"><input class="input" id="w-amt" type="number" min="0.001" step="0.01" inputmode="decimal" placeholder="0.10"><span class="suf-t">SOL</span></div></div>
       <p class="note" id="w-all-note" hidden><b>Everything</b> pauses the builder, sells all open positions at market, then sends all SOL to you.</p>
@@ -913,7 +948,7 @@ async function boot() {
         btn.textContent = all ? 'Selling positions + sending…' : 'Sending…';
         const r = await api.withdraw(agent.id, { all, amountSol, ...auth });
         m.close();
-        toast(`<b>Withdrew ${sol(r.amount, 4)} SOL</b><a class="ext" href="https://solscan.io/tx/${esc(r.sig)}" target="_blank" rel="noopener">View transaction ↗</a>${r.notes?.length ? '<br>' + esc(r.notes.join(' ')) : ''}`, agent.avatarSeed);
+        toast(`<b>Withdrew ${sol(r.amount, 4)} ${r.paper ? 'paper ' : ''}SOL</b>${r.sig ? `<a class="ext" href="https://solscan.io/tx/${esc(r.sig)}" target="_blank" rel="noopener">View transaction ↗</a>` : ''}${r.notes?.length ? '<br>' + esc(r.notes.join(' ')) : ''}`, agent.avatarSeed);
         after && after();
       } catch (e) {
         err.hidden = false; err.textContent = e.message || 'Withdrawal failed.';
@@ -926,21 +961,28 @@ async function boot() {
   function shillModal(agentId) {
     const snap = api.snapshot;
     const site = (api.config.siteUrl || location.origin).replace(/\/+$/, '');
-    const agents = snap.agents.filter((a) => a.coin?.mint && a.status !== 'EXPIRED' && a.status !== 'LAUNCH_FAILED')
+    const agents = snap.agents.filter((a) => (a.coin?.mint || a.paper) && a.status !== 'EXPIRED' && a.status !== 'LAUNCH_FAILED')
       .sort((a, b) => (b.id === agentId) - (a.id === agentId) || b.pnlPct - a.pnlPct);
     const ca = api.config.contractAddress || '';
-    const opts = agents.map((a) => `<option value="${esc(a.id)}">${esc('$' + a.coin.ticker + ' · ' + agentNo(a.no) + ' ' + a.name)}</option>`).join('');
+    const opts = agents.map((a) => `<option value="${esc(a.id)}">${esc('$' + a.coin.ticker + ' · ' + agentNo(a.no) + ' ' + a.name + (a.paper ? ' (paper)' : ''))}</option>`).join('');
     let variant = 0;
     const lines = (a) => {
       if (!a) {
         const L = [
-          `Launch a coin on BUILD and it gets its own AI builder with its own Solana wallet. It trades real SOL 24/7 and keeps all the creator fees.\n\nBuild your builder. It works for you.${ca ? `\n\nCA: ${ca}` : ''}\n${site}`,
-          `Every coin on BUILD hires its own trader: own wallet, fixed rules, every trade public on-chain.\n\nLaunch one, let it work.${ca ? `\n\nCA: ${ca}` : ''}\n${site}`,
+          `On FOREMAN you hire an AI builder that trades Solana memecoins 24/7 with fixed rules and explains every move.${api.config.paper ? ' Paper trading on live prices: watch it work before any real SOL.' : ''}\n\nHire your builder. It works for you.${ca ? `\n\nCA: ${ca}` : ''}\n${site}`,
+          `Every builder on FOREMAN has fixed rules and a public track record${api.config.paper ? ' (paper trading on live prices)' : ', every trade on-chain'}.\n\nLaunch one, let it work.${ca ? `\n\nCA: ${ca}` : ''}\n${site}`,
         ];
         return L[variant % L.length];
       }
       const url = `${site}/#/builder/${a.no}`;
       const pnl = a.depositedSol > 0 ? `${a.pnlPct >= 0 ? '+' : ''}${(a.pnlPct * 100).toFixed(1)}%` : 'just clocked in';
+      if (!a.coin?.mint) {
+        const P = [
+          `${agentNo(a.no)} · ${a.name} is paper trading Solana memecoins on FOREMAN: ${pnl} (simulated), ${a.trades} trades on live prices.\n${url}`,
+          `My AI builder ${a.name} trades 24/7 on FOREMAN with fixed rules. Paper P&L so far: ${pnl}.\n${url}`,
+        ];
+        return P[variant % P.length];
+      }
       const L = [
         `$${a.coin.ticker} has its own AI builder working 24/7.\n\n${agentNo(a.no)} · ${a.name}: ${pnl}, ${a.trades} trades, every one on-chain.\n\nCA: ${a.coin.mint}\n${url}`,
         `$${a.coin.ticker} is not just a coin. Its builder ${a.name} trades real SOL 24/7 and every creator fee goes back into its wallet.\n\nCA: ${a.coin.mint}\n${url}`,
@@ -951,7 +993,7 @@ async function boot() {
     const m = modal('Shill on X', `
       <div class="shill-head">${avatar('crew-shill', 56)}<p>The shiller writes the post, you hit send. Nothing is posted until you confirm it on X.</p></div>
       <div class="field"><label for="s-coin">Coin</label>
-        <select class="input" id="s-coin">${opts}<option value="">BUILD itself</option></select></div>
+        <select class="input" id="s-coin">${opts}<option value="">FOREMAN itself</option></select></div>
       <div class="field"><label for="s-text">Post</label><textarea class="textarea" id="s-text" rows="7" maxlength="560"></textarea>
         <div class="hint"><span id="s-count"></span> · <button type="button" class="copy" id="s-new">Write another</button></div></div>
       <button class="btn btn-primary btn-block btn-lg" id="s-go" type="button">${ICONS.x}<span>Post on X</span></button>`);
@@ -1011,7 +1053,7 @@ async function boot() {
     page = r.name === 'agent' ? AgentPage(ctx, r.id) : r.name === 'agents' ? AgentsPage(ctx) : r.name === 'mine' ? AgentsPage(ctx, { mine: true }) : r.name === 'tokens' ? TokensPage(ctx) : r.name === 'launch' ? LaunchPage(ctx) : r.name === 'how' ? HowPage(ctx) : r.name === 'skins' ? SkinsPage(ctx) : r.name === 'burns' ? AgentBurnsPage(ctx) : r.name === 'dev-burns' ? DevBurnsPage(ctx) : r.name === 'market' ? MarketPage(ctx) : r.name === 'arena' ? ArenaPage(ctx) : r.name === 'duel' ? DuelPage(ctx, r.id) : r.name === 'ranks' ? RanksPage(ctx) : r.name === 'companies' ? CompaniesPage(ctx) : r.name === 'company' ? CompanyPage(ctx, r.id) : HomePage(ctx);
     page.mount($('#page'), api.snapshot);
     document.querySelectorAll('#nav a, #topnav a').forEach((a) => a.classList.toggle('on', a.dataset.r === (r.name === 'agent' ? 'agents' : r.name === 'duel' ? 'arena' : r.name === 'company' ? 'companies' : r.name)));
-    document.title = r.name === 'home' ? 'BUILD · build your builder, it works for you' : 'BUILD · ' + ({ agent: 'Builder', agents: 'Builders', tokens: 'Tokens', launch: 'Launch', how: 'How it works', skins: 'Skins', burns: 'Builder Burns', 'dev-burns': 'Dev Burns', market: 'Builder Market', mine: 'My Builders', arena: 'Arena', duel: 'Duel', ranks: 'Ranks', companies: 'Companies', company: 'Company' })[r.name];
+    document.title = r.name === 'home' ? 'FOREMAN · hire your builder, it works for you' : 'FOREMAN · ' + ({ agent: 'Builder', agents: 'Builders', tokens: 'Tokens', launch: 'Launch', how: 'How it works', skins: 'Skins', burns: 'Builder Burns', 'dev-burns': 'Dev Burns', market: 'Builder Market', mine: 'My Builders', arena: 'Arena', duel: 'Duel', ranks: 'Ranks', companies: 'Companies', company: 'Company' })[r.name];
     window.scrollTo(0, 0);
   }
   addEventListener('hashchange', route);
@@ -1042,7 +1084,7 @@ async function boot() {
       page?.onMarket?.(p);
     }
     if (type === 'burn') {
-      toast(`<b>🔥 ${p.source === 'dev' ? 'Dev buyback' : 'Buyback'} &amp; burn</b>${esc(p.agentName)} bought ${sol(p.sol, 3)} SOL of the BUILD coin and burned ${Math.round(p.tokens).toLocaleString('en')} tokens. <a class="ext" href="#/${p.source === 'dev' ? 'dev-burns' : 'burns'}">See all ${p.source === 'dev' ? 'dev ' : 'builder '}burns</a>`, p.avatarSeed);
+      toast(`<b>🔥 ${p.source === 'dev' ? 'Dev buyback' : 'Buyback'} &amp; burn</b>${esc(p.agentName)} bought ${sol(p.sol, 3)} SOL of the FOREMAN coin and burned ${Math.round(p.tokens).toLocaleString('en')} tokens. <a class="ext" href="#/${p.source === 'dev' ? 'dev-burns' : 'burns'}">See all ${p.source === 'dev' ? 'dev ' : 'builder '}burns</a>`, p.avatarSeed);
       page?.onBurn?.(p);
     }
     if (type === 'skin') {
@@ -1085,7 +1127,7 @@ async function boot() {
   $('#theme-btn').addEventListener('click', () => {
     const next = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    store.set('build_theme', next);
+    store.set('foreman_theme', next);
     paintThemeBtn();
   });
 
@@ -1121,5 +1163,5 @@ async function boot() {
 
 boot().catch((e) => {
   console.error(e);
-  document.getElementById('app').innerHTML = `<div class="wrap"><div class="card"><div class="feed-empty">BUILD could not start: ${esc(e.message)}</div></div></div>`;
+  document.getElementById('app').innerHTML = `<div class="wrap"><div class="card"><div class="feed-empty">FOREMAN could not start: ${esc(e.message)}</div></div></div>`;
 });

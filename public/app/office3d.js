@@ -1,6 +1,6 @@
-// BUILD site office: a live, animated 3D brick diorama drawn with plain WebGL2 (no libraries).
+// FOREMAN site office: a live, animated 3D brick diorama drawn with plain WebGL2 (no libraries).
 // Everything is made of toy bricks with round studs on top. One look per career level
-// (createOffice(el, { level: 1..6 })); level 2 is the BUILD Site Office everyone sees.
+// (createOffice(el, { level: 1..6 })); level 2 is the FOREMAN Site Office everyone sees.
 // Four builders sit at their desks (Launcher, Content Creator, Trader, Researcher) and the
 // foreman walks the floor. Speech bubbles above their heads are real buttons; clicking a
 // builder does the same thing.
@@ -402,7 +402,17 @@ const GLYPHS = {
   I: ['####', '.##.', '.##.', '.##.', '.##.', '.##.', '####'],
   L: ['##...', '##...', '##...', '##...', '##...', '##...', '#####'],
   D: ['#####.', '##..##', '##..##', '##..##', '##..##', '##..##', '#####.'],
+  F: ['#####', '##...', '##...', '####.', '##...', '##...', '##...'],
+  O: ['.####.', '##..##', '##..##', '##..##', '##..##', '##..##', '.####.'],
+  R: ['#####.', '##..##', '##..##', '#####.', '##.##.', '##..##', '##..##'],
+  E: ['#####', '##...', '##...', '####.', '##...', '##...', '#####'],
+  M: ['##...##', '###.###', '#######', '##.#.##', '##...##', '##...##', '##...##'],
+  A: ['.####.', '##..##', '##..##', '######', '##..##', '##..##', '##..##'],
+  N: ['##..##', '###.##', '######', '##.###', '##..##', '##..##', '##..##'],
 };
+// the sign word; letters shrink so a longer word fits the space the original 5-letter sign used
+const SIGN_WORD = 'FOREMAN';
+const SIGN_COLS = 31;
 
 // ─────────────── canvas textures ───────────────
 function canvasTex(gl, w, h) {
@@ -468,7 +478,7 @@ function drawChat(tx, t = 0) {
 const GREENS = [0x3DBE4E, 0x2FA43F, 0x55D060];
 // names shown on the site (Home office switcher, level-up toasts, career ladder)
 export const OFFICE_NAMES = { 1: 'The Garage', 2: 'Site Office', 3: 'The Workshop', 4: 'Studio Loft', 5: 'Tower Floor', 6: 'The Skyscraper' };
-export const MAIN_OFFICE = 2; // the BUILD Site Office everyone sees
+export const MAIN_OFFICE = 2; // the FOREMAN Site Office everyone sees
 const OFFICE_LEVELS = {
   // 1 · the garage: concrete, a roll-up door, folding tables, boxes, a bare bulb, bricks piled in the corner
   1: {
@@ -498,7 +508,7 @@ const OFFICE_LEVELS = {
       plant(9.55, 4.4, 0.8);
     },
   },
-  // 2 · the site office (everyone's default): white brick, yellow accents, crane, the big BUILD sign
+  // 2 · the site office (everyone's default): white brick, yellow accents, crane, the big FOREMAN sign
   2: {
     windows: 'std', crane: true,
     c: { floor: 0xE9E9E6, floorSeam: 0.5, wall: 0xF3F3F1, wallR: 0xEDEDEA, accent: 0xFFD21F, cap: 0xFFD21F, rim: 0xFFD21F,
@@ -932,11 +942,12 @@ export function createOffice(host, { onAction, level = MAIN_OFFICE, agent = null
     walls.box(RW - 0.015, y0, 0, RW, y1, RD, c, -BRK);
   }
 
-  // the BUILD sign on top of the back wall: chunky bricks with studs
+  // the FOREMAN sign on top of the back wall: chunky bricks with studs
   {
-    const L = 0.175, word = 'BUILD';
+    const word = SIGN_WORD;
     const widths = [...word].map((ch) => GLYPHS[ch][0].length);
     const total = widths.reduce((a, b) => a + b, 0) + word.length - 1;
+    const L = 0.175 * Math.min(1, SIGN_COLS / total);
     const x0 = RW / 2 - (total * L) / 2, y0 = RH + 0.08 + 0.16, z0 = -0.24, z1 = -0.02;
     room.box(x0 - 0.22, RH + 0.08, -0.26, x0 + total * L + 0.22, y0, 0.02, K.signBase, 0);   // base beam
     room.studs(x0 - 0.22, -0.26, x0 + total * L + 0.22, 0.02, y0, K.signBase, 0.2);
@@ -1038,14 +1049,15 @@ export function createOffice(host, { onAction, level = MAIN_OFFICE, agent = null
   };
   }
 
-  // ── the BUILD tower: a two-storey brick cutaway with a room per builder (the home page scene) ──
+  // ── the FOREMAN tower: a two-storey brick cutaway with a room per builder (the home page scene) ──
   function towerScene() { return buildTower(); }
 
-  // the BUILD sign: white bricks with a black outline and sides, the last letter in yellow, studs on top
-  function bigSign(cx, y0, zf, L, depth) {
-    const word = 'BUILD';
+  // the FOREMAN sign: white bricks with a black outline and sides, the last letter in yellow, studs on top
+  function bigSign(cx, y0, zf, L0, depth) {
+    const word = SIGN_WORD;
     const widths = [...word].map((ch) => GLYPHS[ch][0].length);
     const total = widths.reduce((a, b) => a + b, 0) + word.length - 1;
+    const L = L0 * Math.min(1, SIGN_COLS / total);
     const x0 = cx - (total * L) / 2, z0 = zf - depth, O = 0.035;
     const night = K.letterEmit || 3;
     let col = 0;

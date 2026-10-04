@@ -31,7 +31,7 @@ export function MarketPage(app) {
         <div><dt>Coin mcap</dt><dd>${x.coin?.mcapUsd ? '$' + Math.round(x.coin.mcapUsd).toLocaleString('en') : '–'}</dd></div>
       </dl>
       <div class="mk-buy">
-        <span class="mk-price"><small>Price</small><span>${+x.price.toFixed(4)} <em>SOL</em></span>${x.priceTokens ? `<small class="mk-tok">≈ ${fmtBag(x.priceTokens)} BUILD</small>` : ''}</span>
+        <span class="mk-price"><small>Price</small><span>${+x.price.toFixed(4)} <em>SOL</em></span>${x.priceTokens ? `<small class="mk-tok">≈ ${fmtBag(x.priceTokens)} FOREMAN</small>` : ''}</span>
         ${mine ? `<a class="btn" href="#/builder/${x.no}">Your listing</a>` : `<button class="btn btn-primary" type="button" data-buy="${esc(x.id)}">Buy builder</button>`}
       </div>
       <small class="muted mk-seller">Seller ${esc(short(x.seller, 4))} · listed <span data-ago="${x.listedAt}">${ago(x.listedAt)}</span></small>
@@ -65,7 +65,7 @@ export function MarketPage(app) {
       : list.length ? list.map(card).join('') : `<div class="mk-empty"><b>No builders for sale right now.</b><span>Own a builder? Open its page and tap <b>Sell this builder</b>.</span></div>`;
     el.querySelector('#mk-sales').innerHTML = salesRows();
     const rf = (m.refunds || []).filter((r) => r.status !== 'paid' || Date.now() - r.ts < 24 * 3600_000);
-    el.querySelector('#mk-refunds').innerHTML = rf.length ? `<div class="burn-warn">${rf.map((r) => `↩ Refund of <b>${r.tokens ? fmtBag(r.tokens) + ' BUILD' : sol(r.sol, 4) + ' SOL'}</b> (${esc(r.note || '')}): ${r.sig ? txLink(r.sig, 'sent ✓') : 'being sent…'}`).join('<br>')}</div>` : '';
+    el.querySelector('#mk-refunds').innerHTML = rf.length ? `<div class="burn-warn">${rf.map((r) => `↩ Refund of <b>${r.tokens ? fmtBag(r.tokens) + ' FOREMAN' : sol(r.sol, 4) + ' SOL'}</b> (${esc(r.note || '')}): ${r.sig ? txLink(r.sig, 'sent ✓') : 'being sent…'}`).join('<br>')}</div>` : '';
   };
 
   const load = () => app.api.getMarket(wallet.address).then((r) => { data = r; err = null; }).catch((e) => { err = e; }).finally(() => { loading = false; paint(); });
@@ -93,9 +93,9 @@ export function MarketPage(app) {
           <header class="card-head"><h2 class="pix">How buying and selling works</h2></header>
           <ol>
             <li><b>Selling:</b> only NFT builders can be sold. Open the builder, tap <b>🎟 Make it an NFT</b> (free), withdraw all its SOL, then tap <b>Sell this builder</b>: you sign the price and send the builder NFT to the market wallet. It is on sale as soon as the NFT arrives. Remove it any time and the NFT comes back to you.</li>
-            <li><b>Buying:</b> prices are shown in SOL, but you <b>pay in the BUILD coin</b>: the amount worth the SOL price at that moment (fixed for 10 minutes). You sign one message and send the BUILD to the market wallet <code class="mono">${esc(short(m.payTo || '', 4))}</code>. The first valid payment wins, and the builder is yours right away.</li>
-            <li>The seller gets the BUILD minus the <b>${Math.round((m.feePct ?? 0.05) * 100)}% market fee</b>, sent automatically.</li>
-            <li>If the builder was sold a moment before, removed or repriced, or you paid too little, <b>your BUILD is sent back automatically</b>.</li>
+            <li><b>Buying:</b> prices are shown in SOL, but you <b>pay in the FOREMAN coin</b>: the amount worth the SOL price at that moment (fixed for 10 minutes). You sign one message and send the FOREMAN to the market wallet <code class="mono">${esc(short(m.payTo || '', 4))}</code>. The first valid payment wins, and the builder is yours right away.</li>
+            <li>The seller gets the FOREMAN minus the <b>${Math.round((m.feePct ?? 0.05) * 100)}% market fee</b>, sent automatically.</li>
+            <li>If the builder was sold a moment before, removed or repriced, or you paid too little, <b>your FOREMAN is sent back automatically</b>.</li>
 
             <li>The builder comes with an empty wallet: fund it with <b>Add SOL</b> and it starts trading with its strategy. NFT skins stay with the seller's wallet.</li>
             <li>Past results do not guarantee future profit. Memecoin trading is very risky.</li>

@@ -3,7 +3,7 @@
 // what happens next on the right. One SOL transfer launches the coin + builder.
 import { robotSVG, robotPNG, robotTraits, robotParts } from '../robot.js';
 import { esc, sol, pct, short, STRAT_ICONS, strategyById, strategyRules, stratIcon, stratKey, riskTag, riskWarning } from '../ui.js';
-import { wallet, sendSol } from '../wallet.js';
+import { wallet, sendSol, signAction, actionMessage } from '../wallet.js';
 import { createOffice } from '../office3d.js';
 import { SKIN_MODELS } from '../skins3d.js';
 
@@ -91,7 +91,7 @@ export function LaunchPage(app) {
     return [card(!want.gear, 'data-gear=""', robotSVG(f.botSeed, { stand: true }), 'Any', 'Random'), ...CAT.gear.map(([k, label, s]) => card(want.gear === k, `data-gear="${k}"`, robotSVG(s, { stand: true }), label, 'Accessory'))].join('');
   };
   const appearanceNote = () => tab === 'skin'
-    ? (f.skin ? `<b>${esc(skinOf(f.skin)?.name || '')}</b> is a paid skin (${skinOf(f.skin)?.priceSol} SOL in BUILD). You buy it for your builder right after launch, from its page or the Skins page. Your coin logo stays your builder.` : 'Paid skins are bought after launch, from the builder page or the Skins page.')
+    ? (f.skin ? `<b>${esc(skinOf(f.skin)?.name || '')}</b> is a paid skin (${skinOf(f.skin)?.priceSol} SOL in FOREMAN). You buy it for your builder right after launch, from its page or the Skins page. Your coin logo stays your builder.` : 'Paid skins are bought after launch, from the builder page or the Skins page.')
     : (() => { const t = robotTraits(f.botSeed); return `<b>${esc(t.outfit)}</b> · ${esc(t.hair)} · ${esc(t.gear || 'no gear')}. It becomes your builder and, unless you upload a logo, your coin logo.`; })();
 
   // ── 4. strategy ──
@@ -119,8 +119,8 @@ export function LaunchPage(app) {
       ${row(IC.brick, 'Coin name', esc(f.name || '–'))}
       ${row(IC.brick, 'Ticker', f.ticker ? '$' + esc(f.ticker) : '–')}
       ${row(IC.brick, 'Description', esc(f.description ? (f.description.length > 40 ? f.description.slice(0, 40) + '…' : f.description) : '–'))}
-      ${row(IC.brick, 'Starting capital', `${sol(Number(f.capital) || 0, 3)} SOL`)}
-      ${row(IC.brick, 'You send', `<b>${sol(total(), 4)} SOL</b>`)}
+      ${row(IC.brick, 'Starting capital', `${sol(Number(f.capital) || 0, 3)} ${cfg.paper ? 'paper ' : ''}SOL`)}
+      ${cfg.paper ? row(IC.brick, 'You send', '<b>Nothing</b> (paper)') : row(IC.brick, 'You send', `<b>${sol(total(), 4)} SOL</b>`)}
       ${row(IC.brick, 'Strategy', esc(st?.name || ''))}
       ${row(IC.brick, 'Socials', [f.twitter && IC.x, (f.website || cfg.siteUrl) && IC.web, f.telegram && IC.tg].filter(Boolean).join('') || '–')}`;
   };
@@ -130,12 +130,12 @@ export function LaunchPage(app) {
     return `<div class="wrap bb">
       <section class="pg-hero bb-hero">
         <div class="pg-hero-copy">
-          <h1 class="pg-big">Build your<br><em>builder</em></h1>
-          <p class="pg-lede">Give it a coin, a look and a job. Your coin launches on pump.fun and your builder gets its own Solana wallet. It trades with the strategy you pick, 24/7 and in public.</p>
+          <h1 class="pg-big">Hire your<br><em>builder</em></h1>
+          <p class="pg-lede">${cfg.paper ? 'Give it a name, a look, a job and a paper bankroll. It trades with the strategy you pick, 24/7 and in public, on live market prices. <b>Paper trading:</b> no coin is launched and no real SOL moves.' : 'Give it a coin, a look and a job. Your coin launches on pump.fun and your builder gets its own Solana wallet. It trades with the strategy you pick, 24/7 and in public.'}</p>
         </div>
         <div class="pg-hero-art"><img src="brand/pages/launch-hero.jpg" alt="Create, customize, launch"></div>
       </section>
-      ${off ? `<div class="card" style="padding:14px 18px"><b class="down">Launching is switched off on this server.</b> <span class="muted">The operator needs to add PINATA_JWT to the server's .env.</span></div>` : ''}
+      ${off ? `<div class="card" style="padding:14px 18px"><b class="down">Launching is switched off on this server.</b></div>` : ''}
       <div class="bb-grid">
         <form class="bb-form" id="l-form" novalidate>
           <section class="card bb-sec">
@@ -150,7 +150,7 @@ export function LaunchPage(app) {
           </section>
 
           <section class="card bb-sec">
-            <h2><span class="bb-num">2</span>Coin details</h2>
+            <h2><span class="bb-num">2</span>${cfg.paper ? 'Name tag' : 'Coin details'}</h2>${cfg.paper ? '<p class="hint">Paper mode: this is your builder\'s name tag and ticker on the site. Nothing is created on pump.fun.</p>' : ''}
             <div class="row2">
               ${field('l-name', 'Coin name', `<div class="input-affix"><span class="pre">${IC.coin}</span><input class="input" id="l-name" maxlength="32" placeholder="e.g. James Bond" autocomplete="off"></div>`)}
               ${field('l-ticker', 'Ticker', `<input class="input" id="l-ticker" maxlength="10" placeholder="BOND" autocomplete="off" style="text-transform:uppercase">`)}
@@ -169,11 +169,11 @@ export function LaunchPage(app) {
           </section>
 
           <section class="card bb-sec">
-            <h2><span class="bb-num">3</span>Starting capital</h2>
+            <h2><span class="bb-num">3</span>Starting capital${cfg.paper ? ' <em class="paper-tag">PAPER</em>' : ''}</h2>
             <div class="bb-caps" id="l-presets">${cfg.launch.capitalPresets.map((v) => `<button type="button" data-v="${v}" class="${v === Number(f.capital) ? 'on' : ''}"><span class="bb-solic">${IC.sol}</span>${v} SOL</button>`).join('')}
               <div class="bb-capin input-affix suf"><input class="input" id="l-cap" type="number" step="0.01" min="${cfg.launch.minStartingCapital}" ${cfg.launch.maxStartingCapital ? `max="${cfg.launch.maxStartingCapital}"` : ''} value="${f.capital}" inputmode="decimal" aria-label="Custom amount"><span class="suf-t">SOL</span></div></div>
             <div class="err" id="l-cap-err" hidden></div>
-            <p class="hint">This will be sent from your wallet to the builder's wallet to launch the coin and start trading (+ ${cfg.launch.launchReserveSol} SOL launch reserve). Minimum ${cfg.launch.minStartingCapital} SOL. <b>Real SOL.</b></p>
+            <p class="hint">${cfg.paper ? `Simulated SOL the builder starts with. Nothing is sent from your wallet. Minimum ${cfg.launch.minStartingCapital} SOL${cfg.launch.maxStartingCapital ? `, maximum ${cfg.launch.maxStartingCapital} SOL` : ''}. <b>Paper SOL.</b>` : `This will be sent from your wallet to the builder's wallet to launch the coin and start trading (+ ${cfg.launch.launchReserveSol} SOL launch reserve). Minimum ${cfg.launch.minStartingCapital} SOL. <b>Real SOL.</b>`}</p>
           </section>
 
           <section class="card bb-sec">
@@ -184,7 +184,7 @@ export function LaunchPage(app) {
             </div>
           </section>
 
-          <button class="btn btn-primary btn-lg btn-block bb-go" type="submit" id="l-submit" ${off ? 'disabled' : ''}>${IC.rocket}<span>Build it – Launch coin + builder</span>${IC.arrow}</button>
+          <button class="btn btn-primary btn-lg btn-block bb-go" type="submit" id="l-submit" ${off ? 'disabled' : ''}>${IC.rocket}<span>${cfg.paper ? 'Hire it – start paper trading' : 'Build it – Launch coin + builder'}</span>${IC.arrow}</button>
           <p class="note" style="text-align:center" id="l-from">${fromHTML()}</p>
         </form>
 
@@ -201,13 +201,14 @@ export function LaunchPage(app) {
           <section class="card bb-next">
             <header class="card-head"><h2>What happens next?</h2></header>
             <ol>
-              <li><span class="bb-num">1</span><span class="bb-nic">${IC.wallet}</span><span><b>You send the starting capital</b><small>We create the builder's wallet, you send ${sol(total(), 4)} SOL to it.</small></span></li>
-              <li><span class="bb-num">2</span><span class="bb-nic">${IC.rocket}</span><span><b>Builder launches the coin</b><small>Your coin goes live on pump.fun, the builder is its creator.</small></span></li>
+              ${cfg.paper ? `<li><span class="bb-num">1</span><span class="bb-nic">${IC.wallet}</span><span><b>You sign one free message</b><small>It proves the builder is yours. No SOL moves, no transaction.</small></span></li>
+              <li><span class="bb-num">2</span><span class="bb-nic">${IC.rocket}</span><span><b>Builder clocks in</b><small>It starts with ${sol(Number(f.capital) || 0, 3)} paper SOL.</small></span></li>` : `<li><span class="bb-num">1</span><span class="bb-nic">${IC.wallet}</span><span><b>You send the starting capital</b><small>We create the builder's wallet, you send ${sol(total(), 4)} SOL to it.</small></span></li>
+              <li><span class="bb-num">2</span><span class="bb-nic">${IC.rocket}</span><span><b>Builder launches the coin</b><small>Your coin goes live on pump.fun, the builder is its creator.</small></span></li>`}
               <li><span class="bb-num">3</span><span class="bb-nic">${IC.chart}</span><span><b>Builder starts trading</b><small>Follows your chosen strategy 24/7 and explains every move.</small></span></li>
-              <li><span class="bb-num">4</span><span class="bb-nic">${IC.eye}</span><span><b>You can watch everything</b><small>All trades, PnL and activity are public on-chain. Pause or withdraw any time.</small></span></li>
+              <li><span class="bb-num">4</span><span class="bb-nic">${IC.eye}</span><span><b>You can watch everything</b><small>${cfg.paper ? 'All trades, PnL and decisions are public on this site (simulated fills on live prices). Pause any time.' : 'All trades, PnL and activity are public on-chain. Pause or withdraw any time.'}</small></span></li>
             </ol>
           </section>
-          <section class="bb-risk"><span>${IC.shield}</span><div><b>Risk: high volatility</b><p>Meme coins are extremely volatile. The builder can lose some or all of its SOL. Only send what you can afford to lose.</p></div></section>
+          <section class="bb-risk"><span>${IC.shield}</span><div><b>${cfg.paper ? 'Paper results are not real results' : 'Risk: high volatility'}</b><p>${cfg.paper ? 'Simulated fills include fees and price impact but real trades can slip far more. Meme coins are extremely volatile: a strategy that wins on paper can lose real SOL.' : 'Meme coins are extremely volatile. The builder can lose some or all of its SOL. Only send what you can afford to lose.'}</p></div></section>
         </aside>
       </div>
     </div>`;
@@ -215,7 +216,7 @@ export function LaunchPage(app) {
 
   const field = (id, label, input, hint = '') => `<div class="field"><label for="${id}">${label}</label>${input}${hint ? `<div class="hint">${hint}</div>` : ''}<div class="err" id="${id}-err" hidden></div></div>`;
   function logoHTML() { return f.image ? `<img src="${f.image}" alt="Coin logo">` : robotSVG(f.botSeed); }
-  function fromHTML() { return wallet.address ? 'Launching from <b>' + esc(short(wallet.address, 4)) + '</b>' + (wallet.name ? ' (' + esc(wallet.name) + ')' : '') : 'You will connect your wallet and approve one SOL transfer.'; }
+  function fromHTML() { return wallet.address ? (cfg.paper ? 'Signing as <b>' : 'Launching from <b>') + esc(short(wallet.address, 4)) + '</b>' + (wallet.name ? ' (' + esc(wallet.name) + ')' : '') : (cfg.paper ? 'You will connect your wallet and sign one free message. No SOL is sent.' : 'You will connect your wallet and approve one SOL transfer.'); }
 
   const q = (s) => el.querySelector(s);
   const refresh = () => { q('#l-preview').innerHTML = summaryHTML(); };
@@ -233,7 +234,7 @@ export function LaunchPage(app) {
       applyState();
     } catch { stage.innerHTML = `<div class="bb-flat">${f.skin ? `<img src="brand/skins/${esc(f.skin)}-stand.png" alt="">` : robotSVG(f.botSeed, { stand: true })}</div>`; }
   }
-  const stateObj = () => ({ state: pvState === 'idle' ? 'idle' : 'work', title: f.agentName || 'Your builder', sub: pvState === 'idle' ? 'On-chain, 24/7' : pvState === 'party' ? 'First profit!' : (curStrat()?.name || '') + ' · trading' });
+  const stateObj = () => ({ state: pvState === 'idle' ? 'idle' : 'work', title: f.agentName || 'Your builder', sub: pvState === 'idle' ? (cfg.paper ? 'Paper trading, 24/7' : 'On-chain, 24/7') : pvState === 'party' ? 'First profit!' : (curStrat()?.name || '') + ' · trading' });
   function applyState() { preview?.setAgent?.(stateObj()); if (pvState === 'party') preview?.celebrate?.('launch'); }
 
   const paintCards = () => { q('#bb-cards').innerHTML = cardsHTML(); q('#bb-note').innerHTML = appearanceNote(); };
@@ -283,10 +284,41 @@ export function LaunchPage(app) {
     img.src = url;
   }
 
+  // Paper mode: one free signature creates the builder. No SOL transfer, no coin launch.
+  async function submitPaper(capital) {
+    const steps = ['Connect wallet', 'Sign in your wallet (free, no SOL moves)', 'Create the paper builder', 'Builder is on shift'];
+    const prog = app.progressModal('Hiring ' + f.agentName.trim(), steps);
+    let prep = null;
+    try {
+      prog.step(0);
+      if (!wallet.address) {
+        const addr = await app.openConnect();
+        if (!addr) { prog.fail(0, 'Your wallet is not connected.'); return; }
+      }
+      prog.step(1);
+      const agentName = f.agentName.trim().replace(/[<>]/g, '').slice(0, 32);
+      const auth = await signAction(actionMessage('launch', 'new', [`Name: ${agentName}`, `Ticker: ${f.ticker}`, `Capital: ${capital} SOL (paper)`]));
+      prog.step(2);
+      prep = await app.api.prepareLaunch({
+        creator: wallet.address,
+        coin: { name: f.name.trim(), ticker: f.ticker, description: f.description.trim(), twitter: f.twitter.trim(), website: f.website.trim(), telegram: f.telegram.trim() },
+        agentName, startingCapital: capital, image: f.image || robotPNG(f.botSeed), avatarSeed: f.botSeed, strategy: f.strategy,
+        riskAck: needsAck() ? f.riskAck === true : undefined, ...auth,
+      });
+      prog.step(steps.length);
+      prog.note(`<p>${esc(agentName)} starts with <b>${sol(capital, 3)} paper SOL</b> and makes its first decision on the next market tick.</p>`);
+      prog.done(`Builder ${String(prep.no).padStart(3, '0')} is on shift`, () => app.navigate('#/builder/' + prep.no));
+    } catch (err) {
+      prog.failCurrent(err.message || 'Could not create the builder.');
+      if (prep) prog.link('Open builder page', () => app.navigate('#/builder/' + prep.no));
+    }
+  }
+
   async function submit(e) {
     e.preventDefault();
     if (!validate()) { el.querySelector('.err:not([hidden]), .risk-ok.need')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
     const capital = Number(f.capital);
+    if (cfg.paper) return submitPaper(Math.round(capital * 1e4) / 1e4);
     const steps = ['Connect wallet', 'Create builder + builder wallet', `Send ${sol(total(), 4)} SOL to the builder`, 'Confirm the transfer on-chain', 'Upload coin image + metadata', 'Create the coin on pump.fun', 'Builder is live'];
     const prog = app.progressModal('Launching $' + f.ticker, steps);
     let prep = null;

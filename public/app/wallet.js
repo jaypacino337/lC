@@ -154,7 +154,7 @@ function loadMetaMask() {
     for (const url of ['https://cdn.jsdelivr.net/npm/@metamask/connect-solana/+esm', 'https://esm.sh/@metamask/connect-solana']) {
       try {
         const m = await import(url);
-        const client = await m.createSolanaClient({ dapp: { name: 'BUILD', url: location.origin }, skipAutoRegister: true });
+        const client = await m.createSolanaClient({ dapp: { name: 'FOREMAN', url: location.origin }, skipAutoRegister: true });
         const w = await client.getWallet();
         addStandard(w);
         if (standard.has(w.name)) return w;
@@ -272,7 +272,7 @@ export async function sendSol(to, sol, getBlockhash) {
   return a.sendTransaction(tx);
 }
 
-// Send SPL tokens (e.g. BUILD for a skin): creates the receiver's token account if it is missing
+// Send SPL tokens (e.g. FOREMAN for a skin): creates the receiver's token account if it is missing
 // (idempotent), then TransferChecked. `raw` is the integer token amount (string or bigint).
 const ATA_PROGRAM = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
 export async function sendToken({ to, mint, program, raw, decimals, fromAccount }, getBlockhash) {
@@ -336,7 +336,7 @@ export async function sendCoreAsset({ asset, collection, to }, getBlockhash) {
 // Message format the server checks for creator-only actions
 export function actionMessage(action, agentWallet, extra = []) {
   return [
-    'BUILD action',
+    'FOREMAN action',
     `Action: ${action}`,
     `Builder: ${agentWallet}`,
     ...extra,

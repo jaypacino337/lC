@@ -16,7 +16,7 @@ function safetyRules(f) {
   if (f.maxDevPct != null) r.push(['Dev', `holds at most ${P(f.maxDevPct)} and has not sold anything`]);
   if (f.maxEarlyBuyers != null) r.push(['Bundles', `max ${f.maxEarlyBuyers} buyers in the first 3 s, max ${P(f.maxUnseenPct || 0)} bought in the launch block`]);
   if (f.maxTopHolderPct != null) r.push(['Whales', `top holder ≤ ${P(f.maxTopHolderPct)}, top 10 ≤ ${P(f.maxTop10Pct)}`]);
-  if (f.maxAgentsPerCoin != null) r.push(['Crowding', `max ${f.maxAgentsPerCoin} BUILD builders in the same coin`]);
+  if (f.maxAgentsPerCoin != null) r.push(['Crowding', `max ${f.maxAgentsPerCoin} FOREMAN builders in the same coin`]);
   r.push(['Early exit', 'sells at once if the dev sells, sellers take over or trading stops']);
   return r;
 }
@@ -53,7 +53,14 @@ export function HowPage(app) {
   const builtins = (c.strategies || []).filter((st) => !st.safety);
   const demo = (c.strategies || []).find((st) => st.safety);
 
-  const steps = [
+  const steps = c.paper ? [
+    ['wallet', 'Connect wallet', 'Connect Phantom, Solflare or MetaMask (Solana). It is only used to sign.'],
+    ['coin', 'Name your builder', 'Pick a look, a name tag, a ticker and a paper bankroll.'],
+    ['hat', 'Sign once', 'One free signature proves the builder is yours. No SOL moves.'],
+    ['send', 'Pick a job', 'Choose a built-in strategy or build your own with sliders.'],
+    ['rocket', 'Clock in', 'The builder starts with simulated SOL on the next market tick.'],
+    ['bars', 'Builder trades', 'It buys and sells on live prices with simulated fills, following your strategy.'],
+  ] : [
     ['wallet', 'Connect wallet', 'Connect Phantom, Solflare or MetaMask (Solana).'],
     ['coin', 'Fill in your coin', 'Add name, ticker, description, socials and starting capital.'],
     ['hat', 'Builder wallet', 'We create a new Solana wallet for your builder.'],
@@ -61,7 +68,12 @@ export function HowPage(app) {
     ['rocket', 'Coin launches', 'Your coin goes live on pump.fun with your builder as its creator.'],
     ['bars', 'Builder trades', 'It buys and sells with real SOL, following your strategy.'],
   ];
-  const does = [
+  const does = c.paper ? [
+    ['bars', 'Trades automatically', 'Paper-trades live pump.fun / DexScreener tokens using your chosen strategy.'],
+    ['x', 'Shills on X', 'Writes ready-made posts with its paper P&L, clearly labelled as paper.'],
+    ['fees', 'Pays realistic costs', 'Every simulated fill pays a pool fee, price impact and a network fee.'],
+    ['wallet', 'Explains every move', 'Each BUY, SELL and HOLD comes with the reason, on its public page.'],
+  ] : [
     ['bars', 'Trades automatically', 'Buys and sells real SOL using your chosen strategy.'],
     ['x', 'Shills on X', 'Writes ready-made posts with your coin, CA and live P&L.'],
     ['fees', 'Earns creator fees', c.fees.creatorSharePct > 0 ? `Claims the coin's creator fees: ${Math.round(c.fees.creatorSharePct * 100)}% to you, the rest keeps trading.` : "Claims all of the coin's creator fees and keeps trading with them."],
@@ -80,15 +92,15 @@ export function HowPage(app) {
     <section class="pg-hero">
       <div class="pg-hero-copy">
         <h1 class="pg-big">How it<br><em>works</em></h1>
-        <p class="pg-lede">Launch a coin, give your builder a job and it gets its own Solana wallet. It trades real SOL, keeps every creator fee, explains every move and works for you 24/7.</p>
-        <div class="pg-cta"><a class="btn btn-primary btn-lg" href="#/build"><span>Launch coin + builder</span>${IC.arrow}</a><a class="btn btn-lg btn-ghost" href="#/"><span class="ic-play">${IC.play}</span><span>See it live</span></a></div>
+        <p class="pg-lede">${c.paper ? 'Give your builder a job and a paper bankroll. It trades Solana memecoins on live market data, explains every move and works for you 24/7. Paper trading: the prices are real, the SOL is simulated.' : 'Launch a coin, give your builder a job and it gets its own Solana wallet. It trades real SOL, keeps every creator fee, explains every move and works for you 24/7.'}</p>
+        <div class="pg-cta"><a class="btn btn-primary btn-lg" href="#/build"><span>${c.paper ? 'Hire a builder' : 'Launch coin + builder'}</span>${IC.arrow}</a><a class="btn btn-lg btn-ghost" href="#/"><span class="ic-play">${IC.play}</span><span>See it live</span></a></div>
       </div>
       <div class="pg-hero-art"><img src="brand/pages/how-hero.jpg" alt="A builder at work: launch coin, shill on X, auto trade, earn fees, send to your wallet"></div>
     </section>
 
     <section class="card hw-steps">
-      <div class="hw-side"><h2>From launch<br>to live trades</h2><p>Get your builder up and running in a few simple steps.</p></div>
-      <span class="hw-real"><i></i>Real SOL on Solana mainnet</span>
+      <div class="hw-side"><h2>${c.paper ? 'From hire<br>to first trade' : 'From launch<br>to live trades'}</h2><p>Get your builder up and running in a few simple steps.</p></div>
+      <span class="hw-real"><i></i>${c.paper ? 'Paper trading on live prices' : 'Real SOL on Solana mainnet'}</span>
       <ol class="hw-steplist">${steps.map(([ic, t, d], i) => `<li><span class="hw-n">${String(i + 1).padStart(2, '0')}</span><span class="hw-ic">${IC[ic]}</span><b>${t}</b><small>${esc(d)}</small></li>`).join('')}</ol>
     </section>
 
@@ -98,7 +110,7 @@ export function HowPage(app) {
     </section>
 
     <section class="card hw-ladder">
-      <div class="hw-side"><h2>Career ladder</h2><p>Builders get promoted as the trading profit they make. Promotions are permanent and rewards are paid automatically.</p>
+      <div class="hw-side"><h2>Career ladder</h2><p>Builders get promoted by the trading profit they make${c.paper ? ' (paper profit in paper mode)' : ''}. Promotions are permanent${c.rewards?.enabled ? ' and rewards are paid automatically' : ''}.</p>
         ${c.rewards?.enabled ? '<button type="button" class="btn hw-outline" id="hw-rew-btn"><span>View all rewards</span>' + IC.arrow + '</button>' : ''}</div>
       <ol class="hw-lv">${L.map((l, i) => `<li>
         <img src="brand/pages/lvl${Math.min(6, i + 1)}.png" alt="" loading="lazy">
@@ -156,9 +168,10 @@ export function HowPage(app) {
         <div class="node"><b>Market data</b><span>Live DexScreener data: price, liquidity, volume, 5m / 1h / 24h change</span></div><span class="arrow">→</span>
         <div class="node key"><b>Decision</b><span>Built-in trading rules pick BUY, SELL or HOLD and write down why</span></div><span class="arrow">→</span>
         <div class="node key"><b>Risk check</b><span>Size, SOL reserve, max positions, token list, pause switch</span></div><span class="arrow">→</span>
-        <div class="node"><b>Safety simulation</b><span>The swap is simulated first. If it would spend more than allowed, it is refused</span></div><span class="arrow">→</span>
+        ${c.paper ? `<div class="node"><b>Paper fill</b><span>Filled at the live price minus a 0.3% pool fee, price impact from pool liquidity and a network fee</span></div><span class="arrow">→</span>
+        <div class="node"><b>Public update</b><span>Paper balance, positions and P&amp;L show up for everyone, labelled paper</span></div>` : `<div class="node"><b>Safety simulation</b><span>The swap is simulated first. If it would spend more than allowed, it is refused</span></div><span class="arrow">→</span>
         <div class="node"><b>Signed + sent</b><span>Signed inside the server vault, sent to Solana, confirmed on-chain</span></div><span class="arrow">→</span>
-        <div class="node"><b>Public update</b><span>Balance, positions, P&amp;L and the Solscan link show up for everyone</span></div>
+        <div class="node"><b>Public update</b><span>Balance, positions, P&amp;L and the Solscan link show up for everyone</span></div>`}
       </div>
       <div class="two">
         <div class="card-body"><div class="rules">
@@ -170,10 +183,13 @@ export function HowPage(app) {
           <div class="rule"><div class="k">Tradable tokens</div><div class="v v-text">≥ ${usd(c.filters?.minLiquidityUsd || 0)} liquidity, ≥ ${usd(c.filters?.minVolume24hUsd || 0)} 24h volume, ≥ ${c.filters?.minAgeHours ?? 0}h old</div></div>
         </div></div>
         <div class="prose">
-          <p><b>Two wallets, never mixed.</b> Your wallet launches and funds. The builder wallet trades. The site never asks for your seed phrase.</p>
+          ${c.paper ? `<p><b>Paper trading.</b> Prices, liquidity and volume are real (pump.fun + DexScreener). Fills, balances and P&amp;L are simulated: no transaction is ever sent and builders have no wallet or keys.</p>
+          <p><b>Your wallet only signs.</b> Creating a builder, pausing it, changing its strategy or adding paper SOL needs one free signed message. The site never asks for your seed phrase or private key.</p>
+          <p><b>Costs are simulated too.</b> Each fill pays a ${r.priorityFeeSol} SOL network fee, a ${(r.poolFeePct * 100).toFixed(1)}% pool fee and price impact sized from the pool's liquidity. Real swaps can slip much more.</p>
+          <p><b>Risk.</b> Paper results are not a promise of real results. Memecoins are extremely volatile. Nothing here is financial advice.</p>` : `<p><b>Two wallets, never mixed.</b> Your wallet launches and funds. The builder wallet trades. The site never asks for your seed phrase.</p>
           <p><b>You stay in control.</b> The creator can pause the builder, add SOL or withdraw at any time. "Withdraw everything" sells all positions and sends all SOL back to your wallet.</p>
           <p><b>Costs.</b> Each swap pays network fees, a ${r.priorityFeeSol} SOL priority fee, pool fees and PumpPortal's 0.5% fee. Small builders lose a bigger share to fees.</p>
-          <p><b>Risk.</b> Memecoins are extremely volatile and the builder can lose some or all of its SOL. Nothing here is financial advice.</p>
+          <p><b>Risk.</b> Memecoins are extremely volatile and the builder can lose some or all of its SOL. Nothing here is financial advice.</p>`}
         </div>
       </div>
     </details>

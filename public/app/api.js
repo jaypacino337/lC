@@ -1,5 +1,5 @@
-// Talks to the BUILD server. The server runs the builders 24/7 on mainnet;
-// the browser only watches and asks the creator's wallet to sign.
+// Talks to the FOREMAN server (/api, see lib/router.js). The server runs the builders 24/7
+// (paper trading on live prices by default); the browser only watches and asks the creator's wallet to sign.
 async function json(url, opts = {}) {
   const r = await fetch(url, { headers: { 'content-type': 'application/json' }, ...opts });
   const body = await r.json().catch(() => ({}));
@@ -34,7 +34,7 @@ export async function createApi() {
     setLaunchImage: (id, image) => post(`/api/launch/${id}/image`, { image }),
     confirmFunding: (id, signature) => post(`/api/launch/${id}/funded`, { signature }),
 
-    deposit: (id, signature) => post(`/api/agents/${id}/deposit`, { signature }),
+    deposit: (id, p) => post(`/api/agents/${id}/deposit`, typeof p === 'string' ? { signature: p } : p),
     withdraw: (id, p) => post(`/api/agents/${id}/withdraw`, p),
     pause: (id, p) => post(`/api/agents/${id}/pause`, p),
     setStrategy: (id, p) => post(`/api/agents/${id}/strategy`, p),
