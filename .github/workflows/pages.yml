@@ -32,6 +32,7 @@ jobs:
           cp -r css js assets _site/
           cp -r pumpxbt _site/pumpxbt
           cp -r longdog _site/longdog
+          cp -r sludge _site/sludge   # static only: /api/sludge/* needs Vercel
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

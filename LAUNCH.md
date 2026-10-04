@@ -7,6 +7,7 @@ Three things live in this repo:
 | `/`            | HOLDCO — holding-company site (root)     | Done, deployable now        |
 | `/pumpxbt`     | PumpXBT site + Terminal                  | Works                       |
 | `/longdog`     | LONGDOG — scrolling toy                  | Done                        |
+| `/sludge`      | SLUDGE — coin brewer + live scorer       | Deployable; needs Vercel for `/api/sludge/*` |
 | `/pumpxbt-bot` | Paper-mode agent + ledger API + X agent  | Runs, endpoints unverified  |
 
 ---
@@ -112,3 +113,32 @@ start, and there is no keypair anywhere in the codebase.
 - Any Helius call against a real key
 - The site with your real logo and banner in place
 - iOS Safari momentum scrolling on LONGDOG's scroll recycling
+
+---
+
+## SLUDGE (`/sludge/` + `/api/sludge/*`)
+
+**What is real:** the scoreboard, the paste-a-mint scorer and the live
+narrative chips all come from pump.fun's public frontend API and DexScreener,
+fetched by three Vercel serverless functions (`api/sludge/board.js`,
+`score.js`, `crawl.js`; shared code and the scoring formula in
+`api/_lib/sludge.js`). No keys, no dependencies, CDN-cached 30s–5min.
+
+**What is manual, on purpose:** launching. The brewer generates name, ticker,
+description and a 1000×1000 PNG in the browser and hands off to
+`pump.fun/create`. Nothing in this repo signs a transaction or touches a key.
+
+**What is not built:** MUTATE (feeding scores back into the brewer) and
+everything on the $SLUDGE token cards — all badged PLANNED on the page.
+
+### To go live
+1. Deploy the repo on Vercel as described above — the `api/` folder is picked
+   up automatically (Node runtime, zero config). GitHub Pages serves the page
+   but not the API; there the board shows "LIVE DATA UNAVAILABLE".
+2. Replace the two `og:image` / `twitter:image` paths in `sludge/index.html`
+   with absolute URLs on your domain (`https://YOUR-DOMAIN/sludge/assets/og.png`).
+3. When $SLUDGE exists: `sludge/js/config.js` → `token.address`, `links.buy`,
+   `links.x`, then `stage: 'live'`. Until then the CA pill reads CA SOON and the
+   X link stays hidden.
+4. If pump.fun starts blocking Vercel's IPs, `board`/`crawl` return 502 and the
+   page says so; `score` keeps working (DexScreener only).

@@ -1,10 +1,11 @@
 /* ============================================================================
    SLUDGE — the brewer. Deterministic coin generator + procedural blob art.
 
-   This is the interactive demo: describe a coin (or let the vat decide) and it
-   names it, draws it and writes the case — all client-side, all seeded, so the
-   same input always brews the same coin. NOTHING IS DEPLOYED. The UI says so;
-   this file contains no network calls at all.
+   Describe a coin (or seed it from a live narrative) and it names it, draws it
+   and writes the case — all client-side, all seeded, so the same input always
+   brews the same coin. This is a procedural generator, not a language model,
+   and it deploys nothing: this file makes no network calls. Launching is a
+   hand-off to pump.fun, signed by the user's own wallet, never by this site.
    ========================================================================== */
 (function (global) {
   'use strict';
@@ -82,11 +83,9 @@
       .replace('{V}', pick(r, VIBE));
 
     return {
-      name: name,
-      ticker: tickerFrom(r, name),
+      name: name,                       // ≤14 chars, inside pump.fun's 32
+      ticker: tickerFrom(r, name),      // 4–6 chars, inside pump.fun's 10
       thesis: thesis,
-      viscosity: (60 + Math.floor(r() * 39)) + '%',   // flavor stats, clearly fake
-      toxicity: (r() < 0.5 ? 'HIGH' : 'EXTREME'),
       seed: seed
     };
   }
@@ -94,12 +93,22 @@
   /* ── procedural blob ─────────────────────────────────────────────────────
      A wobbling goo circle with drips and a face, drawn from the coin's seed
      so every coin has its own creature. Canvas, ~2ms, no assets. */
-  function drawBlob(canvas, seed) {
+  /* opts.size: logical drawing size (default 260×280, the on-screen specimen).
+     The canvas's real pixel size can be larger — art scales, strokes stay in
+     proportion. opts.bg paints a background (for the downloadable PNG). */
+  function drawBlob(canvas, seed, opts) {
+    opts = opts || {};
     var r = rng(seed ^ 0x9e3779b9);
     var ctx = canvas.getContext('2d');
-    var W = canvas.width, H = canvas.height;
-    var cx = W / 2, cy = H * 0.44, R = W * 0.30;
+    var W = opts.w || 260, H = opts.h || 280;
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+    var cx = W / 2, cy = H * 0.40, R = Math.min(W, H) * 0.28;
     ctx.clearRect(0, 0, W, H);
+    if (opts.bg) {
+      var bg = ctx.createRadialGradient(cx, cy, R * 0.4, cx, cy, W * 0.8);
+      bg.addColorStop(0, '#1d2612'); bg.addColorStop(1, '#0c0f0a');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    }
 
     /* body: radius perturbed around the circle */
     var pts = [], N = 14, i;
@@ -129,7 +138,7 @@
     var drips = 2 + Math.floor(r() * 3);
     for (i = 0; i < drips; i++) {
       var dx = cx + (r() - 0.5) * R * 1.5;
-      var top = cy + R * 0.8, len = R * (0.35 + r() * 0.8), w = 7 + r() * 12;
+      var top = cy + R * 0.8, len = R * (0.3 + r() * 0.6), w = 7 + r() * 12;
       ctx.beginPath();
       ctx.moveTo(dx - w / 2, top);
       ctx.quadraticCurveTo(dx - w / 2, top + len * 0.7, dx, top + len);
@@ -170,7 +179,16 @@
     ctx.quadraticCurveTo(cx - mw / 6, my + (r() - 0.3) * 16, cx, my);
     ctx.quadraticCurveTo(cx + mw / 6, my + (r() - 0.3) * 16, cx + mw / 2, my);
     ctx.lineWidth = 5; ctx.strokeStyle = '#0c0f0a'; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
-  global.BREWER = { brew: brew, drawBlob: drawBlob, hash: hash };
+  /* Square PNG for pump.fun's image upload (1000×1000, dark background). */
+  function blobPNG(seed, cb) {
+    var c = document.createElement('canvas');
+    c.width = c.height = 1000;
+    drawBlob(c, seed, { w: 280, h: 280, bg: true });
+    c.toBlob(cb, 'image/png');
+  }
+
+  global.BREWER = { brew: brew, drawBlob: drawBlob, blobPNG: blobPNG, hash: hash };
 })(window);

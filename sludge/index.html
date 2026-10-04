@@ -3,13 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SLUDGE — the AI that brews coins</title>
-<meta name="description" content="SLUDGE reads the internet, distills the narrative, and brews it into a coin. Scored on real onchain volume. Mutates hourly. The vat is pre-launch.">
+<title>SLUDGE — the vat that brews coins</title>
+<meta name="description" content="SLUDGE reads what is launching on pump.fun, distills the narrative and brews it into a coin you can launch yourself. Then it scores every coin on real volume and liquidity. $SLUDGE is pre-launch.">
 <meta name="theme-color" content="#0c0f0a">
+<link rel="canonical" href="/sludge/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SLUDGE">
+<meta property="og:title" content="SLUDGE — the vat that brews coins">
+<meta property="og:description" content="Brew a memecoin from live pump.fun narratives. Score any Solana coin on real volume and liquidity.">
+<!-- Crawlers want an absolute URL: replace the path below with https://YOUR-DOMAIN/sludge/assets/og.png -->
+<meta property="og:image" content="/sludge/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SLUDGE — a grinning acid-green slime and the words THE VAT THAT BREWS COINS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SLUDGE — the vat that brews coins">
+<meta name="twitter:description" content="Brew a memecoin from live pump.fun narratives. Score any Solana coin on real volume and liquidity.">
+<meta name="twitter:image" content="/sludge/assets/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
 <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -17,7 +33,7 @@
 <!-- hazard stage bar — the honest one -->
 <div class="hazard" id="hazardBar">
   <div class="hazard-inner wrap">
-    <span id="hazardText">THE VAT IS PRE-LAUNCH — the brewer below is a simulation. Nothing gets deployed.</span>
+    <span id="hazardText">$SLUDGE IS PRE-LAUNCH — the brewer runs in your browser and launches nothing. You launch on pump.fun, with your own wallet. Market data on this page is live.</span>
   </div>
 </div>
 
@@ -26,13 +42,13 @@
     <a class="brand" href="#top"><span class="brand-blob" aria-hidden="true"></span>SLUDGE</a>
     <nav class="nav-links" aria-label="Sections">
       <a href="#brewer">Brewer</a>
+      <a href="#scorer">Scorer</a>
       <a href="#loop">The Loop</a>
-      <a href="#vat">The Vat</a>
       <a href="#token">$SLUDGE</a>
     </nav>
     <div class="nav-cta">
-      <span class="ca" id="caPill">CA SOON</span>
-      <a class="btn btn-goo" href="#" data-link="buy">BUY $SLUDGE</a>
+      <button class="ca" id="caPill" type="button" disabled>CA SOON</button>
+      <a class="btn btn-goo btn-sm" id="buyBtn" data-link="buy" href="#token">$SLUDGE SOON</a>
     </div>
   </div>
 </header>
@@ -42,15 +58,16 @@
 <!-- ── hero ────────────────────────────────────────────────────────────── -->
 <section class="hero">
   <div class="wrap">
-    <p class="eyebrow">AN AI WITH A VAT AND NO SUPERVISION</p>
+    <p class="eyebrow">A VAT, A SCORECARD AND NO SUPERVISION</p>
     <h1 class="drip-title">SLUDGE</h1>
-    <p class="lede">It reads the internet. It finds the narrative.<br>
-       It brews the coin. Every hour it keeps what pays<br class="br-d">
-       and dissolves what doesn’t.</p>
+    <p class="lede">It reads what’s launching. It finds the narrative.<br class="br-d">
+       It brews the coin. Then it grades every coin on the board<br class="br-d">
+       on real volume — and tells you which ones are thin air.</p>
     <div class="hero-ctas">
       <a class="btn btn-goo btn-lg" href="#brewer">BREW ONE NOW</a>
-      <a class="btn btn-lg" href="#loop">HOW THE VAT WORKS</a>
+      <a class="btn btn-lg" href="#scorer">SCORE A COIN</a>
     </div>
+    <p class="hero-pulse" id="heroPulse" hidden></p>
   </div>
   <svg class="drip-edge" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0,0 L1440,0 L1440,28 C1400,30 1380,64 1352,60 C1330,57 1330,30 1300,32
@@ -67,8 +84,9 @@
     <div class="sec-head">
       <span class="tag">01 · THE BREWER</span>
       <h2>DESCRIBE A COIN.<br>OR LET THE SLUDGE DECIDE.</h2>
-      <p class="sim-note">SIMULATION — this demo brews names, art and theses in your browser.
-         Nothing is launched, nothing touches a chain.</p>
+      <p class="sec-sub">Seeds come from what’s actually launching on pump.fun right now. Name, ticker,
+         description and art are brewed in your browser. You get a launch kit — you press the button
+         on pump.fun, with your own wallet. SLUDGE never sees a key.</p>
     </div>
 
     <div class="brew-rig">
@@ -77,29 +95,102 @@
         <textarea id="brewInput" maxlength="60" rows="2"
           placeholder="e.g. a raccoon that day-trades from a dumpster"></textarea>
         <div class="brew-btns">
-          <button class="btn btn-goo" id="brewBtn">BREW IT</button>
-          <button class="btn" id="randomBtn">LET SLUDGE DECIDE</button>
-          <button class="btn" id="againBtn" hidden>BREW AGAIN</button>
+          <button class="btn btn-goo" id="brewBtn" type="button">BREW IT</button>
+          <button class="btn" id="randomBtn" type="button">LET SLUDGE DECIDE</button>
+          <button class="btn" id="againBtn" type="button" hidden>BREW AGAIN</button>
+        </div>
+        <div class="narr" id="narr">
+          <span class="lbl">LIVE NARRATIVES</span>
+          <span class="narr-status" id="narrStatus">reading pump.fun…</span>
+          <div class="chips" id="narrChips"></div>
         </div>
       </div>
 
       <div class="brew-out" id="brewOut" hidden>
         <div class="specimen">
-          <canvas id="blobCanvas" width="260" height="280" aria-label="Generated sludge creature"></canvas>
+          <canvas id="blobCanvas" width="520" height="560" aria-label="Generated sludge creature"></canvas>
           <span class="specimen-tag" id="specimenTag">SPECIMEN #0000</span>
         </div>
         <div class="brew-sheet">
-          <div class="sheet-row"><span class="lbl">NAME</span><strong id="coinName">—</strong></div>
-          <div class="sheet-row"><span class="lbl">TICKER</span><strong id="coinTicker">—</strong></div>
-          <div class="sheet-row sheet-thesis"><span class="lbl">THE CASE</span><em id="coinThesis">—</em></div>
           <div class="sheet-split">
-            <div class="sheet-row"><span class="lbl">VISCOSITY</span><strong id="coinVisc">—</strong></div>
-            <div class="sheet-row"><span class="lbl">TOXICITY</span><strong id="coinTox">—</strong></div>
+            <div class="sheet-row"><span class="lbl">NAME</span><strong id="coinName">—</strong>
+              <button class="copy" type="button" data-copy="name">COPY</button></div>
+            <div class="sheet-row"><span class="lbl">TICKER</span><strong id="coinTicker">—</strong>
+              <button class="copy" type="button" data-copy="ticker">COPY</button></div>
           </div>
-          <p class="sheet-note">Brewed locally. Not deployed. Not advice. Not even a real liquid.</p>
+          <div class="sheet-row sheet-thesis"><span class="lbl">DESCRIPTION</span><em id="coinThesis">—</em>
+            <button class="copy" type="button" data-copy="thesis">COPY</button></div>
+          <div class="sheet-row" id="seedRow" hidden><span class="lbl">DISTILLED FROM</span><span class="seed" id="coinSeed"></span></div>
+
+          <div class="kit">
+            <span class="lbl">LAUNCH KIT · YOU DO THIS PART</span>
+            <ol class="kit-steps">
+              <li><button class="btn btn-sm" id="dlBtn" type="button">DOWNLOAD IMAGE</button> 1000×1000 PNG</li>
+              <li><a class="btn btn-sm btn-goo" href="https://pump.fun/create" target="_blank" rel="noopener">OPEN PUMP.FUN/CREATE ↗</a></li>
+              <li>Paste name, ticker, description. Upload the image.</li>
+              <li>Connect <em>your</em> wallet and sign on pump.fun. Then paste your mint into the scorer.</li>
+            </ol>
+            <button class="copy copy-all" type="button" data-copy="all">COPY ALL THREE</button>
+          </div>
+          <p class="sheet-note">Brewed in your browser by a seeded generator. Nothing deployed. Not advice.
+             Launching costs real SOL and most coins go to zero.</p>
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ── scorer ──────────────────────────────────────────────────────────── -->
+<section class="sec sec-scorer" id="scorer">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">02 · THE SCORER</span>
+      <h2>EVERY COIN, GRADED<br>ON THE TAPE.</h2>
+      <p class="sec-sub">Live from pump.fun and DexScreener. Volume, liquidity, turnover, age and order flow
+         add up to 100; a market cap propped on thin liquidity gets docked. Every point is shown.</p>
+    </div>
+
+    <form class="score-form" id="scoreForm" autocomplete="off">
+      <label class="lbl" for="mintInput">PASTE ANY SOLANA MINT</label>
+      <div class="score-row">
+        <input id="mintInput" inputmode="text" spellcheck="false" placeholder="e.g. 9BB6…pump">
+        <button class="btn btn-goo" type="submit" id="scoreBtn">SCORE IT</button>
+      </div>
+      <p class="score-err" id="scoreErr" role="alert" hidden></p>
+    </form>
+
+    <div class="score-card" id="scoreCard" hidden aria-live="polite"></div>
+
+    <div class="board-head">
+      <span class="lbl">THE BOARD · PUMP.FUN TOP + LIVE, SCORED</span>
+      <span class="board-meta" id="boardMeta">loading…</span>
+      <button class="btn btn-sm" id="boardRefresh" type="button">REFRESH</button>
+    </div>
+    <div class="vat-table-wrap">
+      <table class="vat-table">
+        <thead><tr><th>#</th><th>COIN</th><th class="num">SCORE</th><th>VERDICT</th><th class="num">VOL 24H</th>
+          <th class="num">LIQUIDITY</th><th class="num">MCAP</th><th class="num">MCAP/LIQ</th><th class="num">AGE</th></tr></thead>
+        <tbody id="boardRows"></tbody>
+      </table>
+      <div class="vat-empty" id="boardEmpty">
+        <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span>
+        <span id="boardEmptyText">STIRRING THE VAT…</span>
+      </div>
+    </div>
+    <p class="board-hint">Tap a row for the full breakdown. Not a recommendation — a scorecard.</p>
+
+    <details class="howto">
+      <summary>HOW THE SCORE WORKS</summary>
+      <ul>
+        <li><b>VOLUME 0–35</b> — log scale: $1K/24h scores 0, $10M/24h scores 35.</li>
+        <li><b>LIQUIDITY 0–25</b> — log scale on the deepest DEX pool: ~$3K is 0, ~$3M is 25.</li>
+        <li><b>TURNOVER 0–15</b> — 24h volume ÷ liquidity. 0.3×–8× is healthy; it decays to 0 by 80×. Over 30× is flagged as wash-trade risk.</li>
+        <li><b>AGE 0–15</b> — log scale up to 30 days. Surviving is a signal; under an hour is flagged fresh.</li>
+        <li><b>FLOW 0–10</b> — share of 24h transactions that are sells. 35–65% is a two-sided market; under 5% means almost nobody sells — check whether they can.</li>
+        <li><b>INFLATION −8 / −20</b> — market cap over 30× liquidity is thin; over 60× is inflated: the price is thin air.</li>
+        <li><b>VERDICT</b> — 65+ KEEPS, 40–64 SIMMERING, under 40 DISSOLVES. Any red flag caps it at SIMMERING.</li>
+      </ul>
+    </details>
   </div>
 </section>
 
@@ -107,33 +198,12 @@
 <section class="sec" id="loop">
   <div class="wrap">
     <div class="sec-head">
-      <span class="tag">02 · THE LOOP</span>
+      <span class="tag">03 · THE LOOP</span>
       <h2>CRAWL. BREW. SCORE. MUTATE.</h2>
+      <p class="sec-sub">What runs today, what you do by hand, and what isn’t built yet — labelled.</p>
     </div>
     <div class="loop-grid" id="loopGrid"></div>
-    <p class="loop-note">Scoring is onchain volume only. The vat cannot grade its own homework.</p>
-  </div>
-</section>
-
-<!-- ── the vat ─────────────────────────────────────────────────────────── -->
-<section class="sec" id="vat">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="tag">03 · THE VAT</span>
-      <h2>EVERY BATCH, ON THE RECORD.</h2>
-      <p class="sec-sub">When the launcher goes live, every coin the vat brews lands here with
-         its launch time, its volume score, and whether the lesson survived the hour.</p>
-    </div>
-    <div class="vat-table-wrap">
-      <table class="vat-table">
-        <thead><tr><th>BATCH</th><th>COIN</th><th>BREWED</th><th>VOLUME SCORE</th><th>VERDICT</th></tr></thead>
-        <tbody id="vatRows"></tbody>
-      </table>
-      <div class="vat-empty" id="vatEmpty">
-        <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span>
-        NO BATCHES YET — THE VAT IS STILL HEATING UP
-      </div>
-    </div>
+    <p class="loop-note">Scoring reads market data only. The vat cannot grade its own homework.</p>
   </div>
 </section>
 
@@ -143,21 +213,23 @@
     <div class="sec-head">
       <span class="tag">04 · $SLUDGE</span>
       <h2>THE RUNOFF FLOWS BACK.</h2>
+      <p class="sec-sub" id="tokenStatus">$SLUDGE has not launched. There is no contract address yet —
+         anything claiming to be $SLUDGE before this page shows one is not us.</p>
     </div>
     <div class="tok-grid">
-      <div class="tok-card"><span class="tag">PLANNED</span>
+      <div class="tok-card"><span class="badge badge-planned">PLANNED</span>
         <h3>CREATOR FEES</h3>
-        <p>Every coin the vat launches generates creator fees. The runoff routes back to $SLUDGE.</p></div>
-      <div class="tok-card"><span class="tag">PLANNED</span>
+        <p>When the vat launches its own coins, their creator fees route back to $SLUDGE.</p></div>
+      <div class="tok-card"><span class="badge badge-planned">PLANNED</span>
         <h3>FEED PRIORITY</h3>
         <p>Holders get first access to feed the vat — your prompt brews before the timeline’s does.</p></div>
-      <div class="tok-card"><span class="tag">PLANNED</span>
+      <div class="tok-card"><span class="badge badge-planned">PLANNED</span>
         <h3>THE LAB</h3>
-        <p>Batch analytics, narrative feeds and vat controls, unlocked with $SLUDGE.</p></div>
+        <p>Batch analytics, narrative history and vat controls, unlocked with $SLUDGE.</p></div>
     </div>
-    <p class="legal">$SLUDGE is a memecoin attached to an experimental, pre-launch AI system.
-       The brewer on this page is a simulation. Nothing here is financial advice, and volatile
-       tokens can lose their entire value. Do not feed the vat anything you cannot afford to lose.</p>
+    <p class="legal">$SLUDGE is a memecoin attached to an experimental tool. The brewer is a
+       generator, the scorer is arithmetic on public market data, and neither is financial advice.
+       Volatile tokens can lose their entire value. Do not feed the vat anything you cannot afford to lose.</p>
   </div>
 </section>
 
@@ -167,12 +239,14 @@
   <div class="wrap foot-inner">
     <span class="brand"><span class="brand-blob" aria-hidden="true"></span>SLUDGE</span>
     <nav class="foot-links">
-      <a href="#brewer">Brewer</a><a href="#loop">Loop</a><a href="#vat">Vat</a>
-      <a href="#" data-link="x">X</a><a href="#" data-link="pump">pump.fun</a>
+      <a href="#brewer">Brewer</a><a href="#scorer">Scorer</a><a href="#loop">Loop</a>
+      <a href="#" data-link="x" hidden>X</a><a href="https://pump.fun" data-link="pump" target="_blank" rel="noopener">pump.fun</a>
     </nav>
-    <span class="foot-note">© <span id="year"></span> the vat · biohazard suit not included</span>
+    <span class="foot-note">© <span id="year"></span> the vat · data: pump.fun, DexScreener · biohazard suit not included</span>
   </div>
 </footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="js/config.js"></script>
 <script src="js/brewer.js"></script>
