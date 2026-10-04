@@ -1,451 +1,201 @@
-/* ============================================================================
-   PumpXBT — behaviour.
-   Renders everything driven by config.js, pulls live market data when a
-   contract address is configured, and wires the scroll interactions.
-   ========================================================================== */
+/* PumpXBT landing page: renders config content and wires the live feeds.
+ * Every figure comes from feeds.js. Nothing here invents a number. */
 (function () {
   'use strict';
 
-  var C = window.PXBT;
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var $ = function (s, r) { return (r || document).querySelector(s); };
-  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var C = window.PXBT, X = window.PXF, F = X.F, $ = X.$, $$ = X.$$, put = X.put, DASH = X.DASH;
+  var state = { sol: null, ledger: null, paper: C.stage !== 'live' };
 
-  /* ── Formatting ─────────────────────────────────────────────────────────
-   * Every formatter returns an em dash for null/undefined, so an unconfigured
-   * field is visibly blank rather than silently rendering as zero. */
-  var DASH = '—';
-
-  function usd(n) {
-    if (n === null || n === undefined || !isFinite(n)) return DASH;
-    if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
-    if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
-    if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
-    return '$' + n.toFixed(2);
-  }
-  function price(n) {
-    if (n === null || n === undefined || !isFinite(n)) return DASH;
-    if (n >= 1) return '$' + n.toFixed(3);
-    if (n >= 0.001) return '$' + n.toFixed(5);
-    return '$' + n.toPrecision(3);
-  }
-  function pct(n) {
-    if (n === null || n === undefined || !isFinite(n)) return DASH;
-    return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
-  }
-  function count(n) {
-    if (n === null || n === undefined || !isFinite(n)) return DASH;
-    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-    return String(Math.round(n));
-  }
-  function esc(s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
-    });
-  }
-
-  /* ── Stage ──────────────────────────────────────────────────────────────
-   * One flag drives every status surface, so the page cannot claim the agent
-   * is doing something it is not. */
-  var STAGES = {
-    prelaunch: {
-      pill: 'Autonomous agent · in development',
-      ticker: 'PRE-LAUNCH',
-      banner: 'Pre-launch. The agent is not running yet and no funds are deployed. ' +
-              'Everything below describes what is being built.'
-    },
-    paper: {
-      pill: 'Autonomous agent · paper mode',
-      ticker: 'PAPER MODE',
-      banner: 'Paper mode. The agent is running and publishing signal, but every ' +
-              'trade is simulated — no funds are deployed and no result here is a ' +
-              'realised return.'
-    },
-    live: {
-      pill: 'Autonomous agent · live on pump.fun',
-      ticker: 'ONLINE',
-      banner: null
-    }
-  };
-  var STAGE = STAGES[C.stage] || STAGES.prelaunch;
-
-  (function renderStage() {
-    var pill = $('#heroPill');
-    if (pill) pill.textContent = STAGE.pill;
-
-    var bar = $('#stagebar');
-    if (bar && STAGE.banner) {
-      $('#stagebarText').textContent = STAGE.banner;
-      bar.classList.toggle('is-prelaunch', C.stage === 'prelaunch');
-      bar.hidden = false;
-    }
-  })();
-
-  /* ── Links ──────────────────────────────────────────────────────────────── */
-  ['buyTop', 'buyHero', 'buyFoot'].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el) el.href = C.token.pumpUrl;
-  });
-  var xl = $('#xLink'); if (xl) xl.href = C.token.twitterUrl;
-  $('#year').textContent = new Date().getFullYear();
-
-  /* contract address + copy */
-  var caBtn = $('#caBtn'), caText = $('#caText');
-  var addr = (C.token.address || '').trim();
-  if (addr) {
-    caText.textContent = addr.slice(0, 4) + '…' + addr.slice(-4);
-    caBtn.addEventListener('click', function () {
-      navigator.clipboard && navigator.clipboard.writeText(addr).then(
-        function () { toast('Contract address copied'); },
-        function () { toast('Copy failed'); }
-      );
-    });
-  } else {
-    caText.textContent = 'CA soon';
-    caBtn.addEventListener('click', function () { toast('Contract address not set yet'); });
-  }
-
-  var toastEl = $('#toast'), toastT;
-  function toast(msg) {
-    toastEl.textContent = msg;
-    toastEl.classList.add('on');
-    clearTimeout(toastT);
-    toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2200);
-  }
-
-  /* ── Treasury figures ───────────────────────────────────────────────────── */
-  var T = C.treasury;
-  var TREASURY_FMT = {
-    valueUsd: usd, realisedPnlUsd: usd, feesRoutedUsd: usd, boughtBackUsd: usd,
-    burnedTokens: count, burnedPctSupply: function (n) {
-      return (n === null || n === undefined) ? DASH : n.toFixed(1) + '%';
-    }
-  };
-  $$('[data-treasury]').forEach(function (el) {
-    var k = el.getAttribute('data-treasury');
-    el.textContent = (TREASURY_FMT[k] || String)(T[k]);
-  });
-
-  var burnBar = $('#burnBar');
-  if (T.burnedPctSupply) {
-    setTimeout(function () {
-      burnBar.style.width = Math.max(0, Math.min(100, T.burnedPctSupply)) + '%';
-    }, 400);
-  }
-  if (T.lastBurnTx) {
-    var bt = $('#burnTx');
-    bt.href = 'https://solscan.io/tx/' + T.lastBurnTx;
-    bt.hidden = false;
-  }
-
-  /* ── Flywheel ───────────────────────────────────────────────────────────── */
-  var stepsEl = $('#steps'), nodesEl = $('#wheelNodes');
-  C.flywheel.forEach(function (s, i) {
-    var li = document.createElement('li');
-    li.className = 'step';
-    li.innerHTML = '<div class="step-k">' + esc(s.k) + '</div>' +
-      '<div><h3>' + esc(s.title) + '</h3><p>' + esc(s.body) + '</p></div>';
-    stepsEl.appendChild(li);
-
-    /* place the node on the circle, starting at 12 o'clock */
-    var a = (i / C.flywheel.length) * Math.PI * 2 - Math.PI / 2;
-    var n = document.createElement('div');
-    n.className = 'wnode';
-    n.style.left = (50 + Math.cos(a) * 40) + '%';
-    n.style.top = (50 + Math.sin(a) * 40) + '%';
-    n.textContent = s.k;
-    nodesEl.appendChild(n);
-  });
-
-  var stepEls = $$('.step', stepsEl), nodeEls = $$('.wnode', nodesEl);
-
-  /* highlight whichever step is nearest the middle of the viewport */
-  function syncWheel() {
-    var mid = window.innerHeight * 0.45, best = -1, bestD = Infinity;
-    stepEls.forEach(function (el, i) {
-      var r = el.getBoundingClientRect();
-      var d = Math.abs(r.top + r.height / 2 - mid);
-      if (d < bestD) { bestD = d; best = i; }
-    });
-    stepEls.forEach(function (el, i) { el.classList.toggle('on', i === best); });
-    nodeEls.forEach(function (el, i) { el.classList.toggle('on', i === best); });
-  }
-
-  /* ── Capability cards ───────────────────────────────────────────────────── */
-  var ICONS = {
-    signal:  '<path d="M3 17l5-6 4 4 4-7 5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
-    cluster: '<circle cx="6" cy="7" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="18" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8.5l7.5 .5M7.5 9.5l3.5 6M16.5 10.5l-3 5" fill="none" stroke="currentColor" stroke-width="1.8"/>',
-    wave:    '<path d="M2 12c3-6 5 6 8 0s5 6 8 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
-    shield:  '<path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2.2 2.2L15.5 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
-    chart:   '<path d="M4 20V9M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
-    bolt:    '<path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
-  };
-  var capsEl = $('#caps');
-  C.capabilities.forEach(function (c) {
-    var d = document.createElement('article');
-    d.className = 'card reveal';
-    d.innerHTML = '<div class="card-ico"><svg viewBox="0 0 24 24" aria-hidden="true">' +
-      (ICONS[c.icon] || ICONS.signal) + '</svg></div>' +
-      '<h3>' + esc(c.title) + '</h3><p>' + esc(c.body) + '</p>';
-    capsEl.appendChild(d);
-  });
-
-  /* ── Callouts ───────────────────────────────────────────────────────────── */
-  var listEl = $('#calloutList'), termState = $('#termState');
-  if (C.callouts.sample) {
-    termState.textContent = 'sample data';
-    termState.classList.add('sample');
-  }
-  C.callouts.items.forEach(function (c) {
-    var row = document.createElement('div');
-    row.className = 'callout';
-    row.innerHTML =
-      '<span class="co-tick">$' + esc(c.ticker) + '</span>' +
-      '<span class="co-note">' + esc(c.note) + '</span>' +
-      '<span class="co-at">' + esc(c.at) + '</span>' +
-      '<span class="co-status ' + esc(c.status) + '">' + esc(c.status) + '</span>';
-    listEl.appendChild(row);
-  });
-
-  /* typed prompt line */
-  var typeTarget = $('#termType');
-  var TYPED = C.callouts.sample
-    ? 'pumpxbt callouts --tail   # awaiting live feed'
-    : 'pumpxbt callouts --tail';
-  if (reduce) {
-    typeTarget.textContent = TYPED;
-  } else {
-    var ti = 0;
-    (function type() {
-      typeTarget.textContent = TYPED.slice(0, ti++);
-      if (ti <= TYPED.length) setTimeout(type, 34);
-    })();
-  }
-
-  /* ── Roadmap ────────────────────────────────────────────────────────────── */
-  var roadEl = $('#road');
-  C.roadmap.forEach(function (r) {
-    var d = document.createElement('article');
-    d.className = 'rd reveal ' + r.state;
-    d.innerHTML = '<div class="rd-phase">' +
-      (r.state === 'live' ? '<span class="live-dot"></span>' : '') + esc(r.phase) + '</div>' +
-      '<h3>' + esc(r.title) + '</h3><p>' + esc(r.body) + '</p>';
-    roadEl.appendChild(d);
-  });
-
-  /* ── FAQ ────────────────────────────────────────────────────────────────── */
-  var faqEl = $('#faqList');
-  C.faq.forEach(function (f) {
-    var d = document.createElement('details');
-    d.className = 'qa';
-    d.innerHTML = '<summary>' + esc(f.q) + '</summary><p>' + esc(f.a) + '</p>';
-    faqEl.appendChild(d);
-  });
-
-  /* ── Ticker ─────────────────────────────────────────────────────────────── */
-  function renderTicker(m) {
-    var items = [
-      ['PUMPXBT', m ? price(m.price) : DASH, ''],
-      ['24H', m ? pct(m.change) : DASH, m && m.change >= 0 ? 'up' : (m ? 'down' : '')],
-      ['MCAP', m ? usd(m.mcap) : DASH, ''],
-      ['LIQ', m ? usd(m.liq) : DASH, ''],
-      ['VOL 24H', m ? usd(m.vol) : DASH, ''],
-      ['TREASURY', usd(T.valueUsd), ''],
-      ['BURNED', count(T.burnedTokens), ''],
-      ['TERMINAL', 'FREE', 'up'],
-      ['AGENT', STAGE.ticker, C.stage === 'live' ? 'up' : '']
-    ];
-    var html = items.map(function (i) {
-      return '<span>' + i[0] + ' <b class="' + i[2] + '">' + i[1] + '</b></span>';
+  /* ── static content from config ─────────────────────────────────────── */
+  function renderContent() {
+    $('#caps').innerHTML = C.capabilities.map(function (c) {
+      return '<article class="cap reveal"><span class="code">' + F.esc(c.code) + '</span><h3>' + F.esc(c.title) +
+        '</h3><p>' + F.esc(c.body) + '</p></article>';
     }).join('');
-    /* duplicated so the -50% marquee loops seamlessly */
-    $('#tickerTrack').innerHTML = html + html;
-  }
-  renderTicker(null);
 
-  /* ── Live market data ───────────────────────────────────────────────────
-   * Dexscreener's public token endpoint, client-side. If there is no address
-   * configured, or the request fails, every field stays as an em dash and the
-   * note under the hero stats says why. */
-  function setField(name, text, dir) {
-    $$('[data-field="' + name + '"]').forEach(function (el) {
-      el.textContent = text;
-      el.classList.remove('up', 'down');
-      if (dir) el.classList.add(dir);
+    var by = { worker: ['worker', 'chip-ok'], agent: ['agent · paper', 'chip-paper'], treasury: ['manual', 'chip-warn'] };
+    $('#pipe').innerHTML = C.flywheel.map(function (s) {
+      var tag = by[s.by] || [s.by, ''];
+      return '<li class="reveal"><div class="p-top"><span class="p-k">' + F.esc(s.k) + '</span><span class="chip ' + tag[1] + '">' +
+        F.esc(tag[0]) + '</span></div><h3>' + F.esc(s.title) + '</h3><p>' + F.esc(s.body) +
+        '</p><div class="p-metric"><span>' + F.esc(METRIC_LABEL[s.metric] || 'live') + '</span><b class="num" data-metric="' +
+        F.esc(s.metric) + '">—</b></div></li>';
+    }).join('');
+
+    var cls = { live: 'chip-ok', progress: 'chip-paper', next: 'chip-warn', soon: '' };
+    $('#road').innerHTML = C.roadmap.map(function (r) {
+      return '<article class="road-item reveal"><span class="chip ' + (cls[r.state] || '') + '">' + F.esc(r.phase) +
+        '</span><h3>' + F.esc(r.title) + '</h3><p>' + F.esc(r.body) + '</p></article>';
+    }).join('');
+
+    $('#faqList').innerHTML = C.faq.map(function (f) {
+      return '<details class="reveal"><summary>' + F.esc(f.q) + '</summary><p>' + F.esc(f.a) + '</p></details>';
+    }).join('');
+
+    var buy = C.token.pumpUrl || 'https://pump.fun';
+    ['#buyHero', '#buyFoot'].forEach(function (s) { $(s).href = buy; });
+    $('#xLink').href = C.token.twitterUrl || 'https://x.com';
+    $('#year').textContent = new Date().getFullYear();
+    if (C.token.address) $('#caText').textContent = F.short(C.token.address);
+  }
+
+  var METRIC_LABEL = { claimable: 'claimable', agentMode: 'mode', callouts: 'logged', treasury: 'treasury', burned: 'burned' };
+
+  /* ── chrome: nav, CA copy, reveals, spotlight ───────────────────────── */
+  function chrome() {
+    var burger = $('#burger'), links = $('#navLinks');
+    burger.addEventListener('click', function () {
+      var open = links.classList.toggle('open');
+      burger.setAttribute('aria-expanded', String(open));
     });
-  }
+    $$('#navLinks a').forEach(function (a) {
+      a.addEventListener('click', function () { links.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); });
+    });
+    var nav = $('#nav');
+    window.addEventListener('scroll', function () { nav.classList.toggle('scrolled', window.scrollY > 8); }, { passive: true });
 
-  function loadMarket() {
-    if (!C.liveData || !addr) return;
-    $('#feedNote').textContent = 'Loading live market data…';
+    $('#caBtn').addEventListener('click', function () {
+      if (!C.token.address) return toast('Contract address not published yet');
+      (navigator.clipboard ? navigator.clipboard.writeText(C.token.address) : Promise.reject())
+        .then(function () { toast('Contract address copied'); }, function () { toast(C.token.address); });
+    });
 
-    fetch('https://api.dexscreener.com/latest/dex/tokens/' + encodeURIComponent(addr))
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
-      .then(function (j) {
-        var pairs = (j && j.pairs) || [];
-        if (!pairs.length) throw new Error('no pairs');
-        /* deepest liquidity pool is the reference market */
-        pairs.sort(function (a, b) {
-          return ((b.liquidity && b.liquidity.usd) || 0) - ((a.liquidity && a.liquidity.usd) || 0);
-        });
-        var p = pairs[0];
-        var m = {
-          price: parseFloat(p.priceUsd),
-          change: p.priceChange ? parseFloat(p.priceChange.h24) : null,
-          mcap: p.marketCap || p.fdv || null,
-          liq: p.liquidity ? p.liquidity.usd : null,
-          vol: p.volume ? p.volume.h24 : null
-        };
-        var dir = m.change >= 0 ? 'up' : 'down';
-        setField('price', price(m.price));
-        setField('change', pct(m.change), dir);
-        setField('changeChip', pct(m.change), dir);
-        setField('mcap', usd(m.mcap));
-        setField('liq', usd(m.liq));
-        renderTicker(m);
-
-        $('#feedNote').textContent = 'Live via Dexscreener · updated ' +
-          new Date().toLocaleTimeString();
-      })
-      .catch(function () {
-        $('#feedNote').textContent = 'Live market data unavailable right now.';
+    if ('IntersectionObserver' in window && !X.reduced) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -8% 0px' });
+      $$('.reveal').forEach(function (el, i) {
+        el.style.transitionDelay = (i % 6) * 60 + 'ms';
+        io.observe(el);
       });
-  }
-
-  loadMarket();
-  if (C.liveData && addr) setInterval(loadMarket, 60000);
-
-  /* ── Ledger feed ────────────────────────────────────────────────────────
-   * Pulls real numbers from the bot's read-only API when one is configured.
-   * Anything the API does not supply keeps its em dash — a missing feed must
-   * never look like a zero, and a paper run must never look like a live one. */
-  function loadLedger() {
-    var base = (C.ledgerApi || '').replace(/\/$/, '');
-    if (!base) return;
-
-    fetch(base + '/api/state')
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
-      .then(function (s) {
-        var p = s.portfolio || {};
-        var totals = s.totals || {};
-
-        var live = {
-          valueUsd: s.treasury && Number.isFinite(s.treasury.sol)
-            ? null                       // SOL needs a price to value; left to config
-            : null,
-          realisedPnlUsd: p.realisedUsd,
-          boughtBackUsd: totals.buyback ? Math.abs(totals.buyback) : null,
-          burnedTokens: totals.burn ? Math.abs(totals.burn) : null
-        };
-
-        $$('[data-treasury]').forEach(function (el) {
-          var k = el.getAttribute('data-treasury');
-          var v = live[k];
-          if (v === null || v === undefined || !isFinite(v)) return;
-          el.textContent = (TREASURY_FMT[k] || String)(v);
-        });
-
-        /* Real callouts replace the sample rows. */
-        var ours = (s.callouts && s.callouts.ours) || [];
-        if (ours.length) {
-          listEl.innerHTML = '';
-          ours.slice(0, 12).forEach(function (c) {
-            var row = document.createElement('div');
-            row.className = 'callout';
-            var when = new Date(c.created_at);
-            row.innerHTML =
-              '<span class="co-tick">' + esc(shortMint(c.mint)) + '</span>' +
-              '<span class="co-note">' + esc(c.text) + '</span>' +
-              '<span class="co-at">' + esc(when.toLocaleDateString()) + '</span>' +
-              '<span class="co-status ' + (c.status === 'posted' ? 'win' : 'open') + '">' +
-                esc(c.status) + '</span>';
-            listEl.appendChild(row);
-          });
-        }
-
-        /* The API is the authority on whether this is simulated. */
-        if (s.paper) {
-          termState.textContent = 'paper mode';
-          termState.classList.add('sample');
-        } else {
-          termState.textContent = 'live';
-          termState.classList.remove('sample');
-        }
-      })
-      .catch(function () { /* keep configured values; the feed is optional */ });
-  }
-
-  function shortMint(m) {
-    return m && m.length > 10 ? m.slice(0, 4) + '…' + m.slice(-4) : (m || '—');
-  }
-
-  loadLedger();
-  if (C.ledgerApi) setInterval(loadLedger, 60000);
-
-  /* ── Hero sparkline ─────────────────────────────────────────────────────
-   * Decorative only — a deterministic drifting curve, never presented as
-   * price history. Redrawn once; no data is implied. */
-  (function spark() {
-    var W = 600, H = 140, N = 60, seed = 7;
-    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
-    var pts = [], y = H * 0.72;
-    for (var i = 0; i <= N; i++) {
-      y += (rnd() - 0.42) * 11;
-      y = Math.max(16, Math.min(H - 10, y - i * 0.28));
-      pts.push([(i / N) * W, y]);
+    } else {
+      $$('.reveal').forEach(function (el) { el.classList.add('in'); });
     }
-    var d = pts.map(function (p, i) {
-      return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
-    }).join(' ');
-    var line = $('#sparkLine'), area = $('#sparkArea');
-    if (line) line.setAttribute('d', d);
-    if (area) area.setAttribute('d', d + ' L' + W + ' ' + H + ' L0 ' + H + ' Z');
-  })();
 
-  /* ── Scroll behaviour ───────────────────────────────────────────────────── */
-  var nav = $('#nav');
-  var ticking = false;
-  function onScroll() {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function () {
-      nav.classList.toggle('stuck', window.pageYOffset > 8);
-      syncWheel();
-      ticking = false;
-    });
-  }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', syncWheel);
-
-  /* reveal on enter */
-  if ('IntersectionObserver' in window && !reduce) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    $$('.cap').forEach(function (el) {
+      el.addEventListener('pointermove', function (e) {
+        var r = el.getBoundingClientRect();
+        el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        el.style.setProperty('--my', (e.clientY - r.top) + 'px');
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-    $$('.reveal').forEach(function (el, i) {
-      el.style.transitionDelay = Math.min(i % 4, 3) * 60 + 'ms';
-      io.observe(el);
     });
-  } else {
-    $$('.reveal').forEach(function (el) { el.classList.add('in'); });
   }
 
-  /* mobile menu */
-  var burger = $('#burger'), links = $('.nav-links');
-  burger.addEventListener('click', function () {
-    var open = links.classList.toggle('open');
-    burger.setAttribute('aria-expanded', String(open));
-  });
-  $$('.nav-links a').forEach(function (a) {
-    a.addEventListener('click', function () {
-      links.classList.remove('open');
-      burger.setAttribute('aria-expanded', 'false');
-    });
-  });
+  var toastT;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
 
-  syncWheel();
+  var led = X.led;
+
+  /* ── stage ──────────────────────────────────────────────────────────── */
+  function renderStage() {
+    var paper = state.paper;
+    put('#stageLabel', C.stage === 'prelaunch' ? 'PRE-LAUNCH' : paper ? 'PAPER' : 'LIVE');
+    $('#stageNote').textContent = paper ? 'agent fills are simulated' : 'agent trades real funds';
+    led('stage', paper ? 'paper' : 'on');
+  }
+
+  /* ── market: SOL + PUMPXBT (DexScreener) ────────────────────────────── */
+  function loadMarket() {
+    if (!C.feeds.market) return;
+    var mints = [X.WSOL];
+    if (C.token.address) mints.push(C.token.address);
+    X.quotes(mints).then(function (q) {
+      var sol = q[X.WSOL];
+      state.sol = sol ? sol.price : state.sol;
+      put('#solPx', F.usd(state.sol));
+      var t = C.token.address ? q[C.token.address] : null;
+      if (!C.token.address) return;
+      if (!t) { $('#quoteSrc').textContent = 'no pair yet'; return; }
+      $('#quoteSrc').textContent = t.dex || 'dexscreener';
+      $('#quoteSrc').className = 'chip chip-ok';
+      put('[data-q="price"]', F.price(t.price));
+      put('[data-q="change"]', F.pct(t.change), t.change >= 0 ? 'up' : 'down');
+      put('[data-q="mcap"]', F.usd(t.mcap));
+      put('[data-q="liq"]', F.usd(t.liq));
+      put('[data-q="vol24"]', F.usd(t.vol24));
+      put('[data-q="txns24"]', F.num(t.txns24));
+      $('#quoteNote').textContent = 'DexScreener · ' + (t.dex || '') + ' · refreshed ' + F.clock(Date.now());
+    }).catch(function () { /* keep last values; dashes stay dashes */ });
+  }
+
+  /* ── ledger API: flywheel + agent ───────────────────────────────────── */
+  function loadLedger() {
+    if (!X.hasLedger) { put('#ledgerState', 'not set'); led('ledger', ''); return; }
+    X.ledger('/api/state').then(function (s) {
+      state.ledger = s;
+      state.paper = s.paper !== false;
+      put('#ledgerState', 'online'); led('ledger', 'on');
+      renderStage();
+      renderFlywheel(s.flywheel || {}, s);
+      renderCallouts((s.callouts && s.callouts.ours) || []);
+    }).catch(function () {
+      put('#ledgerState', 'unreachable'); led('ledger', 'off');
+    });
+  }
+
+  function renderFlywheel(fw, s) {
+    var ch = fw.chain || {}, wk = fw.worker || {}, h = wk.health;
+    var solUsd = function (v) { return state.sol && v !== null && v !== undefined ? ' · ' + F.usd(v * state.sol) : ''; };
+
+    put('[data-fw="treasury"]', F.sol(ch.treasurySol, 3));
+    $$('[data-fw="burned"]').forEach(function (el) { put(el, F.num(ch.burnedTokens)); });
+    $$('[data-fw="burnedPct"]').forEach(function (el) {
+      put(el, ch.burnedPctSupply === null || ch.burnedPctSupply === undefined ? DASH : ch.burnedPctSupply.toFixed(2) + '%');
+    });
+    put('[data-fw="supply"]', F.num(ch.supply));
+    put('[data-fw="curve"]', ch.curve ? (ch.curve.complete ? 'GRADUATED' : (ch.curve.progress * 100).toFixed(1) + '%') : DASH);
+    $$('[data-fw="claimable"]').forEach(function (el) { put(el, F.sol(ch.claimableSol, 4)); });
+    $('#burnBar').style.width = Math.min(100, Math.max(0, ch.burnedPctSupply || 0)) + '%';
+
+    if (h) {
+      put('[data-fw="cycles"]', String(h.cycles));
+      put('[data-fw="workerMode"]', (h.live ? 'LIVE' : 'DRY RUN') + (h.intervalMinutes ? ' · every ' + h.intervalMinutes + 'm' : '') + (h.failures ? ' · ' + h.failures + ' failed' : ''));
+      put('[data-fw="last"]', h.last ? F.ago(h.last.finishedAt) + ' ago' : DASH, h.last ? (h.last.ok ? 'up' : 'down') : null);
+      put('[data-fw="lastNote"]', h.last ? (h.last.ok ? 'cycle ok' : 'failed: ' + (h.last.error || 'error')) : 'no cycle yet');
+      put('[data-fw="workerShort"]', h.live ? 'LIVE' : 'DRY RUN');
+    } else {
+      put('[data-fw="workerMode"]', wk.configured ? 'worker unreachable' : 'worker not connected');
+      put('[data-fw="workerShort"]', wk.configured ? 'unreachable' : DASH);
+    }
+
+    var pnl = s.portfolio ? s.portfolio.realisedUsd : null;
+    put('[data-ag="pnl"]', F.usd(pnl), pnl > 0 ? 'up' : pnl < 0 ? 'down' : null);
+    put('[data-ag="pnlNote"]', s.paper ? 'SIMULATED · paper fills' : 'realised');
+
+    var m = {
+      claimable: F.sol(ch.claimableSol, 4) + solUsd(ch.claimableSol),
+      agentMode: s.paper ? 'PAPER' : 'LIVE',
+      callouts: s.callouts ? String((s.callouts.ours || []).length) : DASH,
+      treasury: F.sol(ch.treasurySol, 3),
+      burned: F.num(ch.burnedTokens)
+    };
+    Object.keys(m).forEach(function (k) { put('[data-metric="' + k + '"]', m[k]); });
+  }
+
+  function renderCallouts(rows) {
+    var chip = $('#calloutsChip');
+    chip.textContent = state.paper ? 'paper · simulated' : 'live';
+    chip.className = 'chip ' + (state.paper ? 'chip-paper' : 'chip-ok');
+    var tb = $('#calloutGrid tbody');
+    $('#calloutEmpty').hidden = rows.length > 0;
+    tb.innerHTML = rows.slice(0, 10).map(function (c) {
+      return '<tr><td>' + F.ago(c.created_at) + '</td><td class="sym"><a href="https://pump.fun/coin/' + encodeURIComponent(c.mint) +
+        '" target="_blank" rel="noopener">' + F.esc(F.short(c.mint)) + '</a></td><td class="txt">' + F.esc(c.text) + '</td><td class="r">' +
+        (c.score !== null && c.score !== undefined ? Math.round(c.score * 100) : DASH) + '</td><td class="r"><span class="chip">' +
+        F.esc(c.status) + '</span></td></tr>';
+    }).join('');
+  }
+
+  renderContent();
+  chrome();
+  renderStage();
+  loadMarket();
+  loadLedger();
+  X.launchBoard({ sol: function () { return state.sol; } });
+  setInterval(loadMarket, 30000);
+  setInterval(loadLedger, 30000);
 })();

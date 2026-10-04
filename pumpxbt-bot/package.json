@@ -2,17 +2,20 @@
   "name": "pumpxbt-bot",
   "version": "0.1.0",
   "private": true,
-  "description": "PumpXBT — callout-reward farming agent. Paper mode.",
+  "description": "PumpXBT \u2014 callout-reward farming agent (paper) + read-only view of the memcoinz fee flywheel.",
   "type": "module",
   "engines": {
     "node": ">=22.5.0"
   },
   "scripts": {
-    "start": "node src/main.js",
+    "start": "node src/serve.js",
+    "serve": "node src/serve.js",
     "paper": "PXBT_MODE=paper node src/main.js",
     "replay": "PXBT_SOURCE=fixture node src/main.js --once",
     "api": "node src/api/server.js",
     "x": "node src/x/run.js",
+    "flywheel:env": "node scripts/flywheel-env.js",
+    "probe": "node scripts/probe-sources.js",
     "test": "node --test test/*.test.js",
     "schema": "node -e \"import('./src/store/db.js').then(m=>{m.open().close();console.log('schema ok')})\""
   },

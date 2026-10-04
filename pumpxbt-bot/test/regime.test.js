@@ -122,3 +122,12 @@ test('adjustments are hard-bounded no matter how extreme the record', () => {
   assert.ok(Math.abs(godlike.thresholdDelta) <= ADAPT.maxThresholdDelta);
   assert.ok(godlike.sizeMult <= ADAPT.maxSizeMult);
 });
+
+test('an empty first tick does not seed the baseline (no fake 99x spike after connect)', () => {
+  const { store, r } = tracker();
+  assert.equal(r.observe([], { now: NOW }).regime, 'neutral');
+  const second = r.observe(trades(10, 50), { now: NOW + 6000 });
+  assert.equal(second.regime, 'neutral');
+  assert.equal(second.ratio, 1);
+  store.close();
+});

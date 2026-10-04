@@ -40,11 +40,24 @@ export const config = {
   source: enun('PXBT_SOURCE', ['live', 'fixture'], 'fixture'),
 
   heliusKeys: list('HELIUS_KEYS'),
+  /* Light account reads (curves, balances, supply) fall back to this — or the
+   * public endpoint — when no Helius keys are set. */
+  solanaRpcUrl: str('SOLANA_RPC_URL'),
 
-  pumpfun: {
-    base:         str('PUMPFUN_API_BASE', 'https://frontend-api.pump.fun'),
-    calloutsPath: str('PUMPFUN_CALLOUTS_PATH', '/callouts'),
-    tradesPath:   str('PUMPFUN_TRADES_PATH', '/trades')
+  /* PumpPortal data websocket. Launch + migration streams are free; per-token
+   * trade streams are metered and only open with an API key. */
+  pumpportal: {
+    apiKey:    str('PUMPPORTAL_API_KEY'),
+    tradeSubs: num('PUMPPORTAL_TRADE_SUBS', 50)
+  },
+
+  /* The fee loop (claim → buyback+burn → treasury) runs on the shared memcoinz
+   * flywheel worker on Railway. This bot only READS it. */
+  flywheel: {
+    workerUrl:  str('WORKER_URL'),          // e.g. https://pumpxbt-flywheel.up.railway.app
+    workerDataDir: str('WORKER_DATA_DIR'),  // only when co-located with the worker's volume
+    mint:       str('PXBT_MINT'),
+    creatorWallet: str('CREATOR_WALLET')    // PUBLIC address — never a key
   },
 
   econ: {
@@ -101,8 +114,8 @@ export function validate(cfg = config) {
       'implemented in this version. Run paper mode until the signal is proven.'
     );
   }
-  if (cfg.source === 'live' && cfg.heliusKeys.length === 0) {
-    errs.push('PXBT_SOURCE=live requires at least one key in HELIUS_KEYS.');
+  for (const [k, v] of [['PXBT_MINT', cfg.flywheel.mint], ['CREATOR_WALLET', cfg.flywheel.creatorWallet], ['TREASURY_WALLET', cfg.treasuryWallet]]) {
+    if (v && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)) errs.push(`${k} is not a base58 Solana address.`);
   }
   if (cfg.econ.callFloorUsd >= cfg.econ.probeUsd) {
     errs.push(

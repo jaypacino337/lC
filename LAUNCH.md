@@ -8,15 +8,15 @@ Three things live in this repo:
 | `/pumpxbt`     | PumpXBT site + Terminal                  | Works                       |
 | `/longdog`     | LONGDOG — scrolling toy                  | Done                        |
 | `/sludge`      | SLUDGE — coin brewer + live scorer       | Deployable; needs Vercel for `/api/sludge/*` |
-| `/pumpxbt-bot` | Paper-mode agent + ledger API + X agent  | Runs, endpoints unverified  |
+| `/pumpxbt-bot` | Paper-mode agent + ledger API + X agent  | Live data verified; fee loop on the memcoinz worker |
 
 ---
 
 ## Blocked on you — nobody else can do these
 
 ### 1. Brand assets
-PumpXBT only: drop `logo.png` and `banner.png` into `pumpxbt/assets/`.
-HOLDCO ships with its own mark and needs nothing.
+PumpXBT ships a generated graphite/orange `banner.png` and `mark.svg`; replace them
+with real brand files if you have them (`pumpxbt/assets/README.md`). HOLDCO ships with its own mark and needs nothing.
 Transparent PNG for the logo — the site is dark, so a white background reads as
 a white square. Banner at least 1200×630 or social platforms will refuse it.
 
@@ -31,14 +31,16 @@ shared link previews blank.
 Price, 24h, market cap and liquidity then go live automatically via Dexscreener,
 refreshing every 60s. Until then they show `—`.
 
-### 4. Verify the pump.fun endpoints
-**This blocks the bot going live, and I could not do it.** The paths and field
-names in `pumpxbt-bot/src/sources/pumpfun.js` are guesses — I had no network
-access to pump.fun.
+### 4. PumpXBT keys + fee flywheel (Railway)
+The guessed pump.fun endpoints are gone. Live data now comes from PumpPortal's
+websocket, DexScreener and on-chain reads, all verified with captures in
+`pumpxbt-bot/test/fixtures/` (`npm run probe` re-checks them). pump.fun callouts
+have no public feed, so live mode ingests none and says so.
 
-Open devtools on pump.fun, watch the network tab, correct that one file, drop a
-real captured response into `test/fixtures/`, run `npm test`. The parser tests
-will tell you exactly what broke. Everything downstream is insulated from this.
+The fee loop runs on the shared memcoinz worker. Follow
+`pumpxbt-bot/flywheel/README.md`: mint + treasury wallet → `npm run flywheel:env`
+→ new Railway service from `memcoinz` with `PXBT_CREATOR_KEYPAIR` sealed. Leave
+`LIVE` unset for a dry-run week.
 
 ### 5. Decide about the default branch
 The repo's only branch is `claude/longdog-site-design-kguow6`. Imports work, but
@@ -59,9 +61,10 @@ Point a service at `pumpxbt-bot`, set variables from `.env.example`, and
 **mount a volume at `data/`** — that SQLite file is the caller reputation
 history and is the only thing here you cannot rebuild.
 
-Add a second service running `npm run api` for the ledger, sharing the volume.
-Then set `ledgerApi` in `pumpxbt/js/config.js` to its URL and the site's treasury
-and callout panels populate from real data.
+`npm start` runs the agent and the ledger API in one process (Railway volumes
+can't be shared between services). Set `PXBT_SOURCE=live`, `PXBT_MINT`,
+`CREATOR_WALLET`, `TREASURY_WALLET` (public addresses only), `WORKER_URL` and
+`CORS_ORIGINS`, then set `ledgerApi` in `pumpxbt/js/config.js` to the service URL.
 
 **Keys go in Railway variables. Never in the repo.**
 
@@ -109,7 +112,8 @@ start, and there is no keypair anywhere in the codebase.
 
 ## What is NOT verified
 
-- Any pump.fun API call, ever — see item 4
+- A pump.fun callout feed (none is public)
+- The memcoinz worker on Railway with a real creator key (dry-run verified locally only)
 - Any Helius call against a real key
 - The site with your real logo and banner in place
 - iOS Safari momentum scrolling on LONGDOG's scroll recycling

@@ -1,0 +1,24 @@
+{
+ "_source": "getAccountInfo CUHCtchqaYwoWPf9vRThwit98uhRo1VsGV7Mx1Xy1RFt (bonding curve of A6zce…pump), public RPC, 2026-10-04",
+ "response": {
+  "jsonrpc": "2.0",
+  "result": {
+   "context": {
+    "apiVersion": "4.3.0",
+    "slot": 453320676
+   },
+   "value": {
+    "data": [
+     "F7f4N2DYrGBa0J/wic8DAGhux/wGAAAAWjiNpPjQAgBowqMAAAAAAACAxqR+jQMAABdqYSujp7HfK3TR/5/uKtCm09qGtrXX3VL9Y3cB4Pq+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+     "base64"
+    ],
+    "executable": false,
+    "lamports": 12098656,
+    "owner": "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+    "rentEpoch": 18446744073709552000,
+    "space": 141
+   }
+  },
+  "id": 1
+ }
+}

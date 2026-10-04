@@ -9,27 +9,53 @@ are all built into Node 22, so there is nothing to install and nothing to audit.
 ```sh
 node --version          # needs >= 22.5
 cp .env.example .env
-npm test                # 50 tests
-npm run replay          # one tick against the bundled fixture
-npm run paper           # continuous loop
-npm run api             # ledger API on :8080
+npm test                # 100 tests
+npm run replay          # one tick against the bundled strategy fixture
+npm start               # agent loop + ledger API in one process (Railway entry)
+npm run probe           # check every live source
+npm run flywheel:env    # validate flywheel/memcoin.config.json → MEMCOIN_CONFIG_JSON
 ```
 
-## Read this before running it live
+## Data sources (verified, not guessed)
 
-**The pump.fun endpoints are guesses.** I could not reach pump.fun from the
-environment this was written in, so the paths and field names in
-`src/sources/pumpfun.js` are almost certainly wrong in detail. That file is the
-*only* place that knows pump.fun's shape — fix it there and everything
-downstream keeps working:
+`src/sources/pumpfun.js` is the only file that knows where market data comes from.
+Every source was probed from the build sandbox, and the real captured responses are
+pinned in `test/fixtures/`:
 
-1. Open devtools on pump.fun, watch the network tab
-2. Correct `PATHS` and the `parse*` functions to match reality
-3. Drop a real captured response into `test/fixtures/` and run `npm test` —
-   the parser tests will tell you what broke
+| data | source | fixture |
+|---|---|---|
+| launches, creator first buys, graduations | PumpPortal websocket (free `subscribeNewToken` / `subscribeMigration`) | `pumpportal.stream.json` |
+| every trade (optional) | PumpPortal `subscribeTokenTrade`: metered, only with `PUMPPORTAL_API_KEY` | (shape matches the create event) |
+| price, liquidity, mcap, 5m buys/volume | DexScreener `tokens/v1/solana/…` (batched, 30 per call) | `dexscreener.tokens.json` |
+| unindexed launches | on-chain BondingCurve account (zero-dep PDA + decode in `sources/solana.js`) | `rpc.bondingCurve.json` |
+| flywheel | memcoinz worker `/health` + chain reads | `worker.health.json` |
 
-Until then `PXBT_SOURCE=fixture` replays bundled data so you can develop with no
-network at all.
+```sh
+npm run probe        # hits each live source once (behind a proxy: NODE_USE_ENV_PROXY=1)
+PXBT_SOURCE=live npm start
+```
+
+**There's no callout feed.** pump.fun publishes no documented callout API.
+`frontend-api.pump.fun` returns Cloudflare 1016, and the v3 host has no callouts
+route. Live mode ingests zero callouts and reports `callouts: unavailable` in
+`/api/health` rather than guess. The caller-reputation engine is intact and runs
+on the fixture and on anything recorded later.
+
+Without a PumpPortal key, the live trade feed only has each creator's first buy, so
+velocity comes from DexScreener's 5-minute aggregates. Those count buy transactions,
+not unique wallets, and the callout text says "buys" accordingly. In live mode,
+positions are marked only on token quotes, never on stream-implied prices: on
+non-standard curves those can differ by 100×.
+
+## The fee flywheel (claim → buyback+burn → treasury)
+
+Execution runs on the **shared memcoinz flywheel worker**, not here. This bot holds
+no keys and signs nothing. `flywheel/memcoin.config.json` is PumpXBT's route, and
+`flywheel/README.md` walks through the Railway setup. The bot reads the worker's
+`/health` (and `status.json` + `ledgers/*.jsonl` when it can see the volume), plus
+the chain. That covers burned supply (initial − current), claimable creator fees
+(the same vaults as memcoinz `pump-claim`) and wallet balances. `/api/flywheel` and
+`/api/state.flywheel` serve it, and nulls render as "—" on the site.
 
 **It does not post to pump.fun.** The bot writes the callout, queues it, and
 Telegrams it to you — you paste it. That is deliberate: automated posting means
@@ -136,6 +162,7 @@ expose to the site.
 | Route            | Returns                                 |
 | ---------------- | --------------------------------------- |
 | `/api/state`     | everything the site needs, one call     |
+| `/api/flywheel`  | worker health + on-chain treasury       |
 | `/api/positions` | open + closed                           |
 | `/api/callouts`  | ours, with status                       |
 | `/api/ledger`    | every entry + totals                    |
@@ -175,9 +202,9 @@ got there by measuring before funding.
 
 ## Deploying
 
-Railway: point a service at this folder, set the variables from `.env.example`,
-run `npm run paper`. Add a second service running `npm run api` against the same
-volume for the ledger. **Keys go in Railway variables, never in the repo.**
-
-Mount a volume at `data/` — that database is the reputation history, and it is
-the one thing here you cannot rebuild.
+Railway: one service pointed at this folder, start command `npm start` (agent and
+API in one process, because Railway volumes attach to a single service). Mount a
+volume and set `DB_PATH=/data/pumpxbt.db`: that database is the reputation history
+and the one thing here you can't rebuild. Set the variables from `.env.example`.
+Only **public addresses** go here. The creator key lives only on the memcoinz
+worker service.
