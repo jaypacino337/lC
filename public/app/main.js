@@ -82,7 +82,7 @@ function shell(cfg) {
       ${side('launch', '#/build', NAV_IC.launch, 'Build Builder')}
       ${side('mine', '#/my-builders', NAV_IC.agents, 'My Builders')}
       ${cfg.arena?.enabled ? side('arena', '#/arena', NAV_IC.arena, 'Arena') : ''}
-      ${side('ranks', '#/ranks', NAV_IC.ranks, 'Ranks')}
+      ${cfg.arena?.enabled ? side('ranks', '#/ranks', NAV_IC.ranks, 'Ranks') : ''}
       ${cfg.companies?.enabled ? side('companies', '#/companies', NAV_IC.company, 'Companies') : ''}
       ${cfg.market?.enabled ? side('market', '#/market', NAV_IC.market, 'Market') : ''}
       ${cfg.skins?.enabled ? side('skins', '#/skins', NAV_IC.skins, 'Skins') : ''}
