@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+/* ── SLUDGE tokens: toxic goo. Acid-green + purple slime on near-black. ── */
+@theme {
+  --color-bg: #050704;
+  --color-surface: #0f160a;
+  --color-line: rgb(184 255 31 / 0.14);
+  --color-fg: #effbdc;
+  --color-muted: #8f9e80;
+  --color-brand: #b8ff1f;
+  --color-accent: #b45cff;
+  --color-ink: #060805;
+  --color-hazard: #ffd23f;
+
+  --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bagel), var(--font-rubik), ui-rounded, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, monospace;
+
+  --animate-bubble: bubble var(--dur, 7s) cubic-bezier(0.45, 0, 0.6, 1) var(--delay, 0s) infinite;
+  --animate-drip: drip var(--dur, 4s) cubic-bezier(0.6, 0, 0.8, 0.4) var(--delay, 0s) infinite;
+  --animate-wobble: wobble 6s ease-in-out infinite;
+  --animate-blob: blob 14s ease-in-out infinite alternate;
+  --animate-pipe: pipe 5s ease-in-out infinite;
+
+  @keyframes bubble {
+    0% { transform: translate3d(0, 0, 0) scale(0.4); opacity: 0; }
+    12% { opacity: 1; }
+    50% { transform: translate3d(var(--sway, 14px), calc(var(--rise, 340px) * -0.5), 0) scale(1); }
+    88% { opacity: 1; }
+    100% { transform: translate3d(calc(var(--sway, 14px) * -0.6), calc(var(--rise, 340px) * -1), 0) scale(0.75); opacity: 0; }
+  }
+  @keyframes drip {
+    0%, 15% { transform: translateY(0) scaleY(0.2); }
+    55% { transform: translateY(0) scaleY(1); }
+    72% { transform: translateY(var(--fall, 60px)) scaleY(0.9); opacity: 1; }
+    100% { transform: translateY(calc(var(--fall, 60px) * 3)) scaleY(0.8); opacity: 0; }
+  }
+  @keyframes wobble {
+    0%, 100% { border-radius: 58% 42% 55% 45% / 52% 60% 40% 48%; transform: rotate(0deg); }
+    33% { border-radius: 42% 58% 38% 62% / 60% 42% 58% 40%; transform: rotate(4deg); }
+    66% { border-radius: 55% 45% 62% 38% / 40% 55% 45% 60%; transform: rotate(-3deg); }
+  }
+  @keyframes pipe {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+  }
+  @keyframes blob {
+    0% { transform: translate3d(-8%, -6%, 0) scale(1); }
+    50% { transform: translate3d(6%, 8%, 0) scale(1.18); }
+    100% { transform: translate3d(-4%, 10%, 0) scale(0.92); }
+  }
+
+  --animate-marquee: marquee var(--duration, 30s) linear infinite;
+  --animate-marquee-reverse: marquee var(--duration, 30s) linear infinite reverse;
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-shine: shine 3s linear infinite;
+  --animate-spin-slow: spin 6s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-50% - var(--gap, 1rem) / 2)); }
+  }
+  @keyframes aurora {
+    0% { transform: translate3d(-10%, -10%, 0) rotate(0deg) scale(1); }
+    50% { transform: translate3d(10%, 5%, 0) rotate(20deg) scale(1.15); }
+    100% { transform: translate3d(-5%, 10%, 0) rotate(-10deg) scale(1.05); }
+  }
+  @keyframes shine {
+    from { background-position: 200% center; }
+    to { background-position: -200% center; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.9); opacity: 0.7; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+}
+
+/* ── shadcn / registry compatibility: map their token names onto ours ──
+   So `npx shadcn@latest add @magicui/... @aceternity/... @react-bits/...` drops in themed. */
+:root {
+  --radius: 1.25rem;
+  --background: var(--color-bg);
+  --foreground: var(--color-fg);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-fg);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-fg);
+  --primary: var(--color-brand);
+  --primary-foreground: var(--color-ink);
+  --secondary: #141b0f;
+  --secondary-foreground: var(--color-fg);
+  --muted: #141b0f;
+  --muted-foreground: var(--color-muted);
+  --accent: #141b0f;
+  --accent-foreground: var(--color-fg);
+  --destructive: var(--color-accent);
+  --border: var(--color-line);
+  --input: var(--color-line);
+  --ring: var(--color-brand);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  html {
+    overflow-x: clip; /* decorative blobs / rotated strips must never cause sideways scroll */
+    color-scheme: dark;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: auto; /* Lenis handles smooth scroll */
+  }
+  ::selection { background: var(--color-brand); color: var(--color-ink); }
+  :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 3px; border-radius: 6px; }
+}
+
+@layer utilities {
+  /* gradient text that sweeps a highlight across */
+  .text-shine {
+    background: linear-gradient(110deg, var(--color-fg) 35%, var(--color-brand) 50%, var(--color-fg) 65%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: var(--animate-shine);
+  }
+  /* subtle film grain over the whole page */
+  .noise::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 60;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* goo: blur + alpha threshold → touching shapes merge like metaballs. Defs live in <GooDefs/>. */
+  .goo { filter: url(#goo); }
+  .goo-soft { filter: url(#goo-soft); }
+  /* slime-lit glass panel */
+  .vat-panel {
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgb(184 255 31 / 0.07), transparent 55%),
+      radial-gradient(90% 70% at 100% 100%, rgb(180 92 255 / 0.08), transparent 60%),
+      color-mix(in oklab, var(--color-surface) 82%, transparent);
+    border: 1px solid var(--color-line);
+    backdrop-filter: blur(14px);
+  }
+  /* chunky display type with a toxic offset shadow */
+  .slime-type {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 0.92;
+    text-shadow: 0 0.06em 0 rgb(180 92 255 / 0.9), 0 0.14em 0.3em rgb(184 255 31 / 0.25);
+  }
+  .text-goo {
+    background: linear-gradient(180deg, #f2ffb0 0%, var(--color-brand) 45%, #6fb800 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hazard-tape {
+    background: repeating-linear-gradient(-45deg, var(--color-hazard) 0 14px, var(--color-ink) 14px 28px);
+  }
+  .mask-fade-x { mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent); }
+  .mask-fade-b { mask-image: linear-gradient(to bottom, #000 60%, transparent); }
+}
+
+/* Respect users who ask for less motion: kill loops, keep content visible. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
