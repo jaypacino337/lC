@@ -1,5 +1,5 @@
 {
-  "_comment": "Synthetic fixture. Field names mirror the GUESSES in src/sources/pumpfun.js — replace with a real captured response once you have one, then run `npm test` to see what broke. Timestamps are seconds and are shifted at load time by (realNow - _anchor), so relative ages are preserved: history stays hours old and scoreable, live tokens stay minutes old and tradeable.",
+  "_comment": "Synthetic STRATEGY fixture (not an API capture): a hand-built scenario that exercises caller reputation, earlyBuy and the gates. Real captured source responses live next to it (pumpportal.stream.json, dexscreener.tokens.json, rpc.bondingCurve.json, worker.health.json). Timestamps are seconds and are shifted at load time by (realNow - _anchor), so relative ages are preserved: history stays hours old and scoreable, live tokens stay minutes old and tradeable.",
   "_anchor": 1750020000,
 
   "_scenario": [

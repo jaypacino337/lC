@@ -67,12 +67,16 @@ export class RegimeTracker {
     const flow = a.volume * (0.7 + 0.3 * Math.min(1, a.buyers / 40));
 
     let base = this._get('regime_baseline', 0);
-    if (base <= 0) base = flow || 1;            // first observation seeds it
-    const ratio = flow / base;
+    /* First non-empty observation seeds it. An empty tick (e.g. the stream has
+     * just connected) must not seed a baseline of ~0, or the next real tick
+     * reads as a 99x spike. */
+    const seeded = base > 0;
+    if (!seeded) base = flow || 1;
+    const ratio = seeded ? flow / base : 1;
 
     /* Update the baseline AFTER computing the ratio, so a spike is judged
      * against yesterday's normal, not against itself. */
-    this._set('regime_baseline', base + this.o.emaAlpha * (flow - base));
+    if (seeded || flow > 0) this._set('regime_baseline', base + this.o.emaAlpha * (flow - base));
 
     const regime = ratio >= this.o.hotRatio ? 'risk_on'
                  : ratio <= this.o.coldRatio ? 'risk_off'

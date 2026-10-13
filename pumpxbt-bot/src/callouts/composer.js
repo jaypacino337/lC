@@ -27,7 +27,10 @@ export function composeCallout({ token, verdict, activity }) {
   const lines = [`${sym} — conviction ${(score * 100).toFixed(0)}/100`];
   if (why.length) lines.push(why.join(', ') + '.');
   if (activity?.buyers5m) {
-    lines.push(`${activity.buyers5m} unique buyers in the last 5m.`);
+    /* Aggregate sources (DexScreener) count buy TRANSACTIONS, not wallets. */
+    lines.push(activity.buysAreTxns
+      ? `${activity.buyers5m} buys in the last 5m.`
+      : `${activity.buyers5m} unique buyers in the last 5m.`);
   }
 
   return {

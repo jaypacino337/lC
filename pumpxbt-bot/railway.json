@@ -4,15 +4,17 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npm run paper",
+    "startCommand": "npm start",
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+    "restartPolicyMaxRetries": 10,
+    "healthcheckPath": "/api/health"
   },
   "_notes": [
-    "Mount a volume at ./data — that SQLite file is the caller reputation history",
-    "and is the one thing here you cannot rebuild.",
-    "For the ledger API, add a SECOND Railway service from this same repo with",
-    "startCommand 'npm run api', sharing the same volume.",
-    "Set variables from .env.example. Keys never go in the repo."
+    "One service runs the agent loop AND the read-only ledger API (src/serve.js):",
+    "Railway volumes attach to a single service, so they must share a process.",
+    "Mount a volume and set DB_PATH=/data/pumpxbt.db. That SQLite file is the caller",
+    "reputation history and the one thing here you cannot rebuild.",
+    "The fee flywheel is a SEPARATE service from the memcoinz repo (see flywheel/README.md);",
+    "point WORKER_URL at it. Keys never go in this service or the repo."
   ]
 }

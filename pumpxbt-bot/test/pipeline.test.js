@@ -6,8 +6,9 @@ import { rebuildAllCallerStats, SCORING } from '../src/signals/callerScore.js';
 import { buildApi } from '../src/api/server.js';
 
 /* ── Parsers ───────────────────────────────────────────────────────────────
- * These guard the guesses in pumpfun.js. When you replace the fixture with a
- * real captured response, these are the tests that tell you what broke. */
+ * These guard the fixture parsers in pumpfun.js, which read the synthetic
+ * strategy scenario. Live-source parsers are pinned by real captures in
+ * sources.test.js. */
 
 test('parseCallout tolerates alternative field names', () => {
   const a = parseCallout({ caller: 'W', mint: 'M', created_at: 1750000000, price_usd: 0.5 });

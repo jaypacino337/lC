@@ -38,7 +38,9 @@ export function decay(ageMs, halfLifeMs) {
  * the 95% one-sided bound.
  */
 export function wilsonLowerBound(successes, total, z = 1.96) {
-  if (total <= 0) return 0;
+  /* Zero successes has an exact lower bound of 0; computing it leaves ~1e-17
+   * of float error, which would let a never-right caller outrank a zero. */
+  if (total <= 0 || successes <= 0) return 0;
   const p = successes / total;
   const z2 = z * z;
   const denom = 1 + z2 / total;

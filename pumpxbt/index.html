@@ -3,15 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>PumpXBT — the intelligence layer for pump.fun</title>
-<meta name="description" content="An autonomous agent for pump.fun. Trades a creator-fee-funded treasury, publishes callouts in-app, and routes rewards and realised profit into buyback and burn.">
-<meta name="theme-color" content="#07090a">
-<meta property="og:title" content="PumpXBT — the intelligence layer for pump.fun">
-<meta property="og:description" content="Autonomous agent. Creator-fee treasury. Public callouts. Buyback and burn.">
+<title>PumpXBT: the agent terminal for pump.fun</title>
+<meta name="description" content="An autonomous agent for pump.fun. Live launch tape, a creator-fee flywheel that buys back and burns, and a public record of every call. Real data or a dash.">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:title" content="PumpXBT: the agent terminal for pump.fun">
+<meta property="og:description" content="Live launch tape. Creator-fee flywheel. Buyback and burn. Real data or a dash.">
 <meta property="og:type" content="website">
-<!-- EDIT BEFORE LAUNCH: og:url and og:image MUST be absolute URLs on your real
-     domain. Social crawlers do not run JS and cannot resolve relative paths —
-     leaving these wrong means link previews on X/Telegram/Discord show nothing. -->
+<!-- EDIT BEFORE LAUNCH: og:url / og:image must be absolute URLs on the real
+     domain. Crawlers don't run JS, so a wrong value means blank link previews. -->
 <meta property="og:url" content="https://pumpxbt.fun/">
 <meta property="og:image" content="https://pumpxbt.fun/assets/banner.png">
 <meta property="og:image:width" content="1280">
@@ -19,260 +18,227 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://pumpxbt.fun/assets/banner.png">
 <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/JetBrainsMono-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<!-- Stage banner. Rendered from PXBT.stage; hidden entirely once stage is live. -->
-<div class="stagebar" id="stagebar" hidden>
-  <div class="wrap stagebar-inner">
-    <span class="stagebar-dot" aria-hidden="true"></span>
-    <p id="stagebarText"></p>
+<a class="skip" href="#top">Skip to content</a>
+
+<!-- status rail: stage + feed health, one line -->
+<div class="rail" role="status">
+  <div class="wrap rail-inner">
+    <span class="rail-item"><i class="led" data-led="stage"></i><b id="stageLabel">PAPER</b><span class="rail-dim" id="stageNote">agent fills are simulated</span></span>
+    <span class="rail-item rail-hide-sm"><i class="led" data-led="launches"></i>launch feed <b id="launchState">connecting</b></span>
+    <span class="rail-item rail-hide-sm"><i class="led" data-led="ledger"></i>ledger <b id="ledgerState">—</b></span>
+    <span class="rail-item rail-right"><span class="rail-dim">SOL</span> <b class="num" id="solPx">—</b></span>
   </div>
 </div>
 
-<div class="grid-bg" aria-hidden="true"></div>
-<div class="glow glow-a" aria-hidden="true"></div>
-<div class="glow glow-b" aria-hidden="true"></div>
-
-<!-- ── ticker ──────────────────────────────────────────────────────────── -->
-<div class="ticker" id="ticker" aria-hidden="true">
-  <div class="ticker-track" id="tickerTrack"></div>
+<!-- live tape: every pump.fun launch, as it happens -->
+<div class="tape" aria-label="Live pump.fun launches">
+  <div class="tape-label">LAUNCHES</div>
+  <div class="tape-view"><div class="tape-track" id="tape"><span class="tape-empty">waiting for the next pump.fun launch…</span></div></div>
 </div>
 
-<!-- ── nav ─────────────────────────────────────────────────────────────── -->
 <header class="nav" id="nav">
   <div class="wrap nav-inner">
-    <a class="logo" href="#top">
-      <img src="assets/logo.png" alt="" class="logo-img" width="34" height="34"
-           onerror="this.replaceWith(Object.assign(new Image(34,34),{src:'assets/mark.svg',className:'logo-img',alt:''}))">
-      <span class="logo-type">Pump<b>XBT</b></span>
+    <a class="logo" href="#top" aria-label="PumpXBT home">
+      <img src="assets/mark.svg" alt="" class="logo-img" width="28" height="28">
+      <span class="logo-type">PUMP<b>XBT</b></span>
     </a>
-
-    <nav class="nav-links" aria-label="Sections">
+    <nav class="nav-links" id="navLinks" aria-label="Sections">
+      <a href="#launches">Launches</a>
       <a href="#flywheel">Flywheel</a>
-      <a href="#intel">Intelligence</a>
-      <a href="#callouts">Callouts</a>
-      <a href="#burn">Buyback</a>
-      <a href="terminal.html" class="nav-terminal">Terminal</a>
+      <a href="#agent">Agent</a>
+      <a href="#burn">Burn</a>
+      <a href="#faq">FAQ</a>
     </nav>
-
     <div class="nav-cta">
-      <button class="ca" id="caBtn" title="Copy contract address">
-        <span class="ca-dot" aria-hidden="true"></span>
-        <code id="caText">CA soon</code>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3h-7A2.5 2.5 0 0 0 3 5.5v7A2.5 2.5 0 0 0 5.5 15" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      <button class="ca" id="caBtn" type="button" title="Copy contract address">
+        <span class="ca-k">CA</span><code id="caText">not launched</code>
       </button>
-      <a class="btn btn-primary" id="buyTop" href="#" target="_blank" rel="noopener">
-        <span class="lbl-full">Buy on pump.fun</span><span class="lbl-short">Buy</span>
-      </a>
-      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">
-        <span></span><span></span>
-      </button>
+      <a class="btn btn-primary" href="terminal.html">Terminal <span aria-hidden="true">↗</span></a>
+      <button class="burger" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span></button>
     </div>
   </div>
 </header>
 
 <main id="top">
 
-<!-- ── hero ────────────────────────────────────────────────────────────── -->
+<!-- ── hero: copy + quote panel ─────────────────────────────────────── -->
 <section class="hero">
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <div class="pill reveal"><span class="live-dot"></span> <span id="heroPill">Autonomous agent</span></div>
-
+      <p class="eyebrow reveal"><span class="tag">PUMP.FUN</span> autonomous agent · fee flywheel · public record</p>
       <h1 class="reveal">Pump<span class="accent">XBT</span></h1>
-
-      <p class="lede reveal">pump.fun's agentic layer.</p>
-
-      <p class="sub reveal">
-        It watches every launch on pump.fun. It knows which callers are actually good —
-        not loud, good. It trades its own creator-fee treasury and posts the receipts.
-        Everything it earns burns supply. Ask it anything on X.
-      </p>
-
+      <p class="lede reveal">The trading desk that runs itself, in public.</p>
+      <p class="sub reveal">It watches every launch on pump.fun and scores callers on their record, not their reach. Creator fees are claimed on a fixed cycle. Part of each claim buys back and burns, and the rest funds the agent. You can see every number, and when a feed is down the number shows as a dash.</p>
       <div class="hero-btns reveal">
-        <a class="btn btn-primary btn-lg" id="buyHero" href="#" target="_blank" rel="noopener">
-          Buy on pump.fun
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <a class="btn btn-ghost btn-lg" href="terminal.html">Open the terminal</a>
+        <a class="btn btn-primary btn-lg" id="buyHero" href="https://pump.fun" target="_blank" rel="noopener">Buy on pump.fun</a>
+        <a class="btn btn-ghost btn-lg" href="terminal.html">Open terminal</a>
       </div>
+    </div>
 
-      <dl class="hero-stats reveal" id="heroStats">
-        <div class="hstat"><dt>Price</dt><dd data-field="price">—</dd></div>
-        <div class="hstat"><dt>24h</dt><dd data-field="change">—</dd></div>
-        <div class="hstat"><dt>Market cap</dt><dd data-field="mcap">—</dd></div>
-        <div class="hstat"><dt>Liquidity</dt><dd data-field="liq">—</dd></div>
+    <aside class="quote reveal" aria-label="PUMPXBT market">
+      <header class="panel-bar">
+        <span class="sym">PUMPXBT<span class="rail-dim">/USD</span></span>
+        <span class="chip" id="quoteSrc">no CA yet</span>
+      </header>
+      <div class="quote-main">
+        <strong class="num quote-px" data-q="price">—</strong>
+        <span class="num quote-ch" data-q="change">—</span>
+      </div>
+      <dl class="cells cells-3">
+        <div><dt>MCAP</dt><dd class="num" data-q="mcap">—</dd></div>
+        <div><dt>LIQ</dt><dd class="num" data-q="liq">—</dd></div>
+        <div><dt>VOL 24H</dt><dd class="num" data-q="vol24">—</dd></div>
+        <div><dt>TXNS 24H</dt><dd class="num" data-q="txns24">—</dd></div>
+        <div><dt>BURNED</dt><dd class="num" data-fw="burnedPct">—</dd></div>
+        <div><dt>CURVE</dt><dd class="num" data-fw="curve">—</dd></div>
       </dl>
-      <p class="feed-note" id="feedNote">Awaiting contract address — market data goes live automatically once it is set.</p>
-    </div>
+      <p class="fine" id="quoteNote">Market data goes live from DexScreener as soon as the contract address is set.</p>
+    </aside>
+  </div>
+</section>
 
-    <div class="hero-art reveal">
-      <div class="art-frame">
-        <div class="art-head">
-          <span class="art-tag"><span class="live-dot"></span> PUMPXBT</span>
-          <span class="art-meta" data-field="changeChip">—</span>
+<!-- ── KPI strip: the flywheel, live ────────────────────────────────── -->
+<section class="kpis" aria-label="Flywheel status">
+  <div class="wrap kpi-grid">
+    <div class="kpi reveal"><span class="k">CLAIMABLE FEES</span><strong class="num" data-fw="claimable">—</strong><span class="s">creator vaults, on-chain</span></div>
+    <div class="kpi reveal"><span class="k">AGENT TREASURY</span><strong class="num" data-fw="treasury">—</strong><span class="s">wallet balance, on-chain</span></div>
+    <div class="kpi reveal"><span class="k">BURNED</span><strong class="num" data-fw="burned">—</strong><span class="s">1B − current supply</span></div>
+    <div class="kpi reveal"><span class="k">WORKER CYCLES</span><strong class="num" data-fw="cycles">—</strong><span class="s" data-fw="workerMode">worker not connected</span></div>
+    <div class="kpi reveal"><span class="k">LAST CYCLE</span><strong class="num" data-fw="last">—</strong><span class="s" data-fw="lastNote">claim → burn → treasury</span></div>
+    <div class="kpi reveal"><span class="k">AGENT P&amp;L</span><strong class="num" data-ag="pnl">—</strong><span class="s" data-ag="pnlNote">simulated until live</span></div>
+  </div>
+</section>
+
+<!-- ── live launches grid ───────────────────────────────────────────── -->
+<section class="sec" id="launches">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow"><span class="tag">01</span> Live tape</p>
+      <h2>Every launch, the second it happens.</h2>
+      <p>This is the agent's raw input: the public PumpPortal stream of new pump.fun coins and graduations. Your browser connects to the stream directly, and we don't filter it.</p>
+    </header>
+
+    <div class="desk reveal">
+      <div class="panel">
+        <header class="panel-bar">
+          <span><i class="led" data-led="launches"></i>pump.fun · new tokens</span>
+          <span class="rail-dim num" id="launchCount">0 seen</span>
+        </header>
+        <div class="grid-scroll">
+          <table class="grid" id="launchGrid">
+            <thead><tr><th>time</th><th>token</th><th class="hide-sm">name</th><th class="r">mcap</th><th class="r hide-sm">dev buy</th><th class="r">curve</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p class="grid-empty" id="launchEmpty">Connecting to the launch stream…</p>
         </div>
-        <img src="assets/banner.png" alt="PumpXBT" class="art-img"
-             onerror="this.closest('.art-frame').classList.add('no-art');this.remove()">
-        <div class="art-fallback">
-          <img src="assets/mark.svg" alt="" width="120" height="120">
-          <p>Drop <code>logo.png</code> and <code>banner.png</code> into <code>assets/</code></p>
-        </div>
-        <svg class="art-spark" viewBox="0 0 600 140" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="var(--green)" stop-opacity=".38"/>
-              <stop offset="1" stop-color="var(--green)" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path id="sparkArea" fill="url(#sparkFill)" d=""/>
-          <path id="sparkLine" fill="none" stroke="var(--green)" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round" d=""/>
-        </svg>
+      </div>
+
+      <div class="panel side">
+        <header class="panel-bar"><span>session</span><span class="rail-dim">since page load</span></header>
+        <dl class="cells cells-1">
+          <div><dt>LAUNCHES / MIN</dt><dd class="num" id="sRate">—</dd></div>
+          <div><dt>GRADUATIONS</dt><dd class="num" id="sMig">—</dd></div>
+          <div><dt>DEV BUY · MEDIAN</dt><dd class="num" id="sDev">—</dd></div>
+          <div><dt>NO DEV BUY</dt><dd class="num" id="sZero">—</dd></div>
+          <div class="wide"><dt>TOP MCAP</dt><dd class="num" id="sTop">—</dd></div>
+        </dl>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── stat band ───────────────────────────────────────────────────────── -->
-<section class="band">
-  <div class="wrap band-grid">
-    <div class="bstat reveal"><span class="blabel">Treasury value</span><span class="bval" data-treasury="valueUsd">—</span><span class="bnote">Funded by creator fees</span></div>
-    <div class="bstat reveal"><span class="blabel">Realised profit</span><span class="bval" data-treasury="realisedPnlUsd">—</span><span class="bnote">Closed agent positions</span></div>
-    <div class="bstat reveal"><span class="blabel">Bought back</span><span class="bval" data-treasury="boughtBackUsd">—</span><span class="bnote">Open-market PUMPXBT</span></div>
-    <div class="bstat reveal"><span class="blabel">Burned</span><span class="bval" data-treasury="burnedTokens">—</span><span class="bnote">Permanently removed</span></div>
-  </div>
-</section>
-
-<!-- ── flywheel ────────────────────────────────────────────────────────── -->
-<section class="sec" id="flywheel">
+<!-- ── flywheel pipeline ────────────────────────────────────────────── -->
+<section class="sec sec-alt" id="flywheel">
   <div class="wrap">
     <header class="sec-head reveal">
-      <span class="eyebrow">The loop</span>
+      <p class="eyebrow"><span class="tag">02</span> The loop</p>
       <h2>Fees in. Burn out.</h2>
-      <p>One loop, no leaks. Creator fees fund the treasury, the agent trades it in the open,
-         and every dollar it earns leaves the supply smaller.</p>
+      <p>Five steps. Each one shows who runs it today and its live figure, so you can see which parts are automated and which aren't yet.</p>
     </header>
-
-    <div class="wheel-layout">
-      <div class="wheel reveal" aria-hidden="true">
-        <svg viewBox="0 0 320 320">
-          <circle cx="160" cy="160" r="128" class="wheel-track"/>
-          <circle cx="160" cy="160" r="128" class="wheel-dash"/>
-          <circle cx="160" cy="160" r="96" class="wheel-inner"/>
-          <g class="wheel-core">
-            <text x="160" y="150" class="wheel-t1">BUYBACK</text>
-            <text x="160" y="182" class="wheel-t2">&amp; BURN</text>
-          </g>
-        </svg>
-        <div class="wheel-nodes" id="wheelNodes"></div>
-      </div>
-
-      <ol class="steps" id="steps"></ol>
-    </div>
+    <ol class="pipe" id="pipe"></ol>
+    <p class="fine reveal" id="routeNote">Route per claim is set in <code>pumpxbt-bot/flywheel/memcoin.config.json</code>. It runs on the shared memcoinz flywheel worker.</p>
   </div>
 </section>
 
-<!-- ── intelligence ────────────────────────────────────────────────────── -->
-<section class="sec sec-alt" id="intel">
+<!-- ── agent: intelligence + callouts ───────────────────────────────── -->
+<section class="sec" id="agent">
   <div class="wrap">
     <header class="sec-head reveal">
-      <span class="eyebrow">Intelligence layer</span>
+      <p class="eyebrow"><span class="tag">03</span> Intelligence</p>
       <h2>It reads the chain, not the timeline.</h2>
-      <p>A proprietary signal stack over live pump.fun state. It knows the meta, knows the
-         wallets, knows when the tape is worth trading — and sits out when it isn't.</p>
+      <p>It doesn't trade on vibes. It runs a signal stack over live pump.fun state, and it sits out when the tape isn't worth trading.</p>
     </header>
-    <div class="cards" id="caps"></div>
-  </div>
-</section>
+    <div class="caps" id="caps"></div>
 
-<!-- ── callouts ────────────────────────────────────────────────────────── -->
-<section class="sec" id="callouts">
-  <div class="wrap">
-    <header class="sec-head reveal">
-      <span class="eyebrow">Public record</span>
-      <h2>Every call, timestamped. Every result, kept.</h2>
-      <p>Callouts publish in the pump.fun app before the outcome is known. The terminal keeps
-         the score — wins, losses, all of it. The record is the product.</p>
-    </header>
-
-    <div class="term reveal">
-      <div class="term-bar">
-        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="term-title">pumpxbt — callouts</span>
-        <span class="term-state" id="termState">live</span>
-      </div>
-      <div class="term-body">
-        <p class="term-line"><span class="prompt">$</span> <span id="termType"></span><span class="caret" aria-hidden="true"></span></p>
-        <div id="calloutList" class="callout-list"></div>
+    <div class="panel reveal callouts">
+      <header class="panel-bar">
+        <span><i class="led" data-led="ledger"></i>agent callouts</span>
+        <span class="chip chip-warn" id="calloutsChip">feed offline</span>
+      </header>
+      <div class="grid-scroll">
+        <table class="grid" id="calloutGrid">
+          <thead><tr><th>when</th><th>token</th><th>call</th><th class="r">score</th><th class="r">status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="grid-empty" id="calloutEmpty">No callouts on record yet. They show up here as soon as the agent's ledger API is connected and it queues one.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── buyback & burn ──────────────────────────────────────────────────── -->
+<!-- ── burn ─────────────────────────────────────────────────────────── -->
 <section class="sec sec-alt" id="burn">
   <div class="wrap burn-grid">
     <div class="reveal">
-      <span class="eyebrow">Supply</span>
+      <p class="eyebrow"><span class="tag">04</span> Supply</p>
       <h2>Performance is deflationary.</h2>
-      <p class="sec-p">Callout rewards and trading profit have exactly one exit: buy PUMPXBT,
-        burn it. No discretionary spend, no team unlock, no treasury “diversification.”
-        Performance is deflationary by construction.</p>
-
-      <div class="burn-meter">
-        <div class="burn-meter-head">
-          <span>Supply burned</span>
-          <strong data-treasury="burnedPctSupply">—</strong>
-        </div>
-        <div class="burn-bar"><i id="burnBar" style="width:0%"></i></div>
+      <p class="sec-p">The buyback share of every fee claim buys PUMPXBT on the open market and sends it to the incinerator. Burned supply isn't a number we report. It's read from the mint itself: one billion minus what exists now.</p>
+      <div class="meter">
+        <div class="meter-head"><span>SUPPLY BURNED</span><strong class="num" data-fw="burnedPct">—</strong></div>
+        <div class="meter-bar"><i id="burnBar"></i></div>
+        <div class="meter-scale num"><span>0%</span><span>1B supply</span></div>
       </div>
-
-      <a class="btn btn-ghost" id="burnTx" href="#" target="_blank" rel="noopener" hidden>
-        View latest burn transaction
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M9 6h9v9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
     </div>
-
-    <div class="burn-stats reveal">
-      <div class="bigstat"><span>Fees routed to treasury</span><strong data-treasury="feesRoutedUsd">—</strong></div>
-      <div class="bigstat"><span>Total bought back</span><strong data-treasury="boughtBackUsd">—</strong></div>
-      <div class="bigstat"><span>Tokens burned</span><strong data-treasury="burnedTokens">—</strong></div>
-    </div>
+    <dl class="cells cells-2 burn-cells reveal">
+      <div><dt>TOKENS BURNED</dt><dd class="num" data-fw="burned">—</dd></div>
+      <div><dt>CIRCULATING SUPPLY</dt><dd class="num" data-fw="supply">—</dd></div>
+      <div><dt>FEES CLAIMABLE NOW</dt><dd class="num" data-fw="claimable">—</dd></div>
+      <div><dt>WORKER</dt><dd class="num" data-fw="workerShort">—</dd></div>
+    </dl>
   </div>
 </section>
 
-<!-- ── roadmap ─────────────────────────────────────────────────────────── -->
+<!-- ── roadmap + faq ────────────────────────────────────────────────── -->
 <section class="sec" id="roadmap">
   <div class="wrap">
     <header class="sec-head reveal">
-      <span class="eyebrow">What's next</span>
-      <h2>More coming.</h2>
-      <p>The agent is the first surface. The intelligence behind it becomes a product of its own.</p>
+      <p class="eyebrow"><span class="tag">05</span> Roadmap</p>
+      <h2>Shipped, running, next.</h2>
     </header>
     <div class="road" id="road"></div>
   </div>
 </section>
 
-<!-- ── faq ─────────────────────────────────────────────────────────────── -->
 <section class="sec sec-alt" id="faq">
   <div class="wrap wrap-narrow">
-    <header class="sec-head reveal"><span class="eyebrow">FAQ</span><h2>Questions.</h2></header>
+    <header class="sec-head reveal"><p class="eyebrow"><span class="tag">06</span> FAQ</p><h2>Questions.</h2></header>
     <div class="faq" id="faqList"></div>
   </div>
 </section>
 
-<!-- ── cta ─────────────────────────────────────────────────────────────── -->
 <section class="cta">
   <div class="wrap cta-inner reveal">
     <h2>Fees in. Burn out. Receipts on.</h2>
-    <p>The agent is on X — it answers questions, reads the tape, and remembers who it talked to.</p>
+    <p>The agent is on X. It answers from live state and remembers who it talked to.</p>
     <div class="hero-btns">
-      <a class="btn btn-primary btn-lg" id="buyFoot" href="#" target="_blank" rel="noopener">Buy on pump.fun</a>
-      <a class="btn btn-ghost btn-lg" id="xLink" href="#" target="_blank" rel="noopener">Talk to it on X</a>
-      <a class="btn btn-ghost btn-lg" href="terminal.html">Open the terminal</a>
+      <a class="btn btn-primary btn-lg" id="buyFoot" href="https://pump.fun" target="_blank" rel="noopener">Buy on pump.fun</a>
+      <a class="btn btn-ghost btn-lg" id="xLink" href="https://x.com" target="_blank" rel="noopener">Talk to it on X</a>
+      <a class="btn btn-ghost btn-lg" href="terminal.html">Open terminal</a>
     </div>
   </div>
 </section>
@@ -281,32 +247,24 @@
 
 <footer class="foot">
   <div class="wrap foot-inner">
-    <div class="foot-brand">
-      <span class="logo-type">Pump<b>XBT</b></span>
-      <p>The intelligence layer for pump.fun.</p>
+    <div>
+      <span class="logo-type">PUMP<b>XBT</b></span>
+      <p class="fine">Data: PumpPortal (launches) · DexScreener (market) · Solana RPC (burn, vaults, balances) · memcoinz worker (flywheel).</p>
     </div>
-    <div class="foot-links">
-      <a href="#flywheel">Flywheel</a>
-      <a href="#intel">Intelligence</a>
-      <a href="#callouts">Callouts</a>
-      <a href="#burn">Buyback</a>
-      <a href="#roadmap">Roadmap</a>
-    </div>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="#launches">Launches</a><a href="#flywheel">Flywheel</a><a href="#agent">Agent</a><a href="#burn">Burn</a><a href="terminal.html">Terminal</a>
+    </nav>
   </div>
   <div class="wrap">
-    <p class="disclaimer">
-      PUMPXBT is a memecoin and an experimental autonomous agent. Nothing on this page is
-      financial advice, an offer, or a solicitation. Callouts are a public record of the agent's
-      own activity, not a recommendation. Digital assets are highly volatile and you can lose the
-      entire value of your purchase. Do your own research.
-    </p>
-    <p class="copy">© <span id="year"></span> PumpXBT. Not affiliated with pump.fun.</p>
+    <p class="disclaimer">PUMPXBT is a memecoin and an experimental autonomous agent. Nothing on this site is financial advice, an offer or a solicitation. Callouts are a public record of the agent's own activity, not a recommendation. While the agent is in paper mode, every agent figure is simulated. Digital assets are highly volatile and you can lose everything you put in. Not affiliated with pump.fun.</p>
+    <p class="fine">© <span id="year"></span> PumpXBT</p>
   </div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/config.js"></script>
+<script src="js/feeds.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

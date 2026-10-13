@@ -1,0 +1,96 @@
+{
+ "_source": "wss://pumpportal.fun/api/data subscribeNewToken+subscribeMigration, captured 2026-10-04; migrations captured from subscribeMigration the same day",
+ "messages": [
+  {
+   "message": "Successfully subscribed to token creation events."
+  },
+  {
+   "message": "Subscribed to 'migration' events."
+  },
+  {
+   "signature": "4LoRZQ9ZbF6gVCHZKTkDmHe1wVD5PvYofUZ612dWPm5DBfHrZVCvYDULvJuDuBbK7aYqFY18WeEcY9fNsouGznDe",
+   "mint": "7BGr6ATr3tePqHzWfNrMzxJF5TQUnvMfPz7SLUKantw9",
+   "traderPublicKey": "CcribYvwNoevukgnrDjGfnQMwP9Bs1K6B6pJf1o9A4FP",
+   "txType": "create",
+   "initialBuy": 0,
+   "solAmount": 0,
+   "bondingCurveKey": "AkKJYoAiMxYiBDxCcUjUhQ5u3LhsNubW98rdqrnxgx13",
+   "vTokensInBondingCurve": 1073000000,
+   "vSolInBondingCurve": 30,
+   "marketCapSol": 27.958993476234856,
+   "name": "Stealthpad",
+   "symbol": "STEALTHPAD",
+   "uri": "https://ipfs.io/ipfs/bafkreifzt2m4za7ityg37egh2xqq6m3xlonzdolg4sp44ebdglqr5f4lhe",
+   "is_mayhem_mode": false,
+   "pool": "pump"
+  },
+  {
+   "signature": "5JpoELTTJ6e7Wh1Lj3Yno1vTHrYGtUZxfZZRoEozVQh7wk9KDJ3M22zs71Yc9E252YxYVGC63PsarUc4ZBxgF83U",
+   "mint": "A6zceQB4mGSy83hcJ4PCjdH5Zf5aCumtau31sDMapump",
+   "traderPublicKey": "2aQTfNMWfRksacWVSGYeyGqypJUMWSUC29hQ8EfgmKBb",
+   "txType": "create",
+   "initialBuy": 290771.713583,
+   "solAmount": 0.008131888,
+   "bondingCurveKey": "CUHCtchqaYwoWPf9vRThwit98uhRo1VsGV7Mx1Xy1RFt",
+   "vTokensInBondingCurve": 1072709228.286417,
+   "vSolInBondingCurve": 30.00813188809928,
+   "marketCapSol": 27.974152824279617,
+   "name": "Larp Coin",
+   "symbol": "LRP",
+   "uri": "https://ipfs.io/ipfs/QmZmZRsxB8dyzWfWVgC2qvKqCMP1M95J5fR5NpvAhM3dLH",
+   "is_mayhem_mode": false,
+   "pool": "pump"
+  },
+  {
+   "signature": "5ZsnktXUk19GVhcy23m6mda6GseraBRDKGchBxVcFueHG7Lkg8iMEEwm2F2qVuTuz6kSNfAXH4qgs4i65ontgK3Y",
+   "mint": "MguSf28z5BHGxQCh7PLsS6YwgV7stHTHAzsKP2epump",
+   "traderPublicKey": "2DYHaJRd9WR15NSf7fodiJupL87gYoCdjBAmS1G8Bme7",
+   "txType": "create",
+   "initialBuy": 96449438.144093,
+   "solAmount": 2.962962961,
+   "bondingCurveKey": "Fom4tqc5ZkmY5QiCD6i4ieKHcDzrGhyHEtucvqryoG5U",
+   "vTokensInBondingCurve": 976550561.855907,
+   "vSolInBondingCurve": 32.962962961,
+   "marketCapSol": 33.75448670917235,
+   "name": "Anthropic Interviewer",
+   "symbol": "INTERVIEWE",
+   "uri": "https://ipfs.io/ipfs/bafkreichvdz4xnyilbgktibt36pnlv3h53pi46ee4kw35vk5htdopmw5im",
+   "is_mayhem_mode": false,
+   "pool": "pump"
+  },
+  {
+   "signature": "382bv2mt1mvP8ejL6pAb943XwZD4DaYPL71Mw9eYkzSAMbCjcKXVtFRLZ5GWALkrkPEERykbLgXvq6KV558PGnW4",
+   "mint": "cCE3mWjm2kkQsiahGgxTQ7QYpCcQuQLNXvkoaSJpump",
+   "traderPublicKey": "65kmUyE2jsgGQfW7zvefSkCimWodh1E4FMiXNnr4PZSQ",
+   "txType": "create",
+   "initialBuy": 96435722.411831,
+   "solAmount": 2.9625,
+   "bondingCurveKey": "AFrt5cASD7xHFp3kV5YQo2U5q98czhayDViYVxskjfid",
+   "vTokensInBondingCurve": 976564277.588169,
+   "vSolInBondingCurve": 32.96249999999998,
+   "marketCapSol": 33.75353856011179,
+   "name": "Tip",
+   "symbol": "TIP",
+   "uri": "https://ipfs.io/ipfs/bafkreih3d7xlsj7ozvewq3iramaqwsz4m5w4pekuo54lkr5ft4pr7fkeci",
+   "is_mayhem_mode": false,
+   "pool": "pump"
+  }
+ ],
+ "migrations": [
+  {
+   "message": "Subscribed to 'migration' events."
+  },
+  {
+   "signature": "2WwQye4SrhpcRPufnAkiqb82yU9VQCPtPgxi3bJ7pcsrKuXnjBcvzCY1jMiR2SMsxt14Pit1tSpprtEPbj4JdL6j",
+   "mint": "9esT5FZxQVDLjdb4rQNe4YZhBLNhc9msdgLnLt66pump",
+   "txType": "migrate",
+   "pool": "pump-amm"
+  },
+  {
+   "signature": "4XCpHkqd7ApRbTzefuKb5kKJByHNSozm1hXpd5LMvZ6y78MLUzuUyMeX2KThvua6tk1wacJi4ekSdqQLrKV4fppm",
+   "mint": "Dv7cGnP4vnfD1RQ2pzGqFbvrVRLNR41QTsC9EoBNpump",
+   "txType": "migrate",
+   "pool": "pump-amm"
+  }
+ ]
+}

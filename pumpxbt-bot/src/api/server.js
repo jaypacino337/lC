@@ -1,11 +1,13 @@
 /* Read-only ledger API.
  *
- * This is the feed for the site's "show everything" panel: treasury balance,
- * every trade, PnL, holdings, callouts. Strictly read-only — there is no route
- * that can move funds or mutate strategy state, so exposing it publicly is safe.
+ * This is the feed for the site's terminal: the fee flywheel (worker status +
+ * on-chain treasury), every paper trade, PnL, callouts. Strictly read-only —
+ * there is no route that can move funds or mutate strategy state, so exposing
+ * it publicly is safe.
  *
  *   GET /api/health
  *   GET /api/state      everything the site needs, one call
+ *   GET /api/flywheel   memcoinz worker /health + chain reads (burned, claimable, balances)
  *   GET /api/positions
  *   GET /api/callouts
  *   GET /api/ledger
@@ -18,34 +20,24 @@ import { log } from '../log.js';
 import { Store } from '../store/db.js';
 import { Portfolio } from '../exec/portfolio.js';
 import { RpcPool } from '../sources/rpcPool.js';
+import { SolanaReader } from '../sources/solana.js';
+import { Flywheel } from '../sources/flywheel.js';
 import { RegimeTracker } from '../signals/regime.js';
 import { adaptation, ADAPT } from '../signals/adapt.js';
 import { nowMs } from '../util.js';
 
 const startedAt = nowMs();
 
-export function buildApi({ store = new Store(), rpc = new RpcPool() } = {}) {
+export function buildApi({
+  store = new Store(),
+  rpc = new RpcPool(),
+  flywheel,
+  pump = null          // the running bot's PumpFunClient, when served in-process
+} = {}) {
   const portfolio = new Portfolio(store);
-
-  /* Treasury wallet balances, cached — the site polls, RPC costs money. */
-  let treasuryCache = { at: 0, data: null };
-  async function treasury() {
-    if (!config.treasuryWallet || !rpc.size) return null;
-    if (nowMs() - treasuryCache.at < 30_000) return treasuryCache.data;
-    try {
-      const [lamports, tokens] = await Promise.all([
-        rpc.getBalance(config.treasuryWallet),
-        rpc.getTokenAccounts(config.treasuryWallet)
-      ]);
-      treasuryCache = {
-        at: nowMs(),
-        data: { wallet: config.treasuryWallet, sol: lamports / 1e9, tokens }
-      };
-    } catch (err) {
-      log.warn('treasury read failed', { err: err.message });
-    }
-    return treasuryCache.data;
-  }
+  /* Treasury figures come from the flywheel worker and the chain — never from
+   * the paper ledger, which only ever holds simulated fills. */
+  const fw = flywheel ?? new Flywheel({ chain: new SolanaReader({ pool: rpc }) });
 
   const priceBook = () => {
     const rows = store.db.prepare(`
@@ -62,6 +54,7 @@ export function buildApi({ store = new Store(), rpc = new RpcPool() } = {}) {
       source: config.source,
       uptimeMs: nowMs() - startedAt,
       rpc: rpc.health(),
+      sources: pump?.health?.() ?? null,
       ...store.stats()
     }),
 
@@ -81,7 +74,7 @@ export function buildApi({ store = new Store(), rpc = new RpcPool() } = {}) {
           sizeMult: learn.sizeMult, pnlUsd: learn.pnlUsd
         },
         portfolio: summary,
-        treasury: await treasury(),
+        flywheel: await fw.state(),
         totals,
         callouts: {
           ours: store.recentOurCallouts(50),
@@ -96,6 +89,7 @@ export function buildApi({ store = new Store(), rpc = new RpcPool() } = {}) {
       };
     },
 
+    '/api/flywheel': async () => fw.state(),
     '/api/positions': async () => ({
       open: portfolio.summary(priceBook()).positions,
       closed: store.closedPositions(100)

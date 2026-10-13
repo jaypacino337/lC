@@ -1,0 +1,201 @@
+[
+ {
+  "chainId": "solana",
+  "dexId": "pumpfun",
+  "url": "https://dexscreener.com/solana/cuhctchqaywowpf9vrthwit98uhro1vsgv7mx1xy1rft",
+  "pairAddress": "CUHCtchqaYwoWPf9vRThwit98uhRo1VsGV7Mx1Xy1RFt",
+  "baseToken": {
+   "address": "A6zceQB4mGSy83hcJ4PCjdH5Zf5aCumtau31sDMapump",
+   "name": "Larp Coin",
+   "symbol": "LRP"
+  },
+  "quoteToken": {
+   "address": "So11111111111111111111111111111111111111112",
+   "name": "Wrapped SOL",
+   "symbol": "SOL"
+  },
+  "priceNative": "0.00000002797",
+  "priceUsd": "0.000003403",
+  "txns": {
+   "m5": {
+    "buys": 2,
+    "sells": 0
+   },
+   "h1": {
+    "buys": 2,
+    "sells": 0
+   },
+   "h6": {
+    "buys": 2,
+    "sells": 0
+   },
+   "h24": {
+    "buys": 2,
+    "sells": 0
+   }
+  },
+  "volume": {
+   "h24": 1.3,
+   "h6": 1.3,
+   "h1": 1.3,
+   "m5": 1.3
+  },
+  "priceChange": {
+   "m5": 0.02,
+   "h1": 0.02,
+   "h6": 0.02,
+   "h24": 0.02
+  },
+  "fdv": 3403.37,
+  "marketCap": 3403.37,
+  "pairCreatedAt": 1791134039000
+ },
+ {
+  "chainId": "solana",
+  "dexId": "orca",
+  "url": "https://dexscreener.com/solana/czfq3xzzdmsdgduyrnltrhgc47cxcztlg4crryfu44ze",
+  "pairAddress": "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE",
+  "labels": [
+   "wp"
+  ],
+  "baseToken": {
+   "address": "So11111111111111111111111111111111111111112",
+   "name": "Wrapped SOL",
+   "symbol": "SOL"
+  },
+  "quoteToken": {
+   "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+   "name": "USD Coin",
+   "symbol": "USDC"
+  },
+  "priceNative": "121.7109",
+  "priceUsd": "121.71",
+  "txns": {
+   "m5": {
+    "buys": 39,
+    "sells": 98
+   },
+   "h1": {
+    "buys": 1342,
+    "sells": 1421
+   },
+   "h6": {
+    "buys": 10562,
+    "sells": 9745
+   },
+   "h24": {
+    "buys": 27702,
+    "sells": 28624
+   }
+  },
+  "volume": {
+   "h24": 49782305.88,
+   "h6": 15287182.06,
+   "h1": 1789990.65,
+   "m5": 57837.68
+  },
+  "priceChange": {
+   "m5": 0.05,
+   "h1": 0.15,
+   "h6": 0.4,
+   "h24": 1.53
+  },
+  "liquidity": {
+   "usd": 31452989.71,
+   "base": 125484,
+   "quote": 16180189
+  },
+  "marketCap": 1491663893,
+  "pairCreatedAt": 1688106058000,
+  "info": {
+   "imageUrl": "https://cdn.dexscreener.com/cms/images/fcfb87378d3198fe753ca08ba51a5552a84f34cf48cd09d83971aa195bdf00d2?width=800&height=800&quality=95&format=auto",
+   "header": "https://cdn.dexscreener.com/cms/images/7a8b9d77ffff37a36144cdebff51443a7c35bd737e8f327fc03f1121357731dd?width=1500&height=500&quality=95&format=auto",
+   "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/So11111111111111111111111111111111111111112?timestamp=1791133800000",
+   "websites": [
+    {
+     "url": "https://solana.com",
+     "label": "Website"
+    }
+   ],
+   "socials": [
+    {
+     "url": "https://x.com/solana",
+     "type": "twitter"
+    }
+   ]
+  }
+ },
+ {
+  "chainId": "solana",
+  "dexId": "pumpswap",
+  "url": "https://dexscreener.com/solana/2uf4xh61rdwxng9woyxsvqp7zua6klfpb3nvnrqeoisd",
+  "pairAddress": "2uF4Xh61rDwxnG9woyxsVQP7zuA6kLFpb3NvnRQeoiSd",
+  "baseToken": {
+   "address": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
+   "name": "Pump",
+   "symbol": "PUMP"
+  },
+  "quoteToken": {
+   "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+   "name": "USD Coin",
+   "symbol": "USDC"
+  },
+  "priceNative": "0.006728",
+  "priceUsd": "0.006728",
+  "txns": {
+   "m5": {
+    "buys": 65,
+    "sells": 15
+   },
+   "h1": {
+    "buys": 541,
+    "sells": 446
+   },
+   "h6": {
+    "buys": 1656,
+    "sells": 1538
+   },
+   "h24": {
+    "buys": 6389,
+    "sells": 6228
+   }
+  },
+  "volume": {
+   "h24": 7324532.38,
+   "h6": 2073508.04,
+   "h1": 771090.36,
+   "m5": 27631.32
+  },
+  "priceChange": {
+   "m5": 0.8,
+   "h1": 1.49,
+   "h6": 7.23,
+   "h24": 9.28
+  },
+  "liquidity": {
+   "usd": 29753326.95,
+   "base": 2213677702,
+   "quote": 14858095
+  },
+  "fdv": 5584702468,
+  "marketCap": 3126482060,
+  "pairCreatedAt": 1752512149000,
+  "info": {
+   "imageUrl": "https://cdn.dexscreener.com/cms/images/a0d07b12d0c34be414b8ac98a827ff862cfd684554c8da4c63fa647eef0af501?width=800&height=800&quality=95&format=auto",
+   "header": "https://cdn.dexscreener.com/cms/images/986e66945a1887359c4554253c9c02c3d21805f5d562132e14bf9677f9f38cf5?width=1500&height=500&quality=95&format=auto",
+   "openGraph": "https://cdn.dexscreener.com/token-images/og/solana/pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn?timestamp=1791133800000",
+   "websites": [
+    {
+     "url": "https://pump.fun",
+     "label": "Website"
+    }
+   ],
+   "socials": [
+    {
+     "url": "https://x.com/pumpfun",
+     "type": "twitter"
+    }
+   ]
+  }
+ }
+]

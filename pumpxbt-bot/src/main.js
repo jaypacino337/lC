@@ -66,8 +66,14 @@ export class Bot {
       }
     });
 
-    for (const t of trades) {
-      if (Number.isFinite(t.price)) this.priceBook.set(t.mint, t.price);
+    /* Mark positions from trade prices only when the source says they share a
+     * unit and venue with token quotes (fixtures). Live, stream-implied prices
+     * can disagree with the quote by 100x on non-standard curves, so marks come
+     * from token() alone and a fill is always valued against its own source. */
+    if (this.pump.marksFromTrades !== false) {
+      for (const t of trades) {
+        if (Number.isFinite(t.price)) this.priceBook.set(t.mint, t.price);
+      }
     }
     return { newCallouts, newTrades, trades };
   }
@@ -107,6 +113,8 @@ export class Bot {
       mints.add(c.mint);
     }
     for (const t of trades.slice(0, 200)) mints.add(t.mint);
+    /* One batched market-data lookup per tick instead of one request per mint. */
+    await this.pump.warm?.([...mints]);
 
     const results = [];
     for (const mint of mints) {
@@ -126,11 +134,15 @@ export class Bot {
     if (Number.isFinite(token.price)) this.priceBook.set(mint, token.price);
 
     const mintTrades = allTrades.filter(t => t.mint === mint);
-    const activity = mintTrades.length
+    /* Prefer per-wallet trades; without a metered trade stream the live feed
+     * only has the creator's first buy, so the source's 5m aggregates win. */
+    const sparse = mintTrades.length < 3 && Number.isFinite(token.buyers5m);
+    const activity = mintTrades.length && !sparse
       ? deriveActivity(mintTrades)
       : (Number.isFinite(token.buyers5m)
           ? { buyers5m: token.buyers5m, volume5m: token.volume5m ?? 0,
-              netInflow5m: token.netInflow5m ?? 0, buySellRatio: 1 }
+              netInflow5m: token.netInflow5m ?? 0, buySellRatio: token.buySellRatio ?? 1,
+              buysAreTxns: token.source === 'dexscreener' }
           : null);
 
     /* Callers who called this mint, with their current reputation. */
@@ -231,14 +243,17 @@ export class Bot {
   /* ── 6. Manage exits ──────────────────────────────────────────────────── */
   async manageExits() {
     let exits = 0;
+    const fresh = this.pump.marksFromTrades === false;
     for (const p of this.store.openPositions()) {
+      const quoted = fresh ? await this.pump.token(p.mint).catch(() => null) : null;
+      if (fresh && Number.isFinite(quoted?.price)) this.priceBook.set(p.mint, quoted.price);
       const price = this.priceBook.get(p.mint);
       if (!Number.isFinite(price)) continue;
 
       const plan = this.portfolio.plannedExit(p, price);
       if (!plan || plan.usd <= 0) continue;
 
-      const token = await this.pump.token(p.mint).catch(() => null);
+      const token = quoted ?? await this.pump.token(p.mint).catch(() => null);
       const res = this.broker.sell({
         positionId: p.id,
         usdTarget: plan.usd,
@@ -304,7 +319,10 @@ export class Bot {
       db: config.dbPath
     });
     if (config.source === 'fixture') {
-      log.warn('running on FIXTURES — no live data. Set PXBT_SOURCE=live once endpoints are verified.');
+      log.warn('running on FIXTURES — no live data. Set PXBT_SOURCE=live for PumpPortal + DexScreener + chain.');
+    } else {
+      const ok = await this.pump.start?.();
+      if (!ok) log.warn('pumpportal stream not open yet — will keep retrying in the background');
     }
 
     while (this.running) {
@@ -318,7 +336,7 @@ export class Bot {
     }
   }
 
-  stop() { this.running = false; }
+  stop() { this.running = false; this.pump.stop?.(); }
 }
 
 /* ── Entry point ─────────────────────────────────────────────────────────── */
